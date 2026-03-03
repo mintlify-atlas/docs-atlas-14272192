@@ -492,6 +492,145 @@ public class RegisterThirdPartyDllAttribute : Attribute
 [assembly: RegisterThirdPartyDll("Newtonsoft.Json.dll")]
 ```
 
+### RegisterLocalizedStringDatabaseAttribute
+
+Registers a custom localized string database implementation.
+
+From `~/workspace/source/FrostyPlugin/Attributes/RegisterLocalizedStringDatabaseAttribute.cs:9`:
+
+```csharp
+[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false)]
+public class RegisterLocalizedStringDatabaseAttribute : Attribute
+{
+    public Type LocalizedStringDatabaseType { get; private set; }
+    
+    public RegisterLocalizedStringDatabaseAttribute(Type type)
+    {
+        LocalizedStringDatabaseType = type;
+    }
+}
+```
+
+<ParamField path="type" type="Type" required>
+  Class that implements `ILocalizedStringDatabase` interface
+</ParamField>
+
+**Usage:**
+```csharp
+[assembly: RegisterLocalizedStringDatabase(typeof(MyLocalizedStringDatabase))]
+```
+
+### RegisterShaderAttribute
+
+Registers a custom vertex, pixel, or compute shader for use in the editor viewport.
+
+From `~/workspace/source/FrostyPlugin/Attributes/RegisterShaderAttribute.cs:28`:
+
+```csharp
+[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
+public class RegisterShaderAttribute : Attribute
+{
+    public ShaderType ShaderType { get; private set; }
+    public string ResourceName { get; set; }
+    public string KeyName { get; set; }
+    
+    public RegisterShaderAttribute(ShaderType type, string key, string name)
+    {
+        ShaderType = type;
+        KeyName = key;
+        ResourceName = name;
+    }
+}
+```
+
+<ParamField path="type" type="ShaderType" required>
+  Type of shader: `VertexShader`, `PixelShader`, or `ComputeShader`
+</ParamField>
+
+<ParamField path="key" type="string" required>
+  Key name to retrieve the shader from `FrostyShaderDb`
+</ParamField>
+
+<ParamField path="name" type="string" required>
+  Embedded resource name in `Namespace.ResourceName` format
+</ParamField>
+
+**Usage:**
+```csharp
+[assembly: RegisterShader(
+    ShaderType.PixelShader,
+    "CustomShader",
+    "MyPlugin.Shaders.CustomShader.bin")]
+```
+
+### RegisterUserShaderAttribute
+
+Registers a user-editable shader with XML descriptor.
+
+From `~/workspace/source/FrostyPlugin/Attributes/RegisterUserShaderAttribute.cs:3`:
+
+```csharp
+[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
+public class RegisterUserShaderAttribute : Attribute
+{
+    public string ShaderName { get; set; }
+    public string XmlDescriptor { get; set; }
+    
+    public RegisterUserShaderAttribute(string shaderName, string xmlDescriptor)
+    {
+        ShaderName = shaderName;
+        XmlDescriptor = xmlDescriptor;
+    }
+}
+```
+
+<ParamField path="shaderName" type="string" required>
+  Name of the shader
+</ParamField>
+
+<ParamField path="xmlDescriptor" type="string" required>
+  Path to XML descriptor file
+</ParamField>
+
+**Usage:**
+```csharp
+[assembly: RegisterUserShader("MyShader", "Shaders/MyShader.xml")]
+```
+
+### RegisterCustomAssetManagerAttribute
+
+Registers a custom asset manager for handling specific asset types.
+
+From `~/workspace/source/FrostyPlugin/Attributes/RegisterCustomAssetManagerAttribute.cs:10`:
+
+```csharp
+[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
+public class RegisterCustomAssetManagerAttribute : Attribute
+{
+    public Type CustomAssetManagerClassType { get; set; }
+    public string CustomAssetManagerType { get; set; }
+    
+    public RegisterCustomAssetManagerAttribute(string type, Type classType)
+    {
+        CustomAssetManagerClassType = classType;
+        CustomAssetManagerType = type;
+    }
+}
+```
+
+<ParamField path="type" type="string" required>
+  Asset manager type identifier
+</ParamField>
+
+<ParamField path="classType" type="Type" required>
+  Class that implements `ICustomAssetManager` interface
+</ParamField>
+
+**Usage:**
+```csharp
+[assembly: RegisterCustomAssetManager("custom", typeof(MyCustomAssetManager))]
+```
+
 ## Complete Example
 
 Here's a complete `AssemblyInfo.cs` from the MeshSetPlugin:
