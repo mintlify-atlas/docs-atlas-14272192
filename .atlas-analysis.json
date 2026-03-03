@@ -1,0 +1,160 @@
+{
+  "projectType": "framework",
+  "projectName": "Frosty Toolsuite",
+  "projectDescription": "Advanced modding platform for games running on DICE's Frostbite game engine",
+  "theme": "aspen",
+  "primaryColor": "#5B9BD5",
+  "lightColor": "#89C4F4",
+  "darkColor": "#2E75B5",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/architecture",
+              "concepts/frostbite-engine",
+              "concepts/asset-system",
+              "concepts/plugin-system"
+            ]
+          },
+          {
+            "group": "Applications",
+            "pages": [
+              "applications/editor",
+              "applications/mod-manager",
+              "applications/command-line"
+            ]
+          },
+          {
+            "group": "Modding Guide",
+            "pages": [
+              "modding/creating-mods",
+              "modding/asset-modification",
+              "modding/mod-packaging",
+              "modding/mod-installation",
+              "modding/best-practices"
+            ]
+          },
+          {
+            "group": "Plugin Development",
+            "pages": [
+              "plugins/overview",
+              "plugins/creating-plugins",
+              "plugins/asset-editors",
+              "plugins/custom-actions",
+              "plugins/plugin-attributes"
+            ]
+          },
+          {
+            "group": "Supported Games",
+            "pages": [
+              "games/battlefield",
+              "games/star-wars",
+              "games/fifa",
+              "games/need-for-speed",
+              "games/dragon-age",
+              "games/mass-effect",
+              "games/other-games"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Core APIs",
+            "pages": [
+              "api/frostysdk",
+              "api/frostycore",
+              "api/asset-manager",
+              "api/resource-manager",
+              "api/file-system"
+            ]
+          },
+          {
+            "group": "Asset Types",
+            "pages": [
+              "api/assets/ebx",
+              "api/assets/res",
+              "api/assets/chunks",
+              "api/assets/bundles"
+            ]
+          },
+          {
+            "group": "Plugin APIs",
+            "pages": [
+              "api/plugin-manager",
+              "api/asset-definition",
+              "api/custom-asset-editors",
+              "api/mod-execution"
+            ]
+          },
+          {
+            "group": "Data Structures",
+            "pages": [
+              "api/data/pointers",
+              "api/data/references",
+              "api/data/type-library"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Resources",
+        "groups": [
+          {
+            "group": "Community",
+            "pages": [
+              "resources/contributing",
+              "resources/troubleshooting",
+              "resources/faq",
+              "resources/changelog"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Frostbite Engine Support - Comprehensive tooling for DICE's Frostbite engine across 25+ games",
+    "Frosty Editor - Advanced visual editor for modifying game assets with real-time preview",
+    "Mod Manager - User-friendly application for installing and managing game modifications",
+    "Plugin Architecture - Extensible system supporting custom asset editors and tools",
+    "Asset System - Complete EBX, RES, and chunk resource handling with type reflection",
+    "Multi-Game Support - Battlefield, FIFA, Need for Speed, Dragon Age, Mass Effect, Star Wars and more",
+    "Command-Line Tools - Batch processing and automation support via FrostyCmd",
+    "Visual Asset Editing - Built-in editors for textures, meshes, sounds, localization and more"
+  ],
+  "publicApiSurface": [
+    "FrostySdk.AssetManager - Central asset management and loading system",
+    "FrostySdk.ResourceManager - Game resource access and manipulation",
+    "FrostySdk.FileSystem - Low-level file system interaction with Frostbite archives",
+    "FrostySdk.TypeLibrary - Runtime type information and reflection for game objects",
+    "Frosty.Core.PluginManager - Plugin loading, initialization and lifecycle management",
+    "Frosty.Core.Plugin - Base plugin class with metadata attributes",
+    "Frosty.Core.AssetDefinition - Define custom asset types and editors",
+    "Frosty.Core.FrostyProject - Project file management and mod authoring",
+    "FrostyModSupport.FrostyModExecutor - Mod installation and execution engine",
+    "EbxAssetEntry - Entry point for EBX asset manipulation",
+    "ResAssetEntry - Entry point for resource asset manipulation",
+    "ChunkAssetEntry - Entry point for chunk asset manipulation",
+    "PointerRef - Reference type for asset pointer relationships",
+    "ResourceRef - Reference type for resource dependencies",
+    "Plugin Attributes - PluginDisplayName, PluginAuthor, PluginVersion for metadata",
+    "Asset Editor Extensions - Custom editor registration and UI integration",
+    "Profile System - Game-specific configuration and support via SDK profiles",
+    "Compression Utilities - Decompression and obfuscation handling per game"
+  ]
+}
