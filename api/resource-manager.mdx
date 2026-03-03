@@ -1,0 +1,376 @@
+---
+title: 'ResourceManager API'
+description: 'Low-level API for loading and accessing game resource data from CAS archives'
+---
+
+## Overview
+
+The `ResourceManager` class handles low-level access to game resource data stored in CAS (Content Addressable Storage) archives. It manages catalog loading, encryption, and data decompression.
+
+```csharp
+using FrostySdk.Managers;
+
+ResourceManager rm = new ResourceManager(fileSystem);
+rm.Initialize();
+```
+
+## Constructor
+
+<ParamField path="ResourceManager" type="constructor">
+Creates a new ResourceManager instance
+
+```csharp
+ResourceManager rm = new ResourceManager(FileSystem fs);
+```
+
+<ParamField path="fs" type="FileSystem" required>
+Initialized FileSystem instance
+</ParamField>
+</ParamField>
+
+## Initialization
+
+<ParamField path="Initialize" type="void">
+Initializes the resource manager and loads all catalogs
+
+```csharp
+rm.Initialize();
+```
+
+This method:
+- Binds compression libraries (ZStd, Oodle)
+- Loads all CAS catalogs from native_data and native_patch
+- Loads encryption keys if required
+- Sets up decompression dictionaries for specific games
+</ParamField>
+
+## Resource Data Access
+
+### Get Resource Data (Unpatched)
+
+<ParamField path="GetResourceData" type="Stream">
+Loads resource data from CAS using SHA1 hash
+
+```csharp
+// Load by SHA1
+Stream data = rm.GetResourceData(sha1);
+if (data != null)
+{
+    // Process decompressed data
+    byte[] buffer = new byte[data.Length];
+    data.Read(buffer, 0, buffer.Length);
+}
+```
+
+<ParamField path="sha1" type="Sha1" required>
+SHA1 hash of the resource
+</ParamField>
+
+**Returns:** Decompressed and decrypted resource data stream, or `null` if not found or encrypted without key
+</ParamField>
+
+### Get Resource Data (Patched)
+
+<ParamField path="GetResourceData" type="Stream">
+Loads patched resource data using base and delta SHA1
+
+```csharp
+Stream data = rm.GetResourceData(baseSha1, deltaSha1);
+```
+
+<ParamField path="baseSha1" type="Sha1" required>
+SHA1 of base resource
+</ParamField>
+
+<ParamField path="deltaSha1" type="Sha1" required>
+SHA1 of delta/patch data
+</ParamField>
+
+**Returns:** Merged and decompressed resource data
+</ParamField>
+
+### Get Resource Data (SuperBundle)
+
+<ParamField path="GetResourceData" type="Stream">
+Loads resource data from a binary superbundle file
+
+```csharp
+Stream data = rm.GetResourceData(
+    "win32/levels/mp_001",
+    offset: 12345,
+    size: 8192
+);
+```
+
+<ParamField path="superBundleName" type="string" required>
+Name of the superbundle file
+</ParamField>
+
+<ParamField path="offset" type="long" required>
+Offset within the superbundle
+</ParamField>
+
+<ParamField path="size" type="long" required>
+Size of the resource data
+</ParamField>
+</ParamField>
+
+### Get Resource Data (Cache)
+
+<ParamField path="GetResourceData" type="Stream">
+Loads resource data from the cache file
+
+```csharp
+Stream data = rm.GetResourceData(offset, size);
+```
+
+<ParamField path="offset" type="long" required>
+Offset in cache file
+</ParamField>
+
+<ParamField path="size" type="long" required>
+Size of data
+</ParamField>
+</ParamField>
+
+### Get Resource Data (Buffer)
+
+<ParamField path="GetResourceData" type="Stream">
+Decompresses resource data from a byte buffer
+
+```csharp
+byte[] compressedData = GetCompressedData();
+Stream data = rm.GetResourceData(compressedData);
+```
+
+<ParamField path="buffer" type="byte[]" required>
+Compressed resource data buffer
+</ParamField>
+</ParamField>
+
+## Raw Data Access
+
+The following methods return compressed/encrypted data without decompression:
+
+<ParamField path="GetRawResourceData" type="Stream">
+Gets raw (compressed/encrypted) resource data
+
+```csharp
+// From CAS
+Stream raw = rm.GetRawResourceData(sha1);
+
+// From superbundle
+Stream raw = rm.GetRawResourceData("win32/levels/mp_001", offset, size);
+
+// From cache
+Stream raw = rm.GetRawResourceData(offset, size);
+```
+
+Useful for:
+- Extracting exact data as stored
+- Custom decompression logic
+- Data analysis
+</ParamField>
+
+## Utility Methods
+
+<ParamField path="GetBaseSha1" type="Sha1">
+Gets the base SHA1 for a patched resource
+
+```csharp
+Sha1 baseSha1 = rm.GetBaseSha1(patchedSha1);
+// Returns the same SHA1 if not patched
+```
+
+<ParamField path="sha1" type="Sha1" required>
+Potentially patched resource SHA1
+</ParamField>
+
+**Returns:** Base SHA1, or the input SHA1 if not patched
+</ParamField>
+
+<ParamField path="IsEncrypted" type="bool">
+Checks if a resource is encrypted
+
+```csharp
+if (rm.IsEncrypted(sha1))
+{
+    Console.WriteLine("Resource is encrypted");
+    // May need encryption key to load
+}
+```
+
+<ParamField path="sha1" type="Sha1" required>
+Resource SHA1 to check
+</ParamField>
+</ParamField>
+
+## Logging
+
+<ParamField path="SetLogger" type="void">
+Sets the logger for diagnostic output
+
+```csharp
+rm.SetLogger(logger);
+```
+
+<ParamField path="logger" type="ILogger" required>
+Logger implementation
+</ParamField>
+</ParamField>
+
+<ParamField path="ClearLogger" type="void">
+Clears the current logger
+
+```csharp
+rm.ClearLogger();
+```
+</ParamField>
+
+## Usage Examples
+
+<CodeGroup>
+```csharp Basic Usage
+using FrostySdk;
+using FrostySdk.Managers;
+using System.IO;
+
+// Initialize
+FileSystem fs = new FileSystem(@"C:\Games\FIFA20");
+fs.Initialize();
+
+ResourceManager rm = new ResourceManager(fs);
+rm.Initialize();
+
+// Load resource by SHA1
+Sha1 resourceHash = new Sha1("abc123...");
+Stream data = rm.GetResourceData(resourceHash);
+
+if (data != null)
+{
+    using (BinaryReader reader = new BinaryReader(data))
+    {
+        // Read and process resource data
+        byte[] buffer = reader.ReadBytes((int)data.Length);
+        ProcessResourceData(buffer);
+    }
+}
+else
+{
+    Console.WriteLine("Resource not found or encrypted");
+}
+```
+
+```csharp Loading Patched Resources
+// For patched resources, use base and delta SHA1
+Sha1 baseSha1 = entry.BaseSha1;
+Sha1 deltaSha1 = entry.Sha1;
+
+Stream patchedData = rm.GetResourceData(baseSha1, deltaSha1);
+if (patchedData != null)
+{
+    // Process merged patched data
+    ProcessData(patchedData);
+}
+```
+
+```csharp SuperBundle Resources
+// Load from superbundle file
+string sbName = "win32/levels/mp_metropolis";
+long offset = 4096;
+long size = 16384;
+
+Stream sbData = rm.GetResourceData(sbName, offset, size);
+if (sbData != null)
+{
+    SaveToFile(sbData, "extracted_resource.bin");
+}
+```
+
+```csharp Encryption Handling
+Sha1 resourceSha1 = GetResourceSha1();
+
+if (rm.IsEncrypted(resourceSha1))
+{
+    Console.WriteLine("Warning: Resource is encrypted");
+    
+    // Check if we have the key
+    Stream data = rm.GetResourceData(resourceSha1);
+    if (data == null)
+    {
+        Console.WriteLine("Encryption key not available");
+        return;
+    }
+}
+
+Stream resource = rm.GetResourceData(resourceSha1);
+```
+
+```csharp Working with Modified Data
+// Load original resource
+Stream original = rm.GetResourceData(entry.Sha1);
+byte[] originalData = ReadFully(original);
+
+// Modify data
+byte[] modifiedData = ModifyResourceData(originalData);
+
+// Compress modified data
+byte[] compressed = Utils.CompressFile(modifiedData);
+
+// Now can load from buffer
+Stream modifiedStream = rm.GetResourceData(compressed);
+```
+</CodeGroup>
+
+## Resource Types
+
+The ResourceManager handles various resource types defined in `ResourceType` enum:
+
+```csharp
+public enum ResourceType : uint
+{
+    Texture = 0x6BDE20BA,
+    MeshSet = 0x49B156D4,
+    CompiledLuaResource = 0xAFECB022,
+    SwfMovie = 0x2D47A5FF,
+    // ... and many more
+}
+```
+
+Common resource types:
+- **Texture** - Image/texture data
+- **MeshSet** - 3D mesh geometry
+- **IShaderDatabase** - Compiled shaders
+- **LocalizedStringResource** - Localized text
+- **CompiledLuaResource** - Lua scripts
+- **SwfMovie** - UI Flash files
+
+## Data Locations
+
+Resources can be stored in different locations:
+
+```csharp
+public enum AssetDataLocation
+{
+    Cas,              // Standard CAS archive
+    SuperBundle,      // Binary superbundle file
+    Cache,            // Local cache file
+    CasNonIndexed     // CAS without catalog index
+}
+```
+
+## Performance Notes
+
+<Note>
+**Caching**: The ResourceManager doesn't cache decompressed data. For frequently accessed resources, cache the decompressed streams in your code.
+</Note>
+
+<Warning>
+**Large Resources**: Some resources (like high-res textures) can be very large. Use streaming where possible and dispose of streams when done.
+</Warning>
+
+## See Also
+
+- [AssetManager API](/api/asset-manager) - Higher-level asset management
+- [FileSystem API](/api/file-system) - File system operations
+- [FrostySdk Namespace](/api/frostysdk) - Core SDK types

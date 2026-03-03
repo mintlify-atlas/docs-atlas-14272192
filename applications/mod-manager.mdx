@@ -1,0 +1,366 @@
+---
+title: Frosty Mod Manager
+description: Install and manage mods for Frostbite games
+---
+
+Frosty Mod Manager is the application for installing, organizing, and applying mods to Frostbite engine games. It handles mod conflicts, load order, and game launching with mods enabled.
+
+## Getting Started
+
+### First Launch
+
+<Steps>
+  <Step title="Select Game Profile">
+    Choose your Frostbite game from the profile selector. The manager supports the same games as Frosty Editor.
+  </Step>
+  
+  <Step title="Wait for Initialization">
+    The manager loads the game's asset database to analyze mod compatibility. This happens once per game.
+  </Step>
+  
+  <Step title="Configure Mod Directory">
+    By default, mods are loaded from the `Mods/` folder in the manager directory. You can change this in settings.
+  </Step>
+</Steps>
+
+## Installing Mods
+
+### Adding Mods
+
+<Tabs>
+  <Tab title="Drag and Drop">
+    Drag `.fbmod`, `.zip`, `.rar`, or `.7z` files directly into the mod list.
+  </Tab>
+  
+  <Tab title="Import Button">
+    Click the **Add Mod** button and browse for mod files:
+    - `.fbmod` - Frosty mod format
+    - `.zip` - Compressed mod archive
+    - `.rar` - WinRAR archive
+    - `.7z` - 7-Zip archive
+  </Tab>
+  
+  <Tab title="Mod Folder">
+    Place `.fbmod` files in the `Mods/` directory and restart the manager.
+  </Tab>
+</Tabs>
+
+### Mod Information
+
+Click on a mod to view its details:
+
+- **Title & Version**: Mod name and version number
+- **Author**: Mod creator information
+- **Description**: What the mod does
+- **Category**: Mod type (Gameplay, Visual, Audio, etc.)
+- **Actions**: What resources the mod modifies
+- **Warnings**: Compatibility issues or conflicts
+
+<Note>
+Mods with warnings will still work but may have conflicts with other mods or be outdated.
+</Note>
+
+## Managing Mods
+
+### Enable/Disable Mods
+
+Click the checkbox next to each mod to enable or disable it:
+
+- **Checked**: Mod will be applied when launching the game
+- **Unchecked**: Mod is installed but inactive
+
+Changes take effect on the next game launch.
+
+### Load Order
+
+Mod order matters when multiple mods modify the same assets:
+
+<Steps>
+  <Step title="Understand Priority">
+    Mods at the bottom of the list override mods above them. The last mod wins in conflicts.
+  </Step>
+  
+  <Step title="Reorder Mods">
+    Use the **Up** and **Down** arrow buttons to change mod position:
+    - Move important mods lower in the list
+    - Move compatibility patches to the bottom
+  </Step>
+  
+  <Step title="Check Conflicts">
+    Click the **Mod Details** button to see resource conflicts between mods.
+  </Step>
+</Steps>
+
+### Mod Conflicts
+
+The manager shows conflict information with icons:
+
+- **Primary Action Icons**:
+  - 🔵 **Modify**: Changes existing resource
+  - 🟢 **Add**: Creates new resource
+  - 🟡 **Merge**: Merges with existing data
+  - 🔴 **Replace**: Completely replaces resource
+
+- **Secondary Action Icons**:
+  - ➕ **Add to Bundle**: Adds resource to additional bundles
+
+### Removing Mods
+
+<Steps>
+  <Step title="Select Mod">
+    Click the mod you want to remove.
+  </Step>
+  
+  <Step title="Remove">
+    Click the **Remove Mod** button (trash icon).
+  </Step>
+  
+  <Step title="Confirm">
+    Confirm the deletion. The mod file will be moved to the Recycle Bin.
+  </Step>
+</Steps>
+
+## Launching the Game
+
+### Apply Mods and Launch
+
+<Steps>
+  <Step title="Arrange Mods">
+    Ensure mods are enabled and in the correct order.
+  </Step>
+  
+  <Step title="Click Launch">
+    Click the **Launch** button. The manager will:
+    - Analyze mod compatibility
+    - Apply mods to game files
+    - Start the game with modifications
+  </Step>
+  
+  <Step title="Wait for Patching">
+    The first launch with a new mod configuration takes longer as it patches game files.
+  </Step>
+</Steps>
+
+### Launch Options
+
+Configure game launch settings:
+
+- **Additional Arguments**: Pass command-line arguments to the game
+- **Language**: Override game language
+- **Window Mode**: Borderless, Windowed, Fullscreen
+
+<Warning>
+Never modify game files manually while using Frosty Mod Manager. Always use the manager to apply and remove mods.
+</Warning>
+
+## Mod Data Management
+
+### Applied Mod Cache
+
+The manager caches applied mods for faster subsequent launches:
+
+```
+ModData/
+├── <GameProfile>/
+│   ├── patch/          # Patched game files
+│   ├── cache.db        # Mod application cache
+│   └── config.json     # Applied mod configuration
+```
+
+### Clearing Mod Data
+
+If you experience issues:
+
+<Steps>
+  <Step title="Open Mod Data Manager">
+    Go to `Tools > Manage Mod Data`.
+  </Step>
+  
+  <Step title="Select Profile">
+    Choose the game profile to clear.
+  </Step>
+  
+  <Step title="Clear Cache">
+    Click **Clear Mod Data**. This forces a full reapplication on next launch.
+  </Step>
+</Steps>
+
+## Collections
+
+Save and load mod configurations:
+
+### Creating Collections
+
+<Steps>
+  <Step title="Configure Mods">
+    Arrange your mods in the desired order with appropriate enable/disable states.
+  </Step>
+  
+  <Step title="Save Collection">
+    Click `File > Save Collection` and name your configuration.
+  </Step>
+  
+  <Step title="Load Anytime">
+    Use `File > Load Collection` to restore a saved mod setup.
+  </Step>
+</Steps>
+
+### Collection Files
+
+Collections (`.fbcollection`) store:
+
+- List of enabled mods
+- Mod load order
+- Launch options
+- Game profile
+
+<Note>
+Collections reference mods by filename. Ensure mod files haven't been renamed or moved.
+</Note>
+
+## Command Line Usage
+
+Launch games with mods from the command line:
+
+```bash
+FrostyModManager.exe -launch <ProfileName> [GameArguments]
+```
+
+### Examples
+
+```bash
+# Launch Battlefield 1 with mods
+FrostyModManager.exe -launch "Battlefield 1"
+
+# Launch with game arguments
+FrostyModManager.exe -launch "FIFA 20" -windowed -novid
+```
+
+## Advanced Features
+
+### Mod Profiles
+
+Create different configurations for different playstyles:
+
+1. **Multiplayer Safe**: Only visual/audio mods
+2. **Single Player**: Gameplay overhauls and cheats
+3. **Vanilla Plus**: Quality of life improvements
+4. **Testing**: Latest experimental mods
+
+### Pack Files
+
+Some games use pack files for organization:
+
+- View available packs in the pack selector
+- Select which packs to load
+- Mods can target specific packs
+
+### Compression Support
+
+The manager automatically extracts:
+
+- **ZIP**: Standard zip archives
+- **RAR**: WinRAR archives (requires UnRAR.dll)
+- **7Z**: 7-Zip archives (requires LZMA.dll)
+
+Archives should contain `.fbmod` files at the root or in a single subdirectory.
+
+## Troubleshooting
+
+### Mods Not Applying
+
+<Steps>
+  <Step title="Check Mod Format">
+    Ensure mods are `.fbmod` files created with compatible Frosty Editor version.
+  </Step>
+  
+  <Step title="Clear Mod Data">
+    Use `Tools > Manage Mod Data` to clear the cache.
+  </Step>
+  
+  <Step title="Verify Game Path">
+    Check that the game path in settings points to the correct game executable.
+  </Step>
+</Steps>
+
+### Game Crashes
+
+- Disable half of your mods and test
+- Use binary search to identify problematic mod
+- Check mod descriptions for known conflicts
+- Ensure mods are for the correct game version
+
+### Slow Launch Times
+
+- First launch with new mods is always slower
+- Reduce number of active mods
+- Use an SSD for game installation
+- Clear old mod data periodically
+
+### Install Errors Window
+
+If the install errors window appears:
+
+- Review the error messages for specific issues
+- Common errors:
+  - **Missing Dependencies**: Mod requires another mod
+  - **Outdated Mod**: Mod for older game version
+  - **Corrupted Archive**: Re-download the mod
+
+### Anti-Cheat Conflicts
+
+<Warning>
+Some games have anti-cheat systems (EAC, FairFight) that may conflict with mods. Only use mods in single-player or offline modes.
+</Warning>
+
+## Configuration Files
+
+Manager settings stored in:
+
+```
+%USERPROFILE%/Documents/Frosty/
+├── manager_config.json      # Manager preferences
+├── collections/             # Saved collections
+└── ModData/                 # Applied mod cache
+```
+
+### Manager Settings
+
+- **Default Profile**: Auto-load specific game on startup
+- **Mod Directory**: Custom location for mod files
+- **Update Checking**: Check for Frosty updates
+- **Launch Options**: Default game launch parameters
+
+## Best Practices
+
+### Mod Organization
+
+1. **Name Mods Clearly**: Use descriptive filenames
+2. **Version Control**: Keep track of mod versions
+3. **Test Incrementally**: Add mods one at a time
+4. **Backup Collections**: Save working configurations
+
+### Performance Optimization
+
+- Keep mod count reasonable (under 50 for best performance)
+- Disable unused mods instead of deleting
+- Clear mod data between major game updates
+- Use collections for different scenarios
+
+### Safety
+
+- **Backup Saves**: Game saves may become modded
+- **Offline Play**: Use mods in single-player
+- **Verify Files**: Use Steam/Origin verify if issues occur
+- **Update Carefully**: Test mods after game patches
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Create Mods" icon="pencil" href="/applications/editor">
+    Build your own mods with Frosty Editor
+  </Card>
+  <Card title="CLI Tool" icon="terminal" href="/applications/command-line">
+    Automate mod management tasks
+  </Card>
+</CardGroup>

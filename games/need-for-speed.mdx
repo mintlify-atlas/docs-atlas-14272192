@@ -1,0 +1,300 @@
+---
+title: Need for Speed Series
+description: Frosty Toolsuite support for Need for Speed games on Frostbite
+---
+
+Frosty Toolsuite provides comprehensive modding support for multiple Need for Speed titles running on EA's Frostbite engine.
+
+## Supported Titles
+
+<CardGroup cols={2}>
+  <Card title="Need for Speed: Rivals" icon="car">
+    Released: 2013
+    
+    Profile: `NFS14SDK.dll`
+  </Card>
+  
+  <Card title="Need for Speed (2015)" icon="car">
+    Released: 2015
+    
+    Profile: `NFS16SDK.dll`
+  </Card>
+  
+  <Card title="Need for Speed: Payback" icon="car">
+    Released: 2017
+    
+    Profile: `NFS17SDK.dll`
+  </Card>
+  
+  <Card title="Need for Speed: Heat" icon="car">
+    Released: 2019
+    
+    Profile: `NFSHEATSDK.dll`
+  </Card>
+  
+  <Card title="Need for Speed: Edge" icon="car">
+    Released: 2017
+    
+    Profile: `NFSEDGESDK.dll`
+  </Card>
+</CardGroup>
+
+## Game-Specific Features
+
+### Need for Speed: Rivals (2013)
+
+- Profile Version: `20131115`
+- One of the earliest Frostbite games supported
+- Profile size: ~3.1 MB
+- First NFS title on Frostbite 3 engine
+- Open-world Redview County environment
+
+**Technical Details:**
+- Legacy mesh format similar to Battlefield 4
+- Older asset structure
+- Basic texture compression
+
+### Need for Speed (2015)
+
+- Profile Version: `20151103`
+- Profile size: ~3.9 MB
+- Reboot of the franchise on Frostbite
+- Urban open-world Ventura Bay setting
+- Enhanced car customization system
+
+**Features:**
+- Improved vehicle models
+- Advanced material shaders for car paint
+- Extensive customization part assets
+- Night-focused lighting system
+
+### Need for Speed: Payback (2017)
+
+- Profile Version: `20171110`
+- Profile size: ~6.7 MB
+- Fortune Valley open world
+- Extensive car roster
+- Advanced customization options
+
+**Technical Details:**
+- Modern mesh format with enhanced vertex attributes
+- Special handling in mesh import/export
+- Improved texture streaming
+- Enhanced shader system for car materials
+
+<Note>
+  NFS Payback uses the same mesh structure as Star Wars Battlefront II and FIFA 18, requiring specific handling in the MeshSet plugin.
+</Note>
+
+### Need for Speed: Heat (2019)
+
+- Profile Version: `20191101`
+- Profile size: ~8.2 MB (largest NFS SDK)
+- Palm City open world
+- Day/night gameplay mechanics
+- Most comprehensive customization system
+
+**Advanced Features:**
+- Dual rendering modes for day and night
+- Enhanced vehicle damage system
+- Advanced livery editor assets
+- Improved environmental effects
+
+### Need for Speed: Edge (2017)
+
+- Profile Version: `20171210`
+- Profile size: ~4.0 MB
+- Special edition or region-specific variant
+- Unique asset configuration
+
+**Technical Notes:**
+- Requires special mesh handling (similar to Madden 20)
+- Custom asset loader configuration
+- Distinct profile characteristics
+
+## Modding Capabilities
+
+### Vehicle Customization
+
+<Accordion title="Car Models & Parts">
+  Popular vehicle modifications:
+  
+  - **Car Replacements**: Swap existing vehicles with new models
+  - **Body Kits**: Custom bumpers, spoilers, and aero parts
+  - **Wheels & Tires**: Import aftermarket wheel designs
+  - **Interior Details**: Modify cockpit elements
+  - **Performance Parts**: Visual representations of upgrades
+  
+  All NFS games support extensive vehicle asset modding.
+</Accordion>
+
+<Accordion title="Visual Enhancements">
+  Texture and appearance mods:
+  
+  - **Car Paint**: Custom colors and special finishes
+  - **Liveries**: Pre-made vinyl designs and wraps
+  - **Decals & Vinyls**: Custom graphics and sponsors
+  - **Light Textures**: Modified headlights and taillights
+  - **Brake Calipers**: Custom colors and branding
+  
+  Advanced shader support enables realistic material properties.
+</Accordion>
+
+<Accordion title="Environment & World">
+  Map and world modifications:
+  
+  - **Road Textures**: Enhanced asphalt and surfaces
+  - **Building Textures**: Urban environment improvements
+  - **Skybox**: Custom sky and weather visuals
+  - **Lighting**: Modified time-of-day appearance
+  - **Environmental Effects**: Particle effects and atmosphere
+</Accordion>
+
+<Accordion title="UI & Audio">
+  Interface and sound enhancements:
+  
+  - **Menu Graphics**: Custom UI elements
+  - **Garage Visuals**: Showroom modifications
+  - **Engine Sounds**: Vehicle audio replacements
+  - **Music Tracks**: Soundtrack additions
+  - **Radio Stations**: Custom audio content
+</Accordion>
+
+## Technical Considerations
+
+### Mesh Format Variations
+
+Need for Speed games use different mesh formats depending on the title:
+
+```
+NFS Rivals (2013): Legacy format, basic vertex structure
+NFS (2015): Transition format with improved attributes
+NFS Payback (2017): Modern format, special handling required
+NFS Heat (2019): Advanced format with enhanced features
+NFS Edge (2017): Custom format with unique requirements
+```
+
+### Asset Structure
+
+NFS games organize assets specifically for racing:
+
+- **Vehicle Bundles**: Modular car component system
+- **Part Libraries**: Categorized customization options
+- **Track Assets**: Separated route and environment data
+- **Shader Definitions**: Car paint and material specifications
+
+### Special Handling
+
+<Note>
+  Need for Speed: Edge and some mesh operations in NFS Payback require special handling in the MeshSet plugin. These games have unique vertex attribute configurations.
+  
+  Code reference: `source/Plugins/MeshSetPlugin/Resources/MeshSet.cs:1677`
+</Note>
+
+## Performance Optimization
+
+### LOD System
+
+Need for Speed games use aggressive LOD (Level of Detail) systems:
+
+- **High Detail**: Garage and close-up viewing
+- **Medium Detail**: Gameplay racing views
+- **Low Detail**: Distance rendering
+- **Traffic**: Simplified non-player vehicles
+
+When modding vehicles, maintain appropriate LOD levels for performance.
+
+### Texture Streaming
+
+Modern NFS titles use advanced texture streaming:
+
+- Mipmaps for different viewing distances
+- Compressed formats for memory efficiency
+- Dynamic loading based on camera position
+
+Ensure custom textures follow proper format specifications.
+
+## Known Issues & Quirks
+
+<Accordion title="NFS Edge Mesh Format">
+  NFS Edge requires special vertex attribute handling. When importing meshes, the MeshSet plugin applies Edge-specific transformations.
+  
+  This affects:
+  - Vertex position calculations
+  - Normal map orientations
+  - UV coordinate mapping
+</Accordion>
+
+<Accordion title="NFS Payback Compatibility">
+  NFS Payback shares mesh structure with:
+  - Star Wars Battlefront II
+  - FIFA 18
+  - Madden 19
+  - Anthem
+  
+  This enables some cross-game asset compatibility (with appropriate conversions).
+</Accordion>
+
+<Accordion title="Heat Day/Night Assets">
+  NFS Heat stores separate texture sets for day and night modes. When modding car appearances, you may need to modify both sets for consistent visuals.
+</Accordion>
+
+## DRM & Online Considerations
+
+<Warning>
+  Need for Speed games may include online features and DRM:
+  
+  - Some titles require online connection to launch
+  - Multiplayer modes may detect modified files
+  - Always backup original files before modding
+  - Use mods responsibly and respect EA's Terms of Service
+  - Mods may not work in online competitive modes
+</Warning>
+
+## Getting Started with NFS Modding
+
+1. **Preparation**
+   - Install Frosty Editor and Mod Manager
+   - Verify your Need for Speed game installation
+   - Backup game files
+
+2. **Launch Frosty Editor**
+   - Select your NFS game from the profile list
+   - Wait for asset database to build (5-15 minutes)
+   - Note: Larger games like Heat take longer to index
+
+3. **Explore Vehicle Assets**
+   - Navigate to vehicle bundles in Data Explorer
+   - Find car models, textures, and parts
+   - Use search functionality for specific vehicles
+
+4. **Modify and Test**
+   - Edit textures with Texture Editor plugin
+   - Modify meshes with MeshSet plugin
+   - Save changes as .fbmod files
+
+5. **Apply Mods**
+   - Load mods in Frosty Mod Manager
+   - Arrange load order if using multiple mods
+   - Launch game and test changes
+
+For detailed tutorials, see the [Getting Started](/installation) guide.
+
+## Community Resources
+
+The Need for Speed modding community is extensive:
+
+- Car addition and replacement projects
+- Performance pack mods
+- Visual enhancement overhauls
+- Sound replacement packs
+- Custom track and route modifications
+
+Popular mod types:
+- Real-world car imports
+- Enhanced customization options
+- Gameplay balancing
+- Graphics improvements
+- UI redesigns
+
+Check NFS modding forums and repositories for community content and support.

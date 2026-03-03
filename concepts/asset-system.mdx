@@ -1,0 +1,577 @@
+---
+title: Asset Management System
+description: Understanding EBX, RES, chunks, bundles, and how Frosty manages game assets
+---
+
+Frostbite games organize content into three primary asset types: **EBX** (entity data), **RES** (resources), and **Chunks** (binary data). These assets are packaged into bundles and managed by the AssetManager.
+
+## Asset Types
+
+<CardGroup cols={3}>
+  <Card title="EBX" icon="cube">
+    Entity/Object definitions
+  </Card>
+  <Card title="RES" icon="file-code">
+    Resources (textures, meshes, etc.)
+  </Card>
+  <Card title="Chunks" icon="database">
+    Raw binary data
+  </Card>
+</CardGroup>
+
+## EBX Assets (Entity Data)
+
+EBX files contain structured entity and object data using Frostbite's reflection system.
+
+**EbxAssetEntry Structure:**
+
+```csharp
+public class EbxAssetEntry : AssetEntry
+{
+    public Guid Guid;                      // Unique asset identifier
+    public List<Guid> DependentAssets;     // Dependencies
+    public override string AssetType => "ebx";
+    
+    public bool ContainsDependency(Guid guid)
+    {
+        return HasModifiedData 
+            ? ModifiedEntry.DependentAssets.Contains(guid) 
+            : DependentAssets.Contains(guid);
+    }
+}
+```
+From AssetManager.cs:353.
+
+### EBX File Format
+
+EBX files use a binary format with reflection metadata:
+
+<Tabs>
+  <Tab title="Header">
+    ```csharp
+    internal enum EbxVersion
+    {
+        Version2 = 0x0FB2D1CE,  // Older games
+        Version4 = 0x0FB4D1CE   // Newer games (2017+)
+    }
+    
+    // EBX header contains:
+    // - Magic number (version)
+    // - String offset table
+    // - Type descriptor array
+    // - Instance array
+    // - Pointer fixup data
+    ```
+    From EbxReader.cs:48.
+  </Tab>
+  <Tab title="Type Descriptors">
+    ```csharp
+    public struct EbxClass
+    {
+        public string Name;         // Type name
+        public uint NameHash;       // FNV1 hash
+        public int FieldIndex;      // First field index
+        public byte FieldCount;     // Number of fields
+        public byte Alignment;      // Memory alignment
+        public ushort Type;         // Type flags
+        public ushort Size;         // Instance size
+        public string Namespace;    // Type namespace
+    }
+    ```
+    From EbxReader.cs:66.
+  </Tab>
+  <Tab title="Fields">
+    ```csharp
+    public struct EbxField
+    {
+        public string Name;         // Field name
+        public uint NameHash;       // FNV1 hash
+        public ushort Type;         // Field type flags
+        public ushort ClassRef;     // Reference to type
+        public uint DataOffset;     // Offset in instance
+        public uint SecondOffset;   // Secondary offset (arrays)
+    }
+    ```
+    From EbxReader.cs:54.
+  </Tab>
+  <Tab title="Instances">
+    ```csharp
+    public struct EbxInstance
+    {
+        public ushort ClassRef;     // Index into class array
+        public ushort Count;        // Number of instances
+        public bool IsExported;     // Can be referenced externally
+    }
+    ```
+    Instances contain the actual object data laid out per type descriptors.
+  </Tab>
+</Tabs>
+
+### EBX Field Types
+
+```csharp
+public enum EbxFieldType : byte
+{
+    DbObject = 0x01,        // Complex object
+    Struct = 0x02,          // Value type struct
+    Pointer = 0x03,         // Reference to another object
+    Array = 0x04,           // Array of elements
+    String = 0x06,          // Wide string
+    CString = 0x07,         // Character string
+    Enum = 0x08,            // Enumeration
+    FileRef = 0x09,         // Reference to file
+    Boolean = 0x0A,         // Boolean value
+    Int8 = 0x0B,            // Signed 8-bit
+    UInt8 = 0x0C,           // Unsigned 8-bit
+    Int16 = 0x0D,           // Signed 16-bit
+    UInt16 = 0x0E,          // Unsigned 16-bit
+    Int32 = 0x0F,           // Signed 32-bit
+    UInt32 = 0x10,          // Unsigned 32-bit
+    Int64 = 0x12,           // Signed 64-bit
+    UInt64 = 0x11,          // Unsigned 64-bit
+    Float32 = 0x13,         // 32-bit float
+    Float64 = 0x14,         // 64-bit float
+    Guid = 0x15,            // GUID
+    Sha1 = 0x16,            // SHA1 hash
+    ResourceRef = 0x17,     // Resource reference
+    TypeRef = 0x19,         // Type reference
+    BoxedValueRef = 0x1A    // Boxed value
+}
+```
+From EbxReader.cs:18.
+
+### Reading EBX Assets
+
+```csharp
+public EbxAsset GetEbx(EbxAssetEntry entry)
+{
+    using (EbxReader reader = EbxReader.CreateReader(GetEbxStream(entry)))
+    {
+        return reader.ReadAsset();
+    }
+}
+
+// Example EBX structure
+public class BlueprintBundle : DataBusData
+{
+    public List<Blueprint> Blueprints { get; set; }
+    public CString Name { get; set; }
+    // Additional fields...
+}
+```
+
+<Info>
+EBX uses a sophisticated reflection system that allows runtime type discovery and manipulation without compile-time knowledge of game-specific types.
+</Info>
+
+## RES Assets (Resources)
+
+RES assets are typed binary resources like textures, meshes, and audio.
+
+**ResAssetEntry Structure:**
+
+```csharp
+public class ResAssetEntry : AssetEntry
+{
+    public override string Type => ((ResourceType)ResType).ToString();
+    public override string AssetType => "res";
+    
+    public ulong ResRid;        // Resource ID (unique)
+    public uint ResType;        // Resource type hash
+    public byte[] ResMeta;      // Resource metadata
+}
+```
+From AssetManager.cs:379.
+
+### Resource Types
+
+```csharp
+public enum ResourceType : uint
+{
+    Texture = 0x6BDE20BA,
+    MeshSet = 0x49B156D4,
+    AtlasTexture = 0x957C32B1,
+    ShaderProgramDatabase = 0x10F0E5A1,
+    SwfMovie = 0x2D47A5FF,
+    LocalizedStringResource = 0x5E862E05,
+    HavokPhysicsData = 0x91043F65,
+    SvgImage = 0x89983F10,
+    RawFileData = 0x3568E2B7,
+    // ... many more types
+    Invalid = 0xFFFFFFFF
+}
+```
+From AssetManager.cs:13. Each resource type has specific handling logic.
+
+### Resource Metadata
+
+RES assets have type-specific metadata:
+
+<Accordion title="Texture Metadata">
+  ```csharp
+  // Texture resource metadata contains:
+  // - Width, height
+  // - Pixel format (DXT1, DXT5, BC7, etc.)
+  // - Mip count
+  // - Texture type (2D, Cube, 3D)
+  // - Chunk GUID for pixel data
+  ```
+</Accordion>
+
+<Accordion title="Mesh Metadata">
+  ```csharp
+  // MeshSet metadata includes:
+  // - Vertex buffer layout
+  // - Index buffer format
+  // - LOD levels
+  // - Bounding boxes
+  // - Chunk GUIDs for geometry data
+  ```
+</Accordion>
+
+<Accordion title="Audio Metadata">
+  ```csharp
+  // Audio metadata contains:
+  // - Sample rate
+  // - Channel count
+  // - Codec information
+  // - Duration
+  // - Chunk GUID for audio data
+  ```
+</Accordion>
+
+### Adding Resources
+
+```csharp
+public ResAssetEntry AddRes(
+    string name, 
+    ResourceType resType, 
+    byte[] resMeta, 
+    byte[] buffer, 
+    params int[] bundles)
+{
+    ResAssetEntry entry = new ResAssetEntry
+    {
+        Name = name,
+        ResRid = Utils.GenerateResourceId(),
+        ResType = (uint)resType,
+        ResMeta = resMeta,
+        IsAdded = true,
+        IsDirty = true
+    };
+    
+    entry.ModifiedEntry = new ModifiedAssetEntry
+    {
+        Data = Utils.CompressFile(buffer),
+        OriginalSize = buffer.Length,
+        ResMeta = entry.ResMeta
+    };
+    
+    entry.ModifiedEntry.Sha1 = GenerateSha1(entry.ModifiedEntry.Data);
+    entry.AddedBundles.AddRange(bundles);
+    
+    resList.Add(entry.Name, entry);
+    resRidList.Add(entry.ResRid, entry);
+    
+    return entry;
+}
+```
+From AssetManager.cs:1049.
+
+## Chunks (Binary Data)
+
+Chunks store large binary blobs referenced by resources.
+
+**ChunkAssetEntry Structure:**
+
+```csharp
+public class ChunkAssetEntry : AssetEntry
+{
+    public override string Name => Id.ToString();
+    public override string Type => "Chunk";
+    public override string AssetType => "chunk";
+    
+    public Guid Id;                 // Chunk identifier
+    public uint BundledSize;        // Compressed size in bundle
+    public uint LogicalOffset;      // Offset for streaming
+    public uint LogicalSize;        // Logical size
+    public uint RangeStart;         // Range start (textures)
+    public uint RangeEnd;           // Range end (textures)
+    public int H32;                 // FNV1 hash of parent
+    public int FirstMip;            // First mipmap level
+    public bool IsTocChunk;         // Is in TOC chunk list
+}
+```
+From AssetManager.cs:394.
+
+### Chunk Usage
+
+Chunks are primarily used for:
+
+<CardGroup cols={2}>
+  <Card title="Texture Data" icon="image">
+    Pixel data for all mip levels
+  </Card>
+  <Card title="Mesh Data" icon="cube">
+    Vertex and index buffers
+  </Card>
+  <Card title="Audio Data" icon="volume">
+    Compressed audio samples
+  </Card>
+  <Card title="Physics Data" icon="arrows-to-circle">
+    Havok physics meshes
+  </Card>
+</CardGroup>
+
+### Adding Chunks
+
+```csharp
+public Guid AddChunk(
+    byte[] buffer, 
+    Guid? overrideGuid = null, 
+    Texture texture = null, 
+    params int[] bundles)
+{
+    ChunkAssetEntry entry = new ChunkAssetEntry 
+    { 
+        IsAdded = true, 
+        IsDirty = true 
+    };
+    
+    // Compress with appropriate algorithm
+    CompressionType compressType = 
+        (ProfilesLibrary.DataVersion == (int)ProfileVersion.Fifa18) 
+            ? CompressionType.Oodle 
+            : CompressionType.Default;
+    
+    entry.ModifiedEntry = new ModifiedAssetEntry
+    {
+        Data = (texture != null) 
+            ? Utils.CompressTexture(buffer, texture, compressType)
+            : Utils.CompressFile(buffer, compressionOverride: compressType),
+        LogicalSize = (uint)buffer.Length,
+        FirstMip = -1
+    };
+    
+    if (texture != null)
+    {
+        entry.ModifiedEntry.LogicalOffset = texture.LogicalOffset;
+        entry.ModifiedEntry.RangeStart = texture.RangeStart;
+        entry.ModifiedEntry.RangeEnd = texture.RangeEnd;
+        entry.ModifiedEntry.FirstMip = texture.FirstMip;
+    }
+    
+    // Generate GUID
+    byte[] guidBuf = Guid.NewGuid().ToByteArray();
+    guidBuf[15] |= 1;  // Mark as chunk GUID
+    entry.Id = overrideGuid ?? new Guid(guidBuf);
+    
+    chunkList.Add(entry.Id, entry);
+    return entry.Id;
+}
+```
+From AssetManager.cs:1089.
+
+<Warning>
+Chunk GUIDs have specific bit patterns - the LSB of the last byte is set to 1 for chunks. Don't generate random GUIDs without this marker.
+</Warning>
+
+## Bundles
+
+Bundles group related assets together.
+
+**BundleEntry Structure:**
+
+```csharp
+public class BundleEntry
+{
+    public string Name;                 // Bundle name
+    public int SuperBundleId;           // Parent superbundle
+    public EbxAssetEntry Blueprint;     // Blueprint asset (if any)
+    public BundleType Type;             // Bundle type
+    public bool Added;                  // User-added bundle
+}
+
+public enum BundleType
+{
+    None = -1,
+    SubLevel,               // Contains level data
+    BlueprintBundle,        // Contains blueprint definitions
+    SharedBundle            // Shared resources
+}
+```
+From AssetManager.cs:100 and 114.
+
+### Bundle Organization
+
+Assets maintain bundle membership:
+
+```csharp
+public class AssetEntry
+{
+    public List<int> Bundles = new List<int>();         // Original bundles
+    public List<int> AddedBundles = new List<int>();    // User-added
+    public List<int> RemBundles = new List<int>();      // Removed bundles
+    
+    public bool IsInBundle(int bid) => 
+        Bundles.Contains(bid) || AddedBundles.Contains(bid);
+    
+    public IEnumerable<int> EnumerateBundles(bool addedOnly = false)
+    {
+        if (!addedOnly)
+        {
+            for (int i = 0; i < Bundles.Count; i++)
+            {
+                if (!RemBundles.Contains(Bundles[i]))
+                    yield return Bundles[i];
+            }
+        }
+        
+        for (int i = 0; i < AddedBundles.Count; i++)
+            yield return AddedBundles[i];
+    }
+}
+```
+From AssetManager.cs:168.
+
+## Asset Linking
+
+Assets can be linked to track dependencies:
+
+```csharp
+public void LinkAsset(AssetEntry assetToLink)
+{
+    if (!LinkedAssets.Contains(assetToLink))
+        LinkedAssets.Add(assetToLink);
+    
+    // Store parent reference in chunk
+    if (assetToLink is ChunkAssetEntry entry)
+    {
+        if (entry.HasModifiedData)
+        {
+            entry.ModifiedEntry.H32 = Fnv1.HashString(Name.ToLower());
+        }
+        else
+        {
+            entry.H32 = Fnv1.HashString(Name.ToLower());
+        }
+    }
+}
+```
+From AssetManager.cs:244.
+
+**Common Linking Patterns:**
+
+<Steps>
+  <Step title="Texture → Chunk">
+    TextureAsset (RES) links to texture data chunk
+  </Step>
+  <Step title="Mesh → Multiple Chunks">
+    MeshSet (RES) links to vertex buffer, index buffer, and optional LOD chunks
+  </Step>
+  <Step title="Blueprint → EBX">
+    BlueprintBundle (EBX) references contained blueprint assets
+  </Step>
+</Steps>
+
+## Asset Data Locations
+
+```csharp
+public enum AssetDataLocation
+{
+    Cas,            // In catalog CAS archive
+    SuperBundle,    // In binary superbundle
+    Cache,          // In Frosty cache (patched data)
+    CasNonIndexed   // In CAS but via manifest
+}
+
+public class AssetExtraData
+{
+    public Sha1 BaseSha1;           // Base asset hash
+    public Sha1 DeltaSha1;          // Delta hash (patches)
+    public long DataOffset;         // Offset in file
+    public int SuperBundleId;       // Superbundle reference
+    public bool IsPatch;            // Is patched data
+    public string CasPath;          // Path to CAS file
+}
+```
+From AssetManager.cs:92 and 125.
+
+## Modification Workflow
+
+<Steps>
+  <Step title="Load Asset">
+    ```csharp
+    EbxAssetEntry entry = App.AssetManager.GetEbxEntry("path/to/asset");
+    EbxAsset asset = App.AssetManager.GetEbx(entry);
+    ```
+  </Step>
+  <Step title="Modify Data">
+    ```csharp
+    dynamic rootObject = asset.RootObject;
+    rootObject.SomeProperty = newValue;
+    asset.Update();  // Update internal dependencies
+    ```
+  </Step>
+  <Step title="Save Changes">
+    ```csharp
+    App.AssetManager.ModifyEbx(entry.Name, asset);
+    entry.IsDirty = true;
+    ```
+  </Step>
+  <Step title="Persist to Project">
+    ```csharp
+    FrostyProject project = new FrostyProject();
+    project.Save("MyMod.fbproject");
+    ```
+  </Step>
+</Steps>
+
+## Enumeration and Filtering
+
+```csharp
+// Get all textures
+foreach (ResAssetEntry entry in App.AssetManager.EnumerateRes())
+{
+    if (entry.ResType == (uint)ResourceType.Texture)
+    {
+        // Process texture...
+    }
+}
+
+// Get modified EBX of specific type
+foreach (EbxAssetEntry entry in 
+    App.AssetManager.EnumerateEbx("MeshAsset", modifiedOnly: true))
+{
+    // Process modified meshes...
+}
+
+// Get assets in specific bundle
+BundleEntry bundle = App.AssetManager.GetBundle(bundleId);
+foreach (EbxAssetEntry entry in App.AssetManager.EnumerateEbx(bundle))
+{
+    // Process bundle assets...
+}
+```
+
+## Performance Considerations
+
+<Note>
+**Best Practices:**
+- Use GUID lookups for EBX assets (O(1) vs O(n) for name search)
+- Cache frequently accessed assets
+- Batch modifications before saving
+- Use `modifiedOnly` flags when enumerating to reduce iteration
+- Link chunks to parent assets for proper dependency tracking
+</Note>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Architecture" href="/concepts/architecture" icon="sitemap">
+    Understand how AssetManager fits in the overall architecture
+  </Card>
+  <Card title="Plugin System" href="/concepts/plugin-system" icon="puzzle-piece">
+    Create plugins to handle custom asset types
+  </Card>
+</CardGroup>

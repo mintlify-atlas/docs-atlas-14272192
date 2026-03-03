@@ -1,0 +1,507 @@
+---
+title: "Mod Installation"
+description: "Install and manage mods using Frosty Mod Manager"
+---
+
+## Overview
+
+Frosty Mod Manager handles installing, applying, and launching games with mods. It manages mod load order, resolves conflicts, and applies modifications to game files.
+
+<Note>
+Mods created with Frosty Editor are packaged as `.fbmod` files and can only be installed with Frosty Mod Manager.
+</Note>
+
+## Installing Frosty Mod Manager
+
+<Steps>
+  <Step title="Download Mod Manager">
+    1. Get Frosty Mod Manager from the official source
+    2. Extract to a folder on your system
+    3. Run `FrostyModManager.exe`
+  </Step>
+  
+  <Step title="Select Game">
+    On first launch:
+    1. Select your game from the dropdown
+    2. Mod Manager will detect the game installation path
+    3. If not found, manually browse to the game folder
+    4. Click **Continue**
+  </Step>
+  
+  <Step title="Initialize Cache">
+    Mod Manager needs to build a cache:
+    1. Wait for cache initialization (first time only)
+    2. This reads all game assets and creates index
+    3. May take several minutes depending on game size
+    4. Progress bar shows current status
+  </Step>
+</Steps>
+
+<Tip>
+The cache file is saved in `%LOCALAPPDATA%\Frosty\` and persists between sessions. It only needs to rebuild if the game updates.
+</Tip>
+
+## Adding Mods
+
+### Import Mods
+
+<Steps>
+  <Step title="Add Mod Files">
+    Multiple ways to add mods:
+    
+    **Option 1: Import Button**
+    1. Click **Import Mod** in the toolbar
+    2. Browse to your `.fbmod` file
+    3. Select and click **Open**
+    
+    **Option 2: Drag and Drop**
+    1. Drag `.fbmod` file from Explorer
+    2. Drop onto Mod Manager window
+    3. Mod is automatically imported
+    
+    **Option 3: Mods Folder**
+    1. Place `.fbmod` in the Mods folder
+    2. Default: `Documents\Frosty\[GameName]\Mods\`
+    3. Restart Mod Manager to detect
+  </Step>
+  
+  <Step title="View Mod Details">
+    Click on a mod to see:
+    - **Title and Author**: Mod metadata
+    - **Version**: Current version number
+    - **Description**: What the mod does
+    - **Category**: Mod type
+    - **Screenshots**: Preview images
+    - **Modified Assets**: List of changed files
+  </Step>
+</Steps>
+
+### Enable/Disable Mods
+
+<Tabs>
+  <Tab title="Individual Mods">
+    Toggle mods on/off:
+    1. Check the box next to a mod to enable
+    2. Uncheck to disable
+    3. Disabled mods stay in list but don't apply
+  </Tab>
+  
+  <Tab title="Bulk Operations">
+    Manage multiple mods:
+    - **Enable All**: Check all mods at once
+    - **Disable All**: Uncheck all mods
+    - **Select by Category**: Filter and enable groups
+  </Tab>
+</Tabs>
+
+## Mod Load Order
+
+Mods are applied in order from top to bottom. Later mods override earlier ones if they modify the same assets.
+
+### Organizing Load Order
+
+<Steps>
+  <Step title="Reorder Mods">
+    Drag and drop mods to change priority:
+    1. Click and hold a mod
+    2. Drag up or down in the list
+    3. Release to set new position
+    
+    **Load order affects:**
+    - Which mod's changes take priority
+    - Texture/mesh replacements
+    - EBX property values
+  </Step>
+  
+  <Step title="Load Order Strategy">
+    Recommended ordering:
+    
+    ```
+    1. Base/Framework Mods (first)
+    2. Large Content Mods
+    3. Gameplay Tweaks
+    4. Visual/Texture Mods
+    5. Small Tweaks/Patches (last)
+    ```
+    
+    Later mods override earlier ones for conflicts.
+  </Step>
+</Steps>
+
+<Warning>
+Incorrect load order can cause:
+- Mods not working as intended
+- Visual glitches
+- Game instability
+- Asset conflicts
+</Warning>
+
+### Handling Conflicts
+
+<AccordionGroup>
+  <Accordion title="Detecting Conflicts">
+    Mod Manager shows conflicts:
+    - **Yellow Warning**: Same asset modified by multiple mods
+    - **Red Error**: Incompatible modifications
+    - **Details Panel**: Lists conflicting mods
+    
+    Click on warnings to see which mods conflict.
+  </Accordion>
+  
+  <Accordion title="Resolving Conflicts">
+    Options to fix conflicts:
+    
+    1. **Reorder Mods**: Change priority
+    2. **Disable One Mod**: Choose which to keep
+    3. **Merge Mods**: Some mods can be merged (advanced)
+    4. **Contact Authors**: Request compatibility patch
+  </Accordion>
+  
+  <Accordion title="Compatible Conflicts">
+    Not all conflicts are bad:
+    - Intentional overrides (texture packs)
+    - Complementary modifications
+    - Patches designed to override
+    
+    Read mod descriptions for compatibility notes.
+  </Accordion>
+</AccordionGroup>
+
+## Applying Mods
+
+Mods must be applied before launching the game.
+
+<Steps>
+  <Step title="Apply Mods">
+    Click the **Apply Mods** button:
+    
+    The mod executor:
+    1. Reads all enabled mods
+    2. Merges modifications by load order
+    3. Creates modified game files in `ModData` folder
+    4. Generates bundle patches
+    5. Writes CAS archives
+    6. Creates symbolic links
+    
+    Progress shows:
+    - Current operation
+    - Percentage complete
+    - Estimated time remaining
+  </Step>
+  
+  <Step title="Applying Process">
+    What happens during apply:
+    
+    **Loading Mods:**
+    - Reads `.fbmod` files
+    - Validates mod format and version
+    - Loads resource archives
+    
+    **Processing Resources:**
+    - Merges EBX modifications
+    - Combines RES changes
+    - Handles chunk data
+    - Processes bundle actions
+    
+    **Writing ModData:**
+    - Creates modified CAS files
+    - Generates superbundle patches
+    - Updates catalog entries
+    - Creates bundle layouts
+  </Step>
+  
+  <Step title="Completion">
+    When applying finishes:
+    - "Mods Applied" message shows
+    - **Launch** button becomes available
+    - ModData folder contains all changes
+    - Game is ready to launch
+  </Step>
+</Steps>
+
+<Tip>
+Applying mods can take several minutes for large mod packs. The time depends on:
+- Number of enabled mods
+- Total modified assets
+- System performance
+</Tip>
+
+## Launching the Game
+
+### Standard Launch
+
+<Steps>
+  <Step title="Launch with Mods">
+    After applying mods:
+    1. Click **Launch** button
+    2. Game launches with mods active
+    3. Mod Manager can stay open or minimize
+  </Step>
+  
+  <Step title="Additional Arguments">
+    Configure launch options:
+    - **Command Line Args**: Add game parameters
+    - **DX11/DX12**: Graphics API selection
+    - **Windowed Mode**: Launch in window
+    - **Resolution**: Set custom resolution
+  </Step>
+</Steps>
+
+### Launch Process
+
+<AccordionGroup>
+  <Accordion title="ModData Folder">
+    Mods are stored in a ModData folder:
+    ```
+    GameDir/ModData/[ModPackName]/
+    ├─ Patch/ (or Data/)
+    │   ├─ cas_*.cas
+    │   ├─ *.toc
+    │   ├─ *.sb
+    │   └─ mods.json
+    └─ SymLinks/
+    ```
+    
+    Game-specific paths:
+    - **Most Games**: `Patch/`
+    - **BFN/BFV**: `Data/`
+    - **Older Games**: `Update/Patch/Data/`
+  </Accordion>
+  
+  <Accordion title="Symbolic Links">
+    Mod Manager creates symlinks:
+    - Links ModData to game directory
+    - Makes mods visible to game
+    - Preserves original files
+    - Easy to remove by deleting ModData
+    
+    **Requires Administrator:**
+    Symlink creation needs admin privileges on first run.
+  </Accordion>
+  
+  <Accordion title="Mod Pack Tracking">
+    `mods.json` tracks applied mods:
+    ```json
+    [
+      {
+        "name": "Enhanced Graphics",
+        "version": "1.0",
+        "category": "Graphics",
+        "file_name": "enhanced-graphics.fbmod"
+      }
+    ]
+    ```
+    
+    Used to detect if mods need reapplying.
+  </Accordion>
+</AccordionGroup>
+
+## Managing ModData
+
+### When to Reapply Mods
+
+Mods need reapplying when:
+
+<Tabs>
+  <Tab title="Mod Changes">
+    Reapply if you:
+    - Add new mods
+    - Remove mods
+    - Change load order
+    - Update existing mods
+    - Enable/disable mods
+  </Tab>
+  
+  <Tab title="Game Updates">
+    Game patches require:
+    - Delete ModData folder
+    - Let game patch normally
+    - Reapply mods after patch
+    - Rebuild cache if needed
+    
+    <Warning>
+    Always remove mods before updating the game to avoid corruption.
+    </Warning>
+  </Tab>
+  
+  <Tab title="Auto-Detection">
+    Mod Manager detects:
+    - Modified mod list
+    - Changed load order
+    - Game version changes
+    - Missing ModData
+    
+    Prompts to reapply when needed.
+  </Tab>
+</Tabs>
+
+### Cleaning ModData
+
+<Steps>
+  <Step title="Remove ModData">
+    To remove all mods:
+    1. Close the game
+    2. In Mod Manager, click **Clear ModData**
+    3. Or manually delete `ModData` folder in game directory
+    4. Game returns to vanilla state
+  </Step>
+  
+  <Step title="Verify Game Files">
+    If issues occur:
+    1. Remove ModData
+    2. Use game launcher to verify files
+    3. Rebuild Frosty cache
+    4. Reapply mods
+  </Step>
+</Steps>
+
+## Advanced Features
+
+### Profile Management
+
+<AccordionGroup>
+  <Accordion title="Mod Profiles">
+    Save different mod configurations:
+    1. **Create Profile**: Save current mod list and order
+    2. **Load Profile**: Switch between setups
+    3. **Rename Profile**: Organize by purpose
+    4. **Delete Profile**: Remove unused profiles
+    
+    Use cases:
+    - Different playstyles
+    - Testing configurations
+    - Vanilla vs modded
+  </Accordion>
+  
+  <Accordion title="Mod Packs">
+    Bundle multiple mods:
+    - Group related mods
+    - Share configurations
+    - Quick enable/disable sets
+    - Simplified mod management
+  </Accordion>
+</AccordionGroup>
+
+### Bundle Whitelisting
+
+Optimize performance by limiting modified bundles:
+
+```csharp
+// Only modify specific bundles
+App.WhitelistedBundles.Add(bundleHash);
+
+// Chunks bundle always included
+App.WhitelistedBundles.Add(chunksBundleHash);
+```
+
+Benefits:
+- Faster mod application
+- Reduced ModData size
+- Better game performance
+
+### Custom Mod Actions
+
+Some mods include custom execution actions:
+
+<Tabs>
+  <Tab title="Standard Actions">
+    Built-in bundle operations:
+    - **Add**: Insert assets into bundles
+    - **Modify**: Change existing assets
+    - **Remove**: Delete assets from bundles
+  </Tab>
+  
+  <Tab title="Legacy Actions">
+    Backwards compatible with old formats:
+    - Converted automatically
+    - Transparent to user
+    - No special handling needed
+  </Tab>
+  
+  <Tab title="Custom Handlers">
+    Plugin-defined actions:
+    - Game-specific modifications
+    - Complex merge operations
+    - Specialized asset handling
+  </Tab>
+</Tabs>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Game Won't Launch">
+    If game fails to start:
+    1. Check ModData was created successfully
+    2. Verify no antivirus blocking
+    3. Run Mod Manager as administrator
+    4. Check game is closed before applying
+    5. Try launching game directly first (vanilla)
+  </Accordion>
+  
+  <Accordion title="Mods Not Working">
+    If mods don't appear in game:
+    1. Verify mods were applied (check ModData)
+    2. Check load order for conflicts
+    3. Ensure mods are for correct game version
+    4. Look for error messages during apply
+    5. Try disabling other mods to isolate issue
+  </Accordion>
+  
+  <Accordion title="Apply Process Fails">
+    If applying mods errors:
+    1. Check console output for specific error
+    2. Verify mod files aren't corrupted
+    3. Ensure enough disk space
+    4. Try removing recently added mods
+    5. Rebuild cache if needed
+  </Accordion>
+  
+  <Accordion title="Performance Issues">
+    If game runs poorly with mods:
+    1. Check total mod size (large texture mods impact FPS)
+    2. Disable mods one by one to find culprit
+    3. Reduce graphics settings
+    4. Close background applications
+    5. Monitor VRAM usage
+  </Accordion>
+  
+  <Accordion title="Crash on Startup">
+    If game crashes immediately:
+    1. Remove ModData
+    2. Test vanilla game
+    3. If vanilla works, mods are incompatible
+    4. Check mod descriptions for requirements
+    5. Test mods individually to find problem
+  </Accordion>
+</AccordionGroup>
+
+## Safety and Best Practices
+
+<Warning>
+**Important Safety Tips:**
+- Always backup saves before modding
+- Remove mods before game updates
+- Don't use mods in multiplayer (may cause bans)
+- Verify mod sources are trustworthy
+- Keep original game files intact
+</Warning>
+
+<Tip>
+**Performance Tips:**
+- Limit number of enabled mods
+- Avoid conflicting texture mods
+- Use compressed texture formats (BC)
+- Close Mod Manager after launching
+- Reapply mods only when necessary
+</Tip>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Create Mods" icon="hammer" href="/modding/creating-mods">
+    Learn how to create your own mods with Frosty Editor
+  </Card>
+  <Card title="Best Practices" icon="clipboard-check" href="/modding/best-practices">
+    Follow best practices for a smooth modding experience
+  </Card>
+</CardGroup>

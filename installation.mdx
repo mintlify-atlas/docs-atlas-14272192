@@ -1,0 +1,332 @@
+---
+title: Installation
+description: How to download, install, and set up Frosty Toolsuite for modding Frostbite engine games
+---
+
+## System Requirements
+
+Before installing Frosty Toolsuite, ensure your system meets these requirements:
+
+<CardGroup cols={2}>
+  <Card title="Operating System" icon="windows">
+    - Windows 7 or later (64-bit)
+    - Windows 10/11 recommended
+  </Card>
+  <Card title="Software Dependencies" icon="gear">
+    - .NET Framework 4.7.2 or later
+    - Visual C++ Redistributable 2019
+    - DirectX 11 compatible graphics
+  </Card>
+  <Card title="Development Setup" icon="code">
+    - Visual Studio 2019 (for building from source)
+    - Git for Windows
+  </Card>
+  <Card title="Storage" icon="hard-drive">
+    - At least 500MB free space
+    - Additional space for game cache files
+  </Card>
+</CardGroup>
+
+## Installation Methods
+
+<Tabs>
+  <Tab title="Download Release (Recommended)">
+    
+### Step 1: Download the Latest Release
+
+Download the latest version of Frosty Toolsuite from the official GitHub releases page:
+
+<Card title="Download Frosty v1.0.6.3" icon="download" href="https://github.com/CadeEvs/FrostyToolsuite/releases">
+  Get the latest stable release
+</Card>
+
+<Steps>
+  <Step title="Download the ZIP file">
+    Download `FrostyToolsuite_v1.0.6.3.zip` from the releases page.
+  </Step>
+  
+  <Step title="Extract to a folder">
+    Extract the ZIP file to a permanent location on your computer (e.g., `C:\FrostyToolsuite`).
+    
+    <Warning>
+      Do not extract to temporary folders or your Downloads folder. Frosty stores configuration and cache files relative to its location.
+    </Warning>
+  </Step>
+  
+  <Step title="Unblock DLL files">
+    Windows may block downloaded DLL files for security. Frosty will automatically unblock all third-party DLLs on first launch.
+    
+    You can verify files were unblocked by checking the file properties:
+    - Right-click a `.dll` file → Properties
+    - If you see "Unblock" checkbox at the bottom, the auto-unblock worked
+  </Step>
+  
+  <Step title="Launch FrostyEditor or FrostyModManager">
+    Double-click `FrostyEditor.exe` to start creating mods, or `FrostyModManager.exe` to install existing mods.
+  </Step>
+</Steps>
+
+  </Tab>
+  
+  <Tab title="Build from Source">
+
+### Building from Source
+
+For developers who want to contribute or customize Frosty, you can build from source:
+
+<Steps>
+  <Step title="Install Git for Windows">
+    Download and install Git from [https://git-scm.com/download/win](https://git-scm.com/download/win).
+  </Step>
+  
+  <Step title="Clone the repository">
+    Create an empty folder, right-click inside it, and select "Git Bash Here". Then run:
+    
+    ```bash
+    git clone -b 1.0.6 https://github.com/CadeEvs/FrostyToolsuite.git .
+    ```
+    
+    <Note>
+      The `-b 1.0.6` flag checks out the stable 1.0.6 branch. Omit it to get the latest development version.
+    </Note>
+  </Step>
+  
+  <Step title="Open in Visual Studio 2019">
+    Open `FrostyEditor/FrostyEditor.sln` in Visual Studio 2019 or later.
+    
+    <Warning>
+      Visual Studio 2022 may work but is not officially supported. VS 2019 is recommended.
+    </Warning>
+  </Step>
+  
+  <Step title="Configure build settings">
+    Set the build configuration:
+    - Configuration: `DeveloperDebug`
+    - Platform: `x64`
+    
+    If prompted with a retarget window, close it without making changes.
+  </Step>
+  
+  <Step title="Build individual projects">
+    **Important:** Build projects individually, never the entire solution.
+    
+    Right-click each project in Solution Explorer and select "Build":
+    1. FrostySdk
+    2. FrostyControls
+    3. FrostyPlugin
+    4. FrostyEditor
+    5. FrostyModManager
+    6. FrostyCmd
+    
+    <Note>
+      Building the entire solution at once can cause dependency resolution issues.
+    </Note>
+  </Step>
+  
+  <Step title="Run from Visual Studio">
+    Press F5 or click "Start Debugging" to launch FrostyEditor.
+  </Step>
+</Steps>
+
+### Build Configuration Options
+
+**DeveloperDebug** - Debug build with developer features enabled
+
+**Release** - Optimized release build
+
+**x64** - 64-bit build (required)
+
+  </Tab>
+</Tabs>
+
+## First Launch Setup
+
+When you first launch Frosty, you'll need to configure it for your games:
+
+<Steps>
+  <Step title="Profile selection window">
+    On first launch, FrostyEditor will show the profile selection window.
+    
+    <Note>
+      A "profile" is Frosty's term for a specific game. Each game has its own profile with custom settings.
+    </Note>
+  </Step>
+  
+  <Step title="Scan for games">
+    Click **"Scan for Games"** to automatically detect installed Frostbite games on your system.
+    
+    Frosty will search common installation locations:
+    - Origin/EA Desktop default paths
+    - Steam library folders
+    - Epic Games Store locations
+  </Step>
+  
+  <Step title="Manual game selection">
+    If automatic detection doesn't find your game:
+    1. Select the game profile from the list
+    2. Click "Browse" to locate the game executable
+    3. Navigate to your game's installation folder
+    4. Select the game's `.exe` file
+  </Step>
+  
+  <Step title="Cache generation">
+    After selecting a game, Frosty will generate cache files:
+    - **Type Info Cache** - Loads the game's type system
+    - **Asset Cache** - Indexes all game assets
+    - **MeshVariation Cache** - Loads mesh variation data (if applicable)
+    
+    <Warning>
+      Cache generation can take several minutes for large games. This only happens once per game version.
+    </Warning>
+  </Step>
+  
+  <Step title="Ready to mod">
+    Once caching completes, you can start creating or loading projects.
+  </Step>
+</Steps>
+
+## Configuration Files
+
+Frosty stores configuration in your AppData folder for global access between builds:
+
+```
+%APPDATA%/Local/Frosty/
+├── FrostyEditor.json       # Editor settings
+├── FrostyModManager.json   # Mod Manager settings
+└── Cache/                  # Generated cache files
+    ├── <GameProfile>/
+    │   ├── TypeInfo.cache
+    │   ├── Assets.cache
+    │   └── MeshVariations.cache
+```
+
+<Note>
+  Configuration files use JSON format (since v1.0.6). Legacy INI configs are automatically migrated.
+</Note>
+
+## Verifying Installation
+
+<AccordionGroup>
+  <Accordion title="Check installed components" icon="list-check">
+    Your Frosty installation should contain:
+    
+    - `FrostyEditor.exe` - Main editor application
+    - `FrostyModManager.exe` - Mod manager application
+    - `FrostyCmd.exe` - Command-line tool
+    - `FrostySdk.dll` - Core SDK library
+    - `Plugins/` - Plugin DLLs (MeshSetPlugin, TexturePlugin, etc.)
+    - `ThirdParty/` - Third-party libraries
+    - `Shaders/` - Rendering shaders
+  </Accordion>
+  
+  <Accordion title="Test with a simple project" icon="vial">
+    To verify everything works:
+    
+    1. Launch FrostyEditor
+    2. Select a game profile
+    3. Wait for cache generation
+    4. Create a new project (File → New Project)
+    5. Browse the Data Explorer
+    
+    If you can see the asset tree, installation was successful!
+  </Accordion>
+  
+  <Accordion title="Troubleshooting common issues" icon="wrench">
+    **Issue: "Missing DLL" errors**
+    - Install Visual C++ Redistributable 2019
+    - Ensure all files were extracted from the ZIP
+    
+    **Issue: "Failed to load game data"**
+    - Verify game executable path is correct
+    - Check game is not running
+    - Delete cache files and regenerate
+    
+    **Issue: Editor crashes on startup**
+    - Update graphics drivers
+    - Install .NET Framework 4.7.2 or later
+    - Run as Administrator (if on restricted system)
+    
+    **Issue: Plugins not loading**
+    - Ensure `Plugins/` folder exists
+    - Check DLL files are unblocked
+    - Review FrostyEditor log file
+  </Accordion>
+</AccordionGroup>
+
+## Platform Support
+
+Frosty supports launching games from multiple platforms:
+
+<CardGroup cols={3}>
+  <Card title="EA Desktop" icon="gamepad">
+    Native support for EA's game launcher
+  </Card>
+  <Card title="Steam" icon="steam">
+    Launch Steam games with mods enabled
+  </Card>
+  <Card title="Epic Games" icon="epic">
+    Support for Epic Games Store titles
+  </Card>
+</CardGroup>
+
+<Note>
+  Platform launching is handled through the LaunchPlatformPlugin. You can configure launch options in the Mod Manager settings.
+</Note>
+
+## SDK Files
+
+Each game profile includes an SDK file that defines the game's type system:
+
+- `AnthemSDK.dll`
+- `BF1SDK.dll`, `BF4SDK.dll`, `BFHSDK.dll`, `BFVSDK.dll`
+- `FIFA17SDK.dll`, `FIFA18SDK.dll`, `FIFA19SDK.dll`, `FIFA20SDK.dll`
+- `StarWarsSDK.dll`, `StarWarsIISDK.dll`, `SWSSDK.dll`
+- `DragonAgeSDK.dll`, `MassEffectSDK.dll`
+- And many more...
+
+<Warning>
+  SDK files are specific to game versions. After a game update, you may need to regenerate the SDK using FrostyCmd.
+</Warning>
+
+## Updating Frosty
+
+To update to a new version:
+
+<Steps>
+  <Step title="Backup your projects">
+    Before updating, backup your `.fbproject` files to prevent data loss.
+  </Step>
+  
+  <Step title="Download new version">
+    Download the latest release from GitHub.
+  </Step>
+  
+  <Step title="Extract to new folder">
+    Extract to a new folder or overwrite your existing installation.
+    
+    <Note>
+      Config files in AppData are preserved between versions.
+    </Note>
+  </Step>
+  
+  <Step title="Regenerate caches">
+    Delete old cache files to force regeneration with the new version.
+  </Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quick Start Guide" icon="rocket" href="/quickstart">
+    Create your first mod in 10 minutes
+  </Card>
+  <Card title="Editor Overview" icon="window" href="/editor/overview">
+    Learn the FrostyEditor interface
+  </Card>
+  <Card title="Mod Manager Guide" icon="box-archive" href="/mod-manager/overview">
+    How to install and manage mods
+  </Card>
+  <Card title="Plugin Development" icon="puzzle-piece" href="/plugins/getting-started">
+    Extend Frosty with custom plugins
+  </Card>
+</CardGroup>

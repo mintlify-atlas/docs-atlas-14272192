@@ -1,0 +1,265 @@
+---
+title: "Dragon Age: Inquisition"
+description: "Frosty Toolsuite support for Dragon Age: Inquisition"
+---
+
+Frosty Toolsuite provides comprehensive modding support for Dragon Age: Inquisition, BioWare's epic fantasy RPG running on the Frostbite engine.
+
+## Game Information
+
+<Card title="Dragon Age: Inquisition" icon="dragon">
+  **Released**: November 2014
+  
+  **Profile**: `DragonAgeSDK.dll`
+  
+  **Profile Version**: `20141118`
+  
+  **SDK Size**: ~4.5 MB
+  
+  **Engine**: Frostbite 3 (BioWare adaptation)
+</Card>
+
+## Overview
+
+Dragon Age: Inquisition represents BioWare's first major title on the Frostbite engine, adapted from DICE's shooter-focused technology to support a complex RPG experience. The game features extensive character customization, vast open-world environments, and deep narrative systems.
+
+## Technical Characteristics
+
+### Frostbite Adaptation
+
+Dragon Age: Inquisition uses an early version of Frostbite 3, customized for RPG gameplay:
+
+- Profile Version: `20141118` (contemporary with Battlefield 4)
+- Legacy mesh format optimized for character creation
+- Extensive dialogue and cinematic assets
+- Complex quest and world state data structures
+
+<Note>
+  DAI shares some technical similarities with Battlefield 4 and the early Plants vs Zombies Garden Warfare, as all three were developed around the same timeframe on Frostbite 3.
+</Note>
+
+### Asset Structure
+
+The game organizes assets uniquely for an RPG:
+
+- **Character Assets**: Extensive facial morphs and body customization
+- **Equipment System**: Modular armor and weapon components
+- **Environment Bundles**: Large open-world area data
+- **Cinematic Data**: Conversation and cutscene assets
+- **Quest Systems**: Dialogue trees and progression triggers
+
+## Modding Capabilities
+
+### Character Customization
+
+<Accordion title="Appearance Modifications">
+  Popular character mods include:
+  
+  - **Face Morphs**: Custom character creator presets
+  - **Hair Styles**: Additional hairstyle options and textures
+  - **Skin Textures**: Enhanced or alternative skin tones
+  - **Eye Colors**: Expanded color palette options
+  - **Makeup & Scars**: Custom facial details
+  - **Body Meshes**: Alternative character proportions
+  
+  DAI's character system supports extensive appearance modding through Frosty.
+</Accordion>
+
+<Accordion title="Equipment & Gear">
+  Armor and weapon modifications:
+  
+  - **Armor Textures**: Retextured or recolored equipment sets
+  - **Weapon Models**: Custom or enhanced weapon meshes
+  - **Material Properties**: Improved shader effects
+  - **Equipment Stats**: Modified item attributes
+  - **Crafting Materials**: Custom material textures
+  
+  Equipment assets can be extensively modified while maintaining game balance.
+</Accordion>
+
+<Accordion title="Companion Modifications">
+  Companion character enhancements:
+  
+  - **Companion Appearances**: Modified default looks
+  - **Outfit Replacements**: Alternative clothing options
+  - **Romance Options**: Extended or modified content
+  - **Dialogue**: Modified or additional conversations
+  - **Abilities**: Adjusted companion skills and specializations
+</Accordion>
+
+### Environmental Enhancements
+
+<Accordion title="World Improvements">
+  Environment and world mods:
+  
+  - **Texture Replacements**: Enhanced terrain and structures
+  - **Skyboxes**: Improved sky and weather visuals
+  - **Lighting**: Modified ambient and scene lighting
+  - **Flora**: Enhanced vegetation textures
+  - **Props**: Improved object details
+  
+  DAI's large environments benefit from texture enhancement mods.
+</Accordion>
+
+### Interface & Gameplay
+
+<Accordion title="UI Modifications">
+  User interface improvements:
+  
+  - **Inventory UI**: Enhanced organization and visuals
+  - **Character Creator**: Expanded customization interface
+  - **HUD Elements**: Modified health bars and indicators
+  - **Menu Graphics**: Custom menu backgrounds and styles
+  - **Font Replacements**: Alternative text styling
+</Accordion>
+
+## Technical Considerations
+
+### Mesh Format
+
+Dragon Age: Inquisition uses a legacy mesh format:
+
+- Similar structure to Battlefield 4
+- Basic bone system for character rigging
+- Special handling for facial animation blend shapes
+- Legacy texture format support
+
+```csharp
+// Code reference for DAI mesh handling
+if (ProfilesLibrary.IsLoaded(ProfileVersion.DragonAgeInquisition))
+{
+    // Apply legacy mesh format handling
+    // Special blend shape processing for facial animations
+}
+```
+
+Code reference: `source/Plugins/MeshSetPlugin/Resources/MeshSet.cs:863`
+
+### Texture System
+
+DAI uses older texture compression formats:
+
+- Legacy texture format similar to BF4
+- Supports standard mipmapping
+- Requires specific compression settings for compatibility
+
+<Note>
+  When importing textures for DAI, ensure you're using formats compatible with the 2014-era Frostbite implementation. Modern formats from newer games may not work correctly.
+</Note>
+
+### Profile-Specific Handling
+
+The DAI profile includes:
+
+- BioWare-specific deobfuscation settings
+- RPG-focused asset loader configuration
+- Quest and dialogue system support
+- Character creator data structures
+- Extensive shared bundle definitions
+
+## Known Issues & Quirks
+
+<Accordion title="Legacy Format Limitations">
+  As an early Frostbite 3 title, DAI has some limitations:
+  
+  - Older mesh format may require special conversion
+  - Some modern Frosty features may have limited compatibility
+  - Texture compression must match legacy specifications
+  - Asset bundle structure differs from newer titles
+  
+  These are handled automatically by Frosty's DAI profile.
+</Accordion>
+
+<Accordion title="Character Creator Complexity">
+  The character creator uses complex morph targets:
+  
+  - Facial sliders modify multiple blend shapes
+  - Hair and makeup are layered texture systems
+  - Modifying morphs requires understanding the blend shape system
+  - Some appearance options are race-specific
+</Accordion>
+
+<Accordion title="Quest System Data">
+  Quest and world state data is intricate:
+  
+  - Modifying quests can break progression
+  - Dialogue trees have complex dependencies
+  - World state flags interact with multiple systems
+  - Always backup saves before testing quest modifications
+</Accordion>
+
+## DRM & Compatibility
+
+<Warning>
+  Dragon Age: Inquisition includes EA's DRM:
+  
+  - Requires Origin client to be running
+  - Some DLC integration may affect modding
+  - Always backup original files before modding
+  - Mods may need updates after official patches
+  - Respect BioWare and EA's Terms of Service
+</Warning>
+
+## Getting Started with DAI Modding
+
+1. **Install Frosty Tools**
+   - Download Frosty Editor and Mod Manager
+   - Ensure Dragon Age: Inquisition is fully updated
+   - Install any DLC you plan to use
+
+2. **Launch Frosty Editor**
+   - Select "Dragon Age: Inquisition" from the profile list
+   - Wait for asset database to build (may take 10-20 minutes)
+   - DAI has extensive assets, so initial indexing takes time
+
+3. **Explore the Asset Database**
+   - Navigate the Data Explorer
+   - Find character assets under character creation folders
+   - Locate equipment in armor and weapon bundles
+   - Search for specific items or characters
+
+4. **Make Modifications**
+   - Use the Texture Editor for appearance changes
+   - Use the Mesh Editor for 3D model modifications
+   - Edit properties for stat changes
+   - Test changes incrementally
+
+5. **Apply and Test**
+   - Save your modifications as .fbmod files
+   - Load mods in Frosty Mod Manager
+   - Arrange load order (important for compatibility)
+   - Launch the game and test thoroughly
+
+<Note>
+  Start with simple texture mods before attempting complex character creator or quest modifications. DAI's systems are intricate and require understanding of the game's structure.
+</Note>
+
+## Community Resources
+
+The Dragon Age modding community is highly active:
+
+- **Character Appearance**: Extensive preset collections and custom faces
+- **Armor Retextures**: Complete visual overhauls of equipment sets
+- **Companion Mods**: Enhanced companion visuals and features
+- **Environment Enhancements**: Improved textures and lighting
+- **Gameplay Tweaks**: Balance adjustments and quality-of-life improvements
+
+Popular mod categories:
+- Diverse character creator options
+- Enhanced romance content
+- Visual upgrades and retextures
+- Companion customization
+- Skyhold improvements
+
+The DAI modding scene has comprehensive tutorials and resources available on community forums and mod sites.
+
+## Tips for Success
+
+- Always test mods on a separate save file
+- Be aware of mod compatibility with official DLC
+- Keep mods updated when the game patches
+- Read mod descriptions for load order requirements
+- Backup your saves and game files regularly
+- Join the community for support and inspiration
+
+For detailed general tutorials, see the [Getting Started](/installation) guide.

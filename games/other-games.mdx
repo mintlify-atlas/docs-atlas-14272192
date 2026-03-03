@@ -1,0 +1,385 @@
+---
+title: Other Supported Games
+description: Additional titles supported by Frosty Toolsuite
+---
+
+Frosty Toolsuite supports several additional EA titles running on the Frostbite engine beyond the major franchises.
+
+## Supported Titles
+
+<CardGroup cols={2}>
+  <Card title="Anthem" icon="jet-fighter">
+    Released: 2019
+    
+    Profile: `AnthemSDK.dll`
+  </Card>
+  
+  <Card title="Plants vs Zombies Series" icon="plant-wilt">
+    3 titles supported
+    
+    Multiple SDK profiles
+  </Card>
+  
+  <Card title="Madden NFL" icon="football">
+    Madden 19, Madden 20
+    
+    Sports SDK profiles
+  </Card>
+</CardGroup>
+
+---
+
+## Anthem
+
+### Game Information
+
+**Released**: February 2019
+**Developer**: BioWare
+**Profile**: `AnthemSDK.dll`
+**Profile Version**: `20181207`
+**SDK Size**: ~12.1 MB (largest SDK profile)
+
+<Note>
+  Anthem has the largest SDK profile of all supported games, indicating extensive and complex asset type support for the game's shared-world shooter mechanics.
+</Note>
+
+### Overview
+
+Anthem is BioWare's shared-world action RPG featuring exosuits called Javelins. Built on an advanced version of Frostbite, it combines shooter mechanics with RPG customization in a lush open world.
+
+### Technical Characteristics
+
+**Engine Features:**
+- Most modern Frostbite implementation at time of release
+- Advanced character customization for Javelin suits
+- Complex shared-world networking assets
+- Extensive loot and equipment systems
+- Dynamic weather and environmental effects
+
+**Mesh Format:**
+- Modern mesh structure with advanced features
+- Special handling for Javelin armor components
+- Enhanced LOD system for multiplayer performance
+- Complex material shader support
+
+Code reference: `source/Plugins/MeshSetPlugin/Resources/MeshSet.cs:992`
+
+### Modding Capabilities
+
+<Accordion title="Javelin Customization">
+  Exosuit appearance modifications:
+  
+  - **Armor Textures**: Custom paint jobs and materials
+  - **Component Models**: Modified armor pieces
+  - **Emissives**: Custom glow effects and lighting
+  - **Decals**: Custom emblems and patterns
+  - **Material Shaders**: Enhanced metallic and wear effects
+  
+  Each Javelin type (Ranger, Colossus, Storm, Interceptor) can be extensively customized.
+</Accordion>
+
+<Accordion title="Weapons & Gear">
+  Equipment modifications:
+  
+  - **Weapon Models**: Custom or enhanced weapon meshes
+  - **Weapon Textures**: Paint jobs and material finishes
+  - **Visual Effects**: Modified ability and shot effects
+  - **Gear Components**: Support item appearances
+  - **Stats & Properties**: Modified item attributes
+</Accordion>
+
+<Accordion title="Environmental Enhancements">
+  World and visual improvements:
+  
+  - **Terrain Textures**: Enhanced landscape materials
+  - **Flora**: Improved vegetation
+  - **Skybox**: Custom atmospheric effects
+  - **Lighting**: Modified ambient and scene lighting
+  - **Fort Tarsis**: Hub area improvements
+</Accordion>
+
+<Accordion title="UI & Effects">
+  Interface and visual effects:
+  
+  - **HUD Elements**: Custom interface designs
+  - **Menu Graphics**: Javelin forge and inventory UI
+  - **Particle Effects**: Modified ability visuals
+  - **Damage Numbers**: Custom combat feedback
+</Accordion>
+
+### Known Considerations
+
+<Warning>
+  Anthem is a live-service game with online requirements:
+  
+  - Requires constant internet connection
+  - Multiplayer-focused gameplay
+  - Mods may not work in shared missions
+  - Server-side validation may limit modifications
+  - Game received limited post-launch support
+  - Always respect EA's Terms of Service
+</Warning>
+
+---
+
+## Plants vs Zombies Series
+
+### Supported Titles
+
+<CardGroup cols={3}>
+  <Card title="PVZ: Garden Warfare" icon="seedling">
+    Released: 2014
+    
+    `PVZ1SDK.dll`
+    
+    Version: `20140225`
+  </Card>
+  
+  <Card title="PVZ: Garden Warfare 2" icon="seedling">
+    Released: 2016
+    
+    `PVZ2SDK.dll`
+    
+    Version: `20150223`
+  </Card>
+  
+  <Card title="PVZ: Battle for Neighborville" icon="seedling">
+    Released: 2019
+    
+    `PVZ3SDK.dll`
+    
+    Version: `20190905`
+  </Card>
+</CardGroup>
+
+### Overview
+
+The Plants vs Zombies shooter series brings the iconic tower defense franchise into third-person action on the Frostbite engine, featuring colorful characters and whimsical gameplay.
+
+### Technical Characteristics
+
+**Profile Sizes:**
+- PVZ1 (Garden Warfare): ~3.6 MB
+- PVZ2 (Garden Warfare 2): ~4.0 MB
+- PVZ3 (Battle for Neighborville): ~12.1 MB (significant expansion)
+
+**Technical Notes:**
+- Early titles use legacy mesh formats (similar to Battlefield 4)
+- Later titles adopt modern Frostbite features
+- Cartoon aesthetic with unique shader requirements
+- Character-focused asset structure
+
+### Modding Capabilities
+
+<Accordion title="Character Customization">
+  Plant and Zombie modifications:
+  
+  - **Character Skins**: Custom appearances for classes
+  - **Accessory Items**: Hats, glasses, and cosmetics
+  - **Variant Textures**: Modified character variants
+  - **Ability Effects**: Custom visual effects
+  - **Emotes**: Modified animation visuals
+</Accordion>
+
+<Accordion title="Environmental Mods">
+  Map and world modifications:
+  
+  - **Map Textures**: Enhanced environment graphics
+  - **Props**: Modified objects and decorations
+  - **Skybox**: Custom sky and atmosphere
+  - **Lighting**: Adjusted scene lighting
+  - **Particle Effects**: Modified gameplay effects
+</Accordion>
+
+<Accordion title="UI & Audio">
+  Interface and sound:
+  
+  - **Menu Graphics**: Custom UI elements
+  - **HUD**: Modified health bars and indicators
+  - **Sound Effects**: Custom audio (with plugins)
+  - **Music**: Modified background tracks
+</Accordion>
+
+### Known Quirks
+
+<Note>
+  The original Garden Warfare shares technical characteristics with Dragon Age: Inquisition and Battlefield 4, as all three were developed around the same timeframe on early Frostbite 3.
+  
+  Code reference: `source/Plugins/TexturePlugin/FrostyTextureEditor.cs:671`
+</Note>
+
+---
+
+## Madden NFL Series
+
+### Supported Titles
+
+<CardGroup cols={2}>
+  <Card title="Madden NFL 19" icon="football">
+    Released: 2018
+    
+    Profile: `MADDEN19SDK.dll`
+    
+    Version: `20180807`
+  </Card>
+  
+  <Card title="Madden NFL 20" icon="football">
+    Released: 2019
+    
+    Profile: `MADDEN20SDK.dll`
+    
+    Version: `20190729`
+  </Card>
+</CardGroup>
+
+### Overview
+
+EA's flagship NFL simulation series on the Frostbite engine, featuring realistic player models, stadiums, and football gameplay mechanics.
+
+### Technical Characteristics
+
+**Profile Sizes:**
+- Madden 19: ~5.6 MB
+- Madden 20: ~8.1 MB (expanded features)
+
+**Technical Features:**
+- Similar asset structure to FIFA (sports game optimization)
+- UINT bone count storage in mesh format
+- Extensive player database and customization
+- Stadium and field asset systems
+
+### Modding Capabilities
+
+<Accordion title="Player Customization">
+  Player appearance and equipment:
+  
+  - **Player Faces**: Updated or custom face scans
+  - **Uniforms**: Custom jersey designs and colors
+  - **Equipment**: Modified helmets, gloves, cleats
+  - **Player Stats**: Attribute modifications
+  - **Body Types**: Player model adjustments
+</Accordion>
+
+<Accordion title="Team & Stadium">
+  Team and environment mods:
+  
+  - **Team Logos**: Custom or updated logos
+  - **Stadium Textures**: Enhanced field and stands
+  - **Crowd**: Modified crowd appearances
+  - **Sidelines**: Coaching staff and equipment
+  - **Field Designs**: Custom turf patterns and end zones
+</Accordion>
+
+<Accordion title="Visual Enhancements">
+  Graphics improvements:
+  
+  - **Uniform Textures**: Enhanced jersey materials
+  - **Lighting**: Improved stadium lighting
+  - **Weather Effects**: Custom weather visuals
+  - **Replay Graphics**: Modified broadcast overlays
+  - **UI Elements**: Custom menus and interfaces
+</Accordion>
+
+### Technical Details
+
+**Mesh Format:**
+- Uses UINT for bone count (same as FIFA)
+- Optimized for sports game character models
+- Special handling for equipment attachments
+- Multiple LOD levels for crowd and distant players
+
+Code reference: `source/Plugins/MeshSetPlugin/Resources/MeshSet.cs:1677`
+
+**Known Considerations:**
+
+<Accordion title="Madden 20 Special Handling">
+  Madden 20 requires unique mesh processing:
+  
+  - Special vertex attribute handling
+  - Distinct from Madden 19 format
+  - Similar to some Need for Speed Edge requirements
+  - Automatic conversion handled by MeshSet plugin
+</Accordion>
+
+<Accordion title="Roster & Season Data">
+  Player database considerations:
+  
+  - Roster updates may conflict with mods
+  - Season progression affects player attributes
+  - Franchise mode has complex data dependencies
+  - Always test with fresh saves
+</Accordion>
+
+---
+
+## Getting Started
+
+### General Workflow
+
+For all these additional games:
+
+1. **Installation**
+   - Install Frosty Editor and Mod Manager
+   - Ensure game is fully updated
+   - Backup game files
+
+2. **Profile Selection**
+   - Launch Frosty Editor
+   - Select your game from the profile list
+   - Wait for asset database to build
+
+3. **Asset Exploration**
+   - Browse Data Explorer
+   - Search for specific assets
+   - Understand game-specific structure
+
+4. **Modification**
+   - Use appropriate editors (Texture, Mesh, etc.)
+   - Make incremental changes
+   - Test frequently
+
+5. **Application**
+   - Save as .fbmod files
+   - Apply through Frosty Mod Manager
+   - Arrange load order if using multiple mods
+
+### Tips for Success
+
+<Note>
+  **Anthem**: Focus on visual mods due to online restrictions
+  
+  **PVZ Series**: Respect the cartoon aesthetic when modding
+  
+  **Madden**: Test roster compatibility after official updates
+</Note>
+
+## DRM & Online Considerations
+
+<Warning>
+  All these titles have online components:
+  
+  - **Anthem**: Always-online requirement, multiplayer focus
+  - **PVZ Series**: Online multiplayer modes
+  - **Madden**: Ultimate Team and online franchises
+  
+  Modding may be restricted in online modes. Always:
+  - Backup original files
+  - Respect EA's Terms of Service
+  - Use mods responsibly
+  - Be aware of anti-cheat systems
+</Warning>
+
+## Community Resources
+
+These games have varying levels of modding community activity:
+
+**Most Active:**
+- Madden series (roster updates, uniform mods)
+- PVZ series (character customization)
+
+**Moderate Activity:**
+- Anthem (visual enhancements, though limited by online nature)
+
+Check community forums and mod repositories for game-specific resources and support.
+
+For detailed general tutorials, see the [Getting Started](/installation) guide.

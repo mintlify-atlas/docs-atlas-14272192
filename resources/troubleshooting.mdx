@@ -1,0 +1,468 @@
+---
+title: Troubleshooting
+description: Common issues and solutions for Frosty Toolsuite
+icon: wrench
+---
+
+## Build and Compilation Issues
+
+### Build Fails with "Could not find SDK"
+
+<AccordionGroup>
+  <Accordion title="Solution">
+    This occurs when building the entire solution instead of individual projects.
+    
+    <Steps>
+      <Step title="Close the Solution">
+        Close Visual Studio completely.
+      </Step>
+      
+      <Step title="Reopen and Build Individual Projects">
+        Open `FrostyEditor.sln` and build projects individually in this order:
+        1. FrostySdk
+        2. FrostyCore (FrostyPlugin)
+        3. FrostyControls
+        4. FrostyModSupport
+        5. FrostyEditor or FrostyModManager
+      </Step>
+    </Steps>
+    
+    <Warning>
+      Never use "Build Solution" - always build individual projects.
+    </Warning>
+  </Accordion>
+</AccordionGroup>
+
+### Retarget Window Appears on Open
+
+<AccordionGroup>
+  <Accordion title="Solution">
+    If Visual Studio prompts you to retarget the project:
+    
+    1. **Close the retarget window** without making changes
+    2. The project is configured for **.NET Framework 4.8** and **Visual Studio 2019**
+    3. Ensure you have the correct framework installed
+    
+    <Note>
+      The project uses .NET Framework 4.8 - do not upgrade to .NET Core or .NET 5+.
+    </Note>
+  </Accordion>
+</AccordionGroup>
+
+### Missing Dependencies
+
+<AccordionGroup>
+  <Accordion title="Third-Party DLL Issues">
+    If you encounter errors about missing DLLs:
+    
+    **Common Missing Libraries:**
+    - SharpDX.dll
+    - Newtonsoft.Json.dll
+    - NAudio.dll
+    - libfbx.dll
+    
+    **Solution:**
+    All third-party DLLs are located in the `ThirdParty` folder of each project. The FileUnblocker automatically unblocks these files, but you may need to:
+    
+    ```bash
+    # Manually unblock DLLs in PowerShell
+    Get-ChildItem -Path .\ThirdParty -Recurse | Unblock-File
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Build Configuration Errors
+
+<AccordionGroup>
+  <Accordion title="Wrong Platform or Configuration">
+    Ensure your build settings are correct:
+    
+    - **Configuration**: `Developer - Debug` (for development)
+    - **Platform**: `x64` (always, never AnyCPU)
+    
+    <Steps>
+      <Step title="Open Configuration Manager">
+        In Visual Studio: `Build` → `Configuration Manager`
+      </Step>
+      
+      <Step title="Verify Settings">
+        Check that all projects are set to:
+        - Active solution configuration: `Developer - Debug`
+        - Active solution platform: `x64`
+      </Step>
+    </Steps>
+  </Accordion>
+</AccordionGroup>
+
+## Runtime Issues
+
+### Editor Crashes on Startup
+
+<AccordionGroup>
+  <Accordion title="Corrupted Config Files">
+    Frosty stores configuration in `AppData/Local`. If configs become corrupted:
+    
+    <Steps>
+      <Step title="Navigate to AppData">
+        ```
+        %LOCALAPPDATA%\Frosty
+        ```
+      </Step>
+      
+      <Step title="Delete Config Files">
+        Delete or rename:
+        - `FrostyEditor.json`
+        - `FrostyModManager.json`
+      </Step>
+      
+      <Step title="Restart Application">
+        Launch Frosty again to regenerate clean configs.
+      </Step>
+    </Steps>
+  </Accordion>
+  
+  <Accordion title="Missing Game Profile">
+    If the editor crashes when selecting a game:
+    
+    1. Ensure you're using a supported game version
+    2. Check if the game SDK needs updating
+    3. Verify game installation path is correct
+    
+    <Note>
+      Some games require profile updates after patches. Check for toolsuite updates.
+    </Note>
+  </Accordion>
+</AccordionGroup>
+
+### Mod Manager Won't Launch Game
+
+<AccordionGroup>
+  <Accordion title="Steam Launch Issues">
+    Fixed in v1.0.6.3, but if you're on an older version:
+    
+    - Update to the latest version
+    - Check that Steam is running
+    - Verify game installation path
+  </Accordion>
+  
+  <Accordion title="Platform Detection Issues">
+    For EA Desktop, Epic Games, or Steam:
+    
+    1. Open Mod Manager options
+    2. Manually select the correct platform
+    3. Verify game executable path
+    
+    <Note>
+      The LaunchPlatformPlugin handles platform detection. Ensure it's enabled.
+    </Note>
+  </Accordion>
+  
+  <Accordion title="EasyAntiCheat Warning">
+    Some games use EasyAntiCheat which may conflict with mods:
+    
+    <Warning>
+      Modding games with EasyAntiCheat may result in bans. Proceed at your own risk.
+    </Warning>
+    
+    - Always play offline when using mods
+    - Disable EAC if possible (game-dependent)
+  </Accordion>
+</AccordionGroup>
+
+### Memory Issues
+
+<AccordionGroup>
+  <Accordion title="Out of Memory Errors">
+    When working with large mods or multiple games:
+    
+    1. **Close unnecessary applications**
+    2. **Increase virtual memory** (Windows page file)
+    3. **Work with fewer mods** at once
+    
+    **Fixed Issues (v1.0.6.2+):**
+    - Memory leak in cat file writing
+    - Excessive memory usage in DAI localized texts
+    
+    <Note>
+      If you're on an older version, update to v1.0.6.3 or later.
+    </Note>
+  </Accordion>
+</AccordionGroup>
+
+## Modding Issues
+
+### Mods Don't Apply
+
+<AccordionGroup>
+  <Accordion title="ModData Not Cleaning">
+    Old ModData can cause conflicts:
+    
+    <Steps>
+      <Step title="Open Mod Manager">
+        Launch Frosty Mod Manager for your game.
+      </Step>
+      
+      <Step title="Manage ModData">
+        Go to `Actions` → `Manage ModData`
+      </Step>
+      
+      <Step title="Clear Old Data">
+        Delete old ModData files and reapply your mods.
+      </Step>
+    </Steps>
+    
+    <Note>
+      This feature was added in v1.0.6.3 to help manage ModData files.
+    </Note>
+  </Accordion>
+  
+  <Accordion title="Mod Load Order">
+    Incorrect mod order can cause issues:
+    
+    1. Drag mods in the Applied Mods list to reorder
+    2. Mods at the bottom override mods at the top
+    3. Check for mod conflicts in the conflict viewer
+  </Accordion>
+  
+  <Accordion title="Legacy Mods">
+    For FIFA/Madden legacy mods:
+    
+    - Legacy mods can be added to collections (v1.0.6+)
+    - Verify legacy file changes are being applied
+    - Check `mods.txt` file generation
+  </Accordion>
+</AccordionGroup>
+
+### Import/Export Issues
+
+<AccordionGroup>
+  <Accordion title="Mesh Import Fails">
+    Common mesh import issues:
+    
+    **Inverted Normals:**
+    - Fixed in v1.0.6.2 (Alpha 1) for MeshSetEditor
+    
+    **Composite Mesh Issues:**
+    - Import support added in v1.0.6.3 (Beta 1)
+    - Ensure you're using correct skeleton
+    
+    **Rigid Mesh Problems:**
+    - Fixed in v1.0.6.2 (Alpha 1)
+    
+    <Warning>
+      Always export meshes with the correct skeleton selection to avoid crashes.
+    </Warning>
+  </Accordion>
+  
+  <Accordion title="Texture Import Issues">
+    Texture format problems:
+    
+    1. **Ensure correct format**: DDS, PNG, TGA, or HDR
+    2. **Check texture dimensions**: Must be power of 2 (e.g., 1024x1024)
+    3. **Verify texture type**: 2D, array, cubemap, or 3D
+    
+    **Supported Formats:**
+    - 2D textures: DDS, PNG, TGA, HDR
+    - Array textures: DDS only
+    - Cubemaps: DDS only
+    - 3D textures: DDS only
+  </Accordion>
+  
+  <Accordion title="Sound Import Problems">
+    Audio format requirements:
+    
+    - **Supported**: WAV, raw ealayer3 format
+    - **Added in**: v1.0.6 (Alpha 1)
+    
+    If sounds don't play:
+    1. Check that all required chunks exist
+    2. Verify audio format compatibility
+    3. Test with simple WAV files first
+  </Accordion>
+</AccordionGroup>
+
+## Plugin Issues
+
+### Plugin Not Loading
+
+<AccordionGroup>
+  <Accordion title="Plugin Compatibility">
+    Plugins must match the Frosty version and game profile:
+    
+    1. **Check plugin version**: Must be compatible with your Frosty version
+    2. **Verify profile support**: Use `PluginValidForProfile` attribute
+    3. **Review loaded plugins**: Check the loaded plugins list in Editor
+    
+    <Note>
+      The loaded plugins list was improved in v1.0.6.2 (Alpha 1).
+    </Note>
+  </Accordion>
+  
+  <Accordion title="Missing Dependencies">
+    Plugins may require specific DLLs:
+    
+    - Place third-party DLLs in the plugin directory
+    - Use `ThirdPartyDllExtension` to register them
+    - Ensure DLLs are unblocked
+  </Accordion>
+</AccordionGroup>
+
+### Custom Plugin Development Issues
+
+<AccordionGroup>
+  <Accordion title="Plugin Extension Not Appearing">
+    If your custom plugin doesn't show up:
+    
+    <Steps>
+      <Step title="Verify Plugin References">
+        Your plugin must reference:
+        - FrostySdk
+        - FrostyCore (FrostyPlugin)
+      </Step>
+      
+      <Step title="Check Extension Registration">
+        Ensure your extension class properly inherits from the base extension type.
+      </Step>
+      
+      <Step title="Build and Copy">
+        Build your plugin and copy the DLL to the Plugins folder.
+      </Step>
+      
+      <Step title="Restart Frosty">
+        Restart the Editor or Mod Manager to load the plugin.
+      </Step>
+    </Steps>
+  </Accordion>
+</AccordionGroup>
+
+## Game-Specific Issues
+
+### Battlefield Series
+
+<AccordionGroup>
+  <Accordion title="Battlefield V">
+    **Common Issues:**
+    - SDK crashes when loading meshes (Fixed in v1.0.5.7)
+    - Bundle editing issues (Fixed in v1.0.6.2 Beta 2)
+    - Full profile added in v1.0.6.3
+    
+    **Mesh Importing:**
+    - Issues fixed in v1.0.6.3 (Beta 1)
+    - Use updated export settings
+  </Accordion>
+  
+  <Accordion title="Battlefield 4">
+    **InitFs Loading:**
+    - Fixed in v1.0.6 (Beta 1)
+    - Profile added in v1.0.4.5
+  </Accordion>
+  
+  <Accordion title="Battlefield 1">
+    **Mesh Importing:**
+    - Issues fixed in v1.0.6 (Beta 5)
+    - Profile added in v1.0.4.3
+  </Accordion>
+</AccordionGroup>
+
+### FIFA Series
+
+<AccordionGroup>
+  <Accordion title="FIFA 19/20">
+    **Pitch Appearance Issues:**
+    - White pitch bug fixed in v1.0.5.4
+    - Bundle-related issues resolved
+    
+    **Kit Previewer:**
+    - Experimental kit previewer added in v1.0.5
+    - Saving with kit previewer open fixed in v1.0.5.1
+    
+    **Legacy Database:**
+    - Changes causing crashes fixed in v1.0.5.5
+  </Accordion>
+</AccordionGroup>
+
+### Need for Speed
+
+<AccordionGroup>
+  <Accordion title="NFS Heat">
+    **Read-Only Profile:**
+    - Experimental support in v1.0.6 (Alpha 1)
+    - Profile was read-only, fixed in v1.0.6.1
+  </Accordion>
+  
+  <Accordion title="NFS Rivals">
+    **InitFs Loading:**
+    - Fixed in v1.0.6 (Beta 1)
+    - Read-only profile added in v1.0.5
+  </Accordion>
+</AccordionGroup>
+
+### Dragon Age Series
+
+<AccordionGroup>
+  <Accordion title="Dragon Age: Inquisition">
+    **Bundle Editing:**
+    - Infinite load issues fixed in v1.0.3 (Alpha 3)
+    - DelayLoadBundle explorer added in v1.0.4
+    
+    **Texture Edits:**
+    - Issues fixed in v1.0.6.2 (Alpha 1)
+    - Corrupted texture problems resolved in v1.0.4.3
+    
+    **Conversation Editor:**
+    - Branch tree view added in v1.0.5
+  </Accordion>
+</AccordionGroup>
+
+## Performance Issues
+
+### Slow Loading Times
+
+<AccordionGroup>
+  <Accordion title="Caching Improvements">
+    Frosty v1.0.6+ includes several caching improvements:
+    
+    - **TypeInfo Caching**: Speeds up initial type loading
+    - **MeshVariation Caching**: Faster mesh database loading
+    - **Variation Database**: Only loads when opening meshes
+    
+    <Note>
+      First launch will be slower as caches are built. Subsequent launches are much faster.
+    </Note>
+  </Accordion>
+</AccordionGroup>
+
+### Slow Mod Application
+
+<AccordionGroup>
+  <Accordion title="Performance Optimizations">
+    Several versions improved mod application speed:
+    
+    - **v1.0.6.2 (Alpha 1)**: Improved applying speed
+    - **v1.0.6.3**: Improved EbxWriter performance
+    - **v1.0.3 (Alpha)**: Drastically reduced time and storage
+    
+    **Tips:**
+    1. Use fewer large mods instead of many small ones
+    2. Avoid unnecessary bundle modifications
+    3. Keep ModData clean
+  </Accordion>
+</AccordionGroup>
+
+## Getting More Help
+
+If your issue isn't covered here:
+
+1. Check the [FAQ](/resources/faq) for common questions
+2. Review the [Changelog](/resources/changelog) for fixed issues
+3. Search existing GitHub issues
+4. Join the community Discord for support
+5. Create a new GitHub issue with:
+   - Frosty version
+   - Game and version
+   - Steps to reproduce
+   - Error messages or logs
+
+<Warning>
+  Always backup your game files and mods before troubleshooting!
+</Warning>

@@ -1,0 +1,369 @@
+---
+title: 'BundleEntry'
+description: 'Bundle container API for organizing assets'
+---
+
+## Overview
+
+The `BundleEntry` class represents asset bundles in the Frostbite engine. Bundles are containers that group related assets together for loading and organization.
+
+## Class Definition
+
+```csharp
+public class BundleEntry
+{
+    public string DisplayName => Name;
+    
+    public string Name;
+    public int SuperBundleId;
+    public EbxAssetEntry Blueprint;
+    public BundleType Type;
+    public bool Added;
+}
+```
+
+Location: `FrostySdk/Managers/AssetManager.cs:114`
+
+## Properties
+
+<ParamField path="Name" type="string">
+  Bundle name/path (e.g., `"win32/levels/mp/mp_001"`). May be a hash for some games.
+</ParamField>
+
+<ParamField path="DisplayName" type="string">
+  Display name for UI - currently returns the same value as Name.
+</ParamField>
+
+<ParamField path="SuperBundleId" type="int">
+  Index of the parent superbundle containing this bundle.
+</ParamField>
+
+<ParamField path="Blueprint" type="EbxAssetEntry">
+  Reference to the blueprint EBX asset defining this bundle (for sublevel/blueprint bundles).
+</ParamField>
+
+<ParamField path="Type" type="BundleType">
+  Type of bundle: `None`, `SubLevel`, `BlueprintBundle`, or `SharedBundle`.
+</ParamField>
+
+<ParamField path="Added" type="bool">
+  True if this bundle was added via modding (not in base game).
+</ParamField>
+
+## Bundle Types
+
+<ParamField path="None" type="BundleType" value="-1">
+  Unknown or uninitialized bundle type.
+</ParamField>
+
+<ParamField path="SubLevel" type="BundleType" value="0">
+  Sublevel bundle containing level/world data. Associated with SubWorldData assets.
+</ParamField>
+
+<ParamField path="BlueprintBundle" type="BundleType" value="1">
+  Blueprint bundle containing entity blueprint data. Associated with BlueprintBundle assets.
+</ParamField>
+
+<ParamField path="SharedBundle" type="BundleType" value="2">
+  Shared bundle containing common assets used across multiple levels/blueprints.
+</ParamField>
+
+## SuperBundle Entry
+
+Superbundles are top-level containers that group multiple bundles:
+
+```csharp
+public class SuperBundleEntry
+{
+    public string Name;
+    public bool Added;
+}
+```
+
+<ParamField path="Name" type="string">
+  Superbundle name (e.g., `"levels/mp/mp_001"`).
+</ParamField>
+
+<ParamField path="Added" type="bool">
+  True if this superbundle was added via modding.
+</ParamField>
+
+## Usage Examples
+
+### Getting a Bundle
+
+```csharp
+// Get bundle by name
+BundleEntry bundle = assetManager.GetBundleEntry("win32/levels/mp/mp_001");
+
+if (bundle != null)
+{
+    Console.WriteLine($"Bundle: {bundle.Name}");
+    Console.WriteLine($"Type: {bundle.Type}");
+    
+    if (bundle.Blueprint != null)
+    {
+        Console.WriteLine($"Blueprint: {bundle.Blueprint.Name}");
+    }
+}
+```
+
+### Enumerating Bundles
+
+```csharp
+// Enumerate all bundles
+foreach (BundleEntry bundle in assetManager.EnumerateBundles())
+{
+    Console.WriteLine($"{bundle.Name} ({bundle.Type})");
+}
+
+// Enumerate only blueprint bundles
+foreach (BundleEntry bundle in assetManager.EnumerateBundles(
+    type: BundleType.BlueprintBundle))
+{
+    Console.WriteLine($"Blueprint: {bundle.Name}");
+}
+
+// Enumerate only modified bundles
+foreach (BundleEntry bundle in assetManager.EnumerateBundles(
+    modifiedOnly: true))
+{
+    Console.WriteLine($"Modified: {bundle.Name}");
+}
+```
+
+### Enumerating Assets in Bundle
+
+```csharp
+BundleEntry bundle = assetManager.GetBundleEntry("win32/gameplay/weapons");
+
+// Get all EBX assets in bundle
+foreach (EbxAssetEntry ebx in assetManager.EnumerateEbx(bundle))
+{
+    Console.WriteLine($"EBX: {ebx.Name} ({ebx.Type})");
+}
+
+// Get all resource assets in bundle
+foreach (ResAssetEntry res in assetManager.EnumerateRes(bundle))
+{
+    Console.WriteLine($"RES: {res.Name} ({res.Type})");
+}
+
+// Get all chunks in bundle
+foreach (ChunkAssetEntry chunk in assetManager.EnumerateChunks(bundle))
+{
+    Console.WriteLine($"Chunk: {chunk.Id}");
+}
+```
+
+### Creating a New Bundle
+
+```csharp
+// Get or create superbundle
+SuperBundleEntry sb = assetManager.AddSuperBundle("custom/mybundle");
+int sbIndex = assetManager.GetSuperBundleId(sb);
+
+// Create bundle
+BundleEntry bundle = assetManager.AddBundle(
+    name: "win32/custom/mybundle",
+    type: BundleType.SharedBundle,
+    sbIndex: sbIndex
+);
+
+Console.WriteLine($"Created bundle: {bundle.Name}");
+Console.WriteLine($"Bundle is new: {bundle.Added}");
+```
+
+### Adding Assets to Bundle
+
+```csharp
+BundleEntry bundle = assetManager.GetBundleEntry("win32/custom/weapons");
+int bundleId = assetManager.GetBundleId(bundle);
+
+// Add EBX to bundle
+EbxAssetEntry ebx = assetManager.GetEbxEntry("weapons/rifle_01");
+ebx.AddToBundle(bundleId);
+
+// Add resource to bundle
+ResAssetEntry res = assetManager.GetResEntry("weapons/rifle_01");
+res.AddToBundle(bundleId);
+
+// Add chunk to bundle
+ChunkAssetEntry chunk = assetManager.GetChunkEntry(chunkId);
+chunk.AddToBundle(bundleId);
+```
+
+### Working with Blueprint Bundles
+
+```csharp
+// Find all blueprint bundles
+foreach (BundleEntry bundle in assetManager.EnumerateBundles(
+    BundleType.BlueprintBundle))
+{
+    if (bundle.Blueprint != null)
+    {
+        Console.WriteLine($"Blueprint Bundle: {bundle.Name}");
+        Console.WriteLine($"  Blueprint Asset: {bundle.Blueprint.Name}");
+        Console.WriteLine($"  Blueprint Type: {bundle.Blueprint.Type}");
+        
+        // Load blueprint to examine contents
+        EbxAsset blueprintAsset = assetManager.GetEbx(bundle.Blueprint);
+        // ... work with blueprint data ...
+    }
+}
+```
+
+### Working with Sublevel Bundles
+
+```csharp
+// Find sublevel bundles
+foreach (BundleEntry bundle in assetManager.EnumerateBundles(
+    BundleType.SubLevel))
+{
+    Console.WriteLine($"Sublevel: {bundle.Name}");
+    
+    if (bundle.Blueprint != null && 
+        bundle.Blueprint.Type == "SubWorldData")
+    {
+        Console.WriteLine($"  World: {bundle.Blueprint.Name}");
+    }
+}
+```
+
+### Getting Bundle Hierarchy
+
+```csharp
+BundleEntry bundle = assetManager.GetBundleEntry("win32/levels/mp/mp_001");
+
+// Get parent superbundle
+SuperBundleEntry superBundle = 
+    assetManager.GetSuperBundleEntry(bundle.SuperBundleId);
+    
+Console.WriteLine($"Bundle: {bundle.Name}");
+Console.WriteLine($"SuperBundle: {superBundle.Name}");
+```
+
+### Filtering Bundles by Path
+
+```csharp
+// Get all bundles under a path
+string basePath = "win32/levels";
+
+foreach (BundleEntry bundle in assetManager.EnumerateBundles())
+{
+    if (bundle.Name.StartsWith(basePath + "/", 
+        StringComparison.OrdinalIgnoreCase))
+    {
+        Console.WriteLine($"Level bundle: {bundle.Name}");
+    }
+}
+```
+
+### Checking Asset Bundle Membership
+
+```csharp
+EbxAssetEntry asset = assetManager.GetEbxEntry("characters/hero");
+
+// Check which bundles contain this asset
+Console.WriteLine($"Asset in {asset.Bundles.Count} bundles:");
+foreach (int bundleId in asset.EnumerateBundles())
+{
+    BundleEntry bundle = assetManager.GetBundleEntry(bundleId);
+    Console.WriteLine($"  - {bundle.Name}");
+}
+```
+
+### Creating Bundle with Assets
+
+```csharp
+// Create superbundle and bundle
+SuperBundleEntry sb = assetManager.AddSuperBundle("custom/weapons");
+int sbId = assetManager.GetSuperBundleId(sb);
+BundleEntry bundle = assetManager.AddBundle(
+    "win32/custom/weapons", BundleType.SharedBundle, sbId);
+int bundleId = assetManager.GetBundleId(bundle);
+
+// Create assets in the bundle
+EbxAsset weaponAsset = new EbxAsset();
+// ... configure weapon asset ...
+
+EbxAssetEntry weaponEntry = assetManager.AddEbx(
+    "weapons/custom_rifle",
+    weaponAsset,
+    bundles: bundleId
+);
+
+Console.WriteLine($"Created asset in bundle: {weaponEntry.Name}");
+```
+
+### Removing Bundle (Revert)
+
+```csharp
+BundleEntry bundle = assetManager.GetBundleEntry("win32/custom/mybundle");
+
+if (bundle.Added)
+{
+    // Only added bundles can be reverted
+    assetManager.RevertBundle(bundle);
+    Console.WriteLine("Bundle removed");
+}
+```
+
+## Bundle Organization Patterns
+
+### Level Bundles
+
+```
+win32/levels/mp/mp_001              (SubLevel)
+├── win32/levels/mp/mp_001_art      (SharedBundle)
+├── win32/levels/mp/mp_001_audio    (SharedBundle)
+└── win32/levels/mp/mp_001_logic    (BlueprintBundle)
+```
+
+### Character Bundles
+
+```
+win32/characters/hero                (BlueprintBundle)
+├── characters/hero (EBX)            
+├── characters/hero (RES - MeshSet)
+└── [chunks] (mesh data)
+```
+
+### Shared Asset Bundles
+
+```
+win32/shared/weapons                 (SharedBundle)
+├── Multiple weapon EBX assets
+├── Shared textures and materials
+└── Common audio/effects
+```
+
+## Bundle Name Hashing
+
+In some games (SWBF2, BFV), bundle names are hashed:
+
+```csharp
+// For games with hashed bundle names
+if (ProfilesLibrary.DataVersion == (int)ProfileVersion.StarWarsBattlefrontII ||
+    ProfilesLibrary.DataVersion == (int)ProfileVersion.Battlefield5)
+{
+    // Bundle name may be a hex hash
+    if (bundle.Name.Length == 8 && IsHex(bundle.Name))
+    {
+        Console.WriteLine($"Hashed bundle: 0x{bundle.Name}");
+        
+        // Name gets resolved from blueprint asset
+        if (bundle.Blueprint != null)
+        {
+            bundle.Name = "win32/" + bundle.Blueprint.Name;
+        }
+    }
+}
+```
+
+## Related Types
+
+- [EbxAssetEntry](/api/assets/ebx) - Entity assets contained in bundles
+- [ResAssetEntry](/api/assets/res) - Resource assets contained in bundles
+- [ChunkAssetEntry](/api/assets/chunks) - Chunk assets contained in bundles
+- [AssetManager](/api/managers/asset-manager) - Bundle management operations

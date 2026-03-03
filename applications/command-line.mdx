@@ -1,0 +1,459 @@
+---
+title: FrostyCmd
+description: Command-line tool for automation and advanced workflows
+---
+
+FrostyCmd is a command-line interface tool for performing Frosty operations without the GUI. It's designed for automation, batch processing, and integration into build pipelines.
+
+## Overview
+
+FrostyCmd provides command-line access to:
+
+- Profile generation and management
+- Shader database dumping and analysis
+- Asset database operations
+- Batch processing workflows
+
+<Note>
+FrostyCmd is primarily used by developers and advanced users. Most modding tasks can be accomplished with Frosty Editor or Mod Manager.
+</Note>
+
+## Installation
+
+FrostyCmd is included with Frosty Editor:
+
+```
+FrostyEditor/
+├── FrostyCmd.exe           # CLI executable
+├── FrostySdk.dll           # SDK library
+├── ThirdParty/             # Dependencies
+│   ├── libfbxsdk.dll
+│   ├── libzstd.dll
+│   └── zlibwapi.dll
+└── Banners/                # Game profile banners
+```
+
+## Usage
+
+Run FrostyCmd from the command line:
+
+```bash
+FrostyCmd.exe [command] [arguments]
+```
+
+### Basic Syntax
+
+```bash
+FrostyCmd.exe <GamePath> <Command> [Options]
+```
+
+- **GamePath**: Path to the game executable or data directory
+- **Command**: Operation to perform
+- **Options**: Command-specific parameters
+
+## Profile Management
+
+### Creating Game Profiles
+
+Generate profile data for Frostbite games:
+
+```bash
+FrostyCmd.exe profile
+```
+
+This command:
+
+1. Scans for supported game profiles
+2. Creates binary profile files (`.bin`)
+3. Generates game-specific metadata
+4. Outputs profiles to the `Profiles/` directory
+
+<Steps>
+  <Step title="Prepare Banners">
+    Place game banner images in `Banners/` directory:
+    - Format: PNG
+    - Naming: `<GameProfile>.png`
+    - Examples: `SWBF2.png`, `DAI.png`, `FIFA20.png`
+  </Step>
+  
+  <Step title="Run Profile Creator">
+    Execute the profile command:
+    ```bash
+    FrostyCmd.exe profile
+    ```
+  </Step>
+  
+  <Step title="Verify Output">
+    Check `Profiles/` for generated `.bin` files.
+  </Step>
+</Steps>
+
+### Profile Structure
+
+Generated profiles contain:
+
+- **Game metadata**: Display name, cache name
+- **Source paths**: Game data locations
+- **Deobfuscators**: String decryption methods
+- **SDK filename**: Associated class library
+- **Flags**: Game-specific settings
+  - `MustAddChunks`: Chunk handling requirement
+  - `EbxVersion`: EBX format version
+  - `RequiresKey`: Encryption key needed
+  - `ReadOnly`: Profile allows viewing only
+  - `ContainsEAC`: Anti-cheat present
+
+## Shader Operations
+
+### Shader Database Dump
+
+Extract shader information from Frostbite's shader database:
+
+```bash
+FrostyCmd.exe <GamePath> shaderdump [OutputPath]
+```
+
+**Parameters:**
+- `GamePath`: Path to game executable
+- `OutputPath`: Where to save shader data (optional)
+
+**Output:**
+- Shader bytecode files
+- Shader metadata JSON
+- Material shader mappings
+
+### Shader Block Depot Dump
+
+Extract shader block depot data:
+
+```bash
+FrostyCmd.exe <GamePath> shaderblockdump [OutputPath]
+```
+
+This extracts:
+
+- Shader block definitions
+- Parameter layouts
+- Constant buffer structures
+- Shader permutations
+
+<Warning>
+Shader dumps can be very large (several GB) depending on the game.
+</Warning>
+
+## Asset Database Operations
+
+### Asset Enumeration
+
+List all assets in a game:
+
+```bash
+FrostyCmd.exe <GamePath> list [Options]
+```
+
+**Options:**
+- `--type <AssetType>`: Filter by asset type (ebx, res, chunk)
+- `--output <File>`: Save list to file
+- `--verbose`: Include detailed information
+
+**Example:**
+
+```bash
+# List all EBX assets
+FrostyCmd.exe "C:/Games/BF1/bf1.exe" list --type ebx
+
+# Export asset list to file
+FrostyCmd.exe "C:/Games/BF1/bf1.exe" list --output assets.txt
+```
+
+### Asset Extraction
+
+Extract specific assets:
+
+```bash
+FrostyCmd.exe <GamePath> extract <AssetName> [OutputPath]
+```
+
+**Example:**
+
+```bash
+FrostyCmd.exe "C:/Games/SWBF2/starwarsbattlefrontii.exe" extract "Weapons/Blasters/DL-44" "./exported/"
+```
+
+## Encryption Keys
+
+Some games require encryption keys:
+
+### Key File Format
+
+Keys should be provided as `.key` files:
+
+```
+[16 bytes] - Primary encryption key (Key1)
+[16 bytes] - Secondary encryption key (Key2) [optional]
+[16384 bytes] - Tertiary encryption key (Key3) [optional]
+```
+
+### Using Keys
+
+Place the key file in the same directory as the game executable:
+
+```
+Game/
+├── game.exe
+├── game.key           # Encryption key
+└── Data/
+```
+
+Or specify explicitly:
+
+```bash
+FrostyCmd.exe <GamePath> <Command> --key "path/to/game.key"
+```
+
+## Automation Examples
+
+### Batch Profile Generation
+
+Create profiles for multiple games:
+
+```batch
+@echo off
+echo Generating Frosty Profiles...
+
+FrostyCmd.exe profile
+
+if %ERRORLEVEL% EQU 0 (
+    echo Profile generation successful!
+) else (
+    echo Profile generation failed!
+    exit /b 1
+)
+
+echo Copying profiles to distribution folder...
+copy /Y Profiles\*.bin ..\Distribution\Profiles\
+
+echo Done!
+```
+
+### Asset Export Pipeline
+
+Extract assets from multiple games:
+
+```bash
+#!/bin/bash
+
+GAMES=("BF1" "SWBF2" "BFV")
+OUTPUT_DIR="./exported_assets"
+
+for game in "${GAMES[@]}"; do
+    echo "Processing $game..."
+    FrostyCmd.exe "C:/Games/$game" extract-all --output "$OUTPUT_DIR/$game"
+done
+
+echo "Export complete!"
+```
+
+### Shader Analysis
+
+Dump shaders and generate reports:
+
+```powershell
+$GamePath = "C:\Games\BFV\bfv.exe"
+$OutputDir = "./shader_analysis"
+
+Write-Host "Dumping shader database..."
+& FrostyCmd.exe $GamePath shaderdump $OutputDir\shaders
+
+Write-Host "Dumping shader blocks..."
+& FrostyCmd.exe $GamePath shaderblockdump $OutputDir\blocks
+
+Write-Host "Generating report..."
+# Custom analysis script
+& python analyze_shaders.py $OutputDir
+
+Write-Host "Analysis complete!"
+```
+
+## Advanced Usage
+
+### Custom Logging
+
+FrostyCmd uses a console logger that outputs to stdout:
+
+```bash
+# Redirect to log file
+FrostyCmd.exe profile > profile_generation.log 2>&1
+
+# Timestamp logs
+FrostyCmd.exe profile | ForEach-Object { "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss'): $_" }
+```
+
+### Integration with Build Systems
+
+#### MSBuild Integration
+
+```xml
+<Target Name="GenerateProfiles" BeforeTargets="Build">
+  <Exec Command="FrostyCmd.exe profile" />
+</Target>
+```
+
+#### CI/CD Pipeline (GitHub Actions)
+
+```yaml
+name: Generate Profiles
+on: [push]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Generate Frosty Profiles
+        run: |
+          cd FrostyCmd
+          .\FrostyCmd.exe profile
+      
+      - name: Upload Profiles
+        uses: actions/upload-artifact@v2
+        with:
+          name: frosty-profiles
+          path: Profiles/*.bin
+```
+
+## Environment Variables
+
+Configure FrostyCmd behavior:
+
+```bash
+# Set Frosty data directory
+export FROSTY_DATA_DIR="/path/to/frosty/data"
+
+# Set default game path
+export FROSTY_GAME_PATH="C:/Games/BF1/bf1.exe"
+
+# Enable verbose logging
+export FROSTY_VERBOSE=1
+```
+
+## Exit Codes
+
+FrostyCmd returns standard exit codes:
+
+| Code | Meaning |
+|------|----------|
+| `0` | Success |
+| `1` | General error |
+| `2` | Invalid arguments |
+| `3` | File not found |
+| `4` | Permission denied |
+| `5` | Unsupported operation |
+
+## Troubleshooting
+
+### DLL Dependencies
+
+Ensure required DLLs are present:
+
+```bash
+# Check dependencies
+dumpbin /dependents FrostyCmd.exe
+
+# Required DLLs:
+# - FrostySdk.dll
+# - FrostyHash.dll
+# - libfbxsdk.dll
+# - libzstd.dll
+# - zlibwapi.dll
+```
+
+### Profile Generation Issues
+
+<Steps>
+  <Step title="Verify Banner Files">
+    Ensure all banner images exist in `Banners/` directory.
+  </Step>
+  
+  <Step title="Check Permissions">
+    Run as administrator if profile generation fails.
+  </Step>
+  
+  <Step title="Clear Existing Profiles">
+    Delete old profiles from `Profiles/` before regenerating.
+  </Step>
+</Steps>
+
+### Asset Extraction Errors
+
+- **Encryption Key Missing**: Provide correct `.key` file
+- **Asset Not Found**: Verify asset name and path
+- **Insufficient Disk Space**: Ensure adequate storage for extraction
+
+## Performance Optimization
+
+### Large-Scale Operations
+
+For processing many assets:
+
+```bash
+# Use parallel processing
+FrostyCmd.exe <GamePath> extract-batch --parallel 4 assets.txt
+
+# Limit memory usage
+FrostyCmd.exe <GamePath> export --max-memory 4096
+```
+
+### Caching
+
+FrostyCmd caches asset database:
+
+```
+Profiles/
+├── <GameName>.cache       # Asset database cache
+└── <GameName>.bin         # Profile data
+```
+
+Delete cache to force rebuild:
+
+```bash
+del Profiles\*.cache
+```
+
+## Development Integration
+
+### Using FrostySdk in Code
+
+FrostyCmd demonstrates FrostySdk usage:
+
+```csharp
+using FrostySdk;
+using FrostySdk.IO;
+using FrostySdk.Managers;
+
+// Initialize file system
+FileSystem fs = new FileSystem(basePath);
+fs.Initialize(encryptionKey);
+
+// Create resource manager
+ResourceManager rm = new ResourceManager(fs);
+rm.SetLogger(logger);
+rm.Initialize();
+
+// Create asset manager
+AssetManager am = new AssetManager(fs, rm);
+am.SetLogger(logger);
+am.Initialize(false);
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="SDK Reference" icon="code" href="/sdk/overview">
+    Learn to use FrostySdk in your projects
+  </Card>
+  <Card title="Frosty Editor" icon="paintbrush" href="/applications/editor">
+    Use the visual editor for most tasks
+  </Card>
+</CardGroup>

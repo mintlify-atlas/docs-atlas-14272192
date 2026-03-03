@@ -1,0 +1,350 @@
+---
+title: Frostbite Engine Structure
+description: Understanding Frostbite's file formats, archives, and data organization
+---
+
+Frostbite is EA's proprietary game engine used across many titles including Battlefield, FIFA, Madden, and Dragon Age. Understanding its file structure is essential for modding with Frosty Toolsuite.
+
+## File System Architecture
+
+Frostbite games organize assets in a hierarchical archive system:
+
+```
+Game Root/
+├── Data/
+│   ├── layout.toc              # Master table of contents
+│   ├── Win32/                  # Platform-specific data
+│   │   ├── {catalog}/
+│   │   │   ├── cas.cat         # Catalog index
+│   │   │   ├── cas_01.cas      # Archive data
+│   │   │   ├── cas_02.cas
+│   │   │   └── ...
+│   │   └── superbundles/       # Bundle definitions
+│   └── Patch/                  # Update data (same structure)
+└── initfs_win32                # Initial filesystem bootstrap
+```
+
+## Layout System
+
+The `layout.toc` file is the entry point for the entire game filesystem.
+
+**Layout Structure:**
+
+<Tabs>
+  <Tab title="Base Layout">
+    Located at `native_data/layout.toc`, contains:
+    - List of all superbundles
+    - Install manifest with catalog definitions
+    - Base version number
+    - Catalog to superbundle mappings
+
+    ```csharp
+    DbObject baseLayout;
+    using (DbReader reader = new DbReader(
+        new FileStream(baseLayoutPath, FileMode.Open), 
+        CreateDeobfuscator()))
+    {
+        baseLayout = reader.ReadDbObject();
+    }
+
+    foreach (DbObject sb in baseLayout.GetValue<DbObject>("superBundles"))
+        superBundles.Add(sb.GetValue<string>("name").ToLower());
+    ```
+    From FileSystem.cs:332.
+  </Tab>
+  <Tab title="Patch Layout">
+    Located at `native_patch/layout.toc`, provides:
+    - Patched/updated superbundles
+    - New or modified catalogs
+    - Head version number (current patch)
+    - Delta information
+
+    The patch layout merges with the base layout, with patch data taking precedence.
+  </Tab>
+  <Tab title="Install Manifest">
+    Defines installation chunks:
+    ```csharp
+    DbObject installManifest = layout.GetValue<DbObject>("installManifest");
+    foreach (DbObject chunk in installManifest.GetValue<DbObject>("installChunks"))
+    {
+        string name = chunk.GetValue<string>("name");
+        bool alwaysInstalled = chunk.GetValue<bool>("alwaysInstalled");
+        // Create catalog from chunk...
+    }
+    ```
+    From FileSystem.cs:389.
+  </Tab>
+</Tabs>
+
+## Catalog System (CAS/CAT)
+
+Catalogs are archive collections that store game assets.
+
+**Catalog Structure:**
+
+<Accordion title="CAS Files (Content Addressable Storage)">
+  CAS files contain the actual compressed asset data. Each catalog has multiple CAS files (cas_01.cas, cas_02.cas, etc.).
+
+  **Data Storage:**
+  - Assets stored by SHA1 hash
+  - Compressed using ZLIB, LZ4, OODLE, or ZSTD
+  - May be encrypted (requires decryption keys)
+  - Supports delta patching
+</Accordion>
+
+<Accordion title="CAT Files (Catalog Index)">
+  CAT files index the contents of CAS archives:
+
+  ```csharp
+  public class CatResourceEntry
+  {
+      public Sha1 Sha1;           // Asset identifier
+      public uint Offset;         // Offset in CAS file
+      public uint Size;           // Compressed size
+      public int ArchiveIndex;    // Which CAS file
+      public bool IsEncrypted;    // Encryption flag
+      public uint EncryptedSize;  // Size when encrypted
+      public string KeyId;        // Encryption key ID
+  }
+  ```
+
+  The ResourceManager uses CAT files to locate assets in CAS archives (ResourceManager.cs:246).
+</Accordion>
+
+<Accordion title="Patch Entries">
+  Patches use delta compression:
+
+  ```csharp
+  public class CatPatchEntry
+  {
+      public Sha1 Sha1;       // Patched asset hash
+      public Sha1 BaseSha1;   // Original asset hash
+      public Sha1 DeltaSha1;  // Delta data hash
+  }
+  ```
+
+  The engine applies delta to base to get the patched asset (ResourceManager.cs:127).
+</Accordion>
+
+## Superbundles and Bundles
+
+**Hierarchy:**
+
+```
+Superbundle (logical grouping)
+└── Bundles (actual asset containers)
+    ├── EBX assets (entities)
+    ├── RES assets (resources)
+    └── Chunks (binary data)
+```
+
+**Superbundle Structure:**
+
+<Steps>
+  <Step title="TOC File">
+    Superbundle table of contents (`.toc` or `.sb`):
+    - Lists contained bundles
+    - References to assets
+    - Dependency information
+  </Step>
+  <Step title="Bundle Organization">
+    Bundles are typed:
+    - **SharedBundle** - Shared across levels
+    - **BlueprintBundle** - Contains BlueprintBundle entity
+    - **SubLevel** - Contains SubWorldData entity
+    
+    ```csharp
+    public enum BundleType
+    {
+        None = -1,
+        SubLevel,
+        BlueprintBundle,
+        SharedBundle
+    }
+    ```
+    From AssetManager.cs:100.
+  </Step>
+  <Step title="Asset References">
+    Each bundle references its contained assets by hash/GUID
+  </Step>
+</Steps>
+
+## Binary SuperBundles
+
+Some games use binary superbundles (single file format):
+
+```csharp
+// Reading from binary superbundle
+public Stream GetResourceData(string superBundleName, long offset, long size)
+{
+    byte[] buffer = null;
+    using (NativeReader bufferReader = new NativeReader(
+        new FileStream(fs.ResolvePath(superBundleName), FileMode.Open)))
+    {
+        using (CasReader reader = new CasReader(
+            bufferReader.CreateViewStream(offset, size)))
+            buffer = reader.Read();
+    }
+    return (buffer != null) ? new MemoryStream(buffer) : null;
+}
+```
+From ResourceManager.cs:155.
+
+## initfs (Initial Filesystem)
+
+The `initfs_win32` file bootstraps the filesystem on game startup.
+
+**Contents:**
+- SDK files (type definitions)
+- Deobfuscation tables
+- Compression dictionaries
+- Encryption keys (encrypted)
+- Engine configuration
+
+**Loading initfs:**
+
+```csharp
+private void LoadInitfs(byte[] key, bool patched = true)
+{
+    string path = ResolvePath((patched ? "" : "native_data/") + "initfs_win32");
+    using (DbReader reader = new DbReader(
+        new FileStream(path, FileMode.Open), 
+        CreateDeobfuscator()))
+    {
+        DbObject initfs = reader.ReadDbObject();
+        
+        // Decrypt if encrypted
+        byte[] buffer = initfs.GetValue<byte[]>("encrypted");
+        if (buffer != null && key != null)
+        {
+            // AES decryption with provided key
+            using (Aes aes = Aes.Create())
+            {
+                aes.Key = key;
+                aes.IV = key;
+                // Decrypt buffer...
+            }
+        }
+        
+        // Store files in memory filesystem
+        foreach (DbObject fileStub in initfs)
+        {
+            DbObject file = fileStub.GetValue<DbObject>("$file");
+            string name = file.GetValue<string>("name");
+            memoryFs.Add(name, file.GetValue<byte[]>("payload"));
+        }
+    }
+}
+```
+From FileSystem.cs:260.
+
+<Info>
+Games like FIFA 18+ require decryption keys to access initfs contents. These keys are game-specific and not distributed with Frosty.
+</Info>
+
+## Path Resolution
+
+The FileSystem class handles multi-source path resolution:
+
+```csharp
+public string ResolvePath(string filename)
+{
+    // Handle native_data vs native_patch prefixes
+    filename = filename.Replace("native_data/", "");
+    filename = filename.Replace("native_patch/", "");
+    
+    // Search in priority order (patch first, then base)
+    for (int i = startCount; i < endCount; i++)
+    {
+        if (File.Exists(BasePath + paths[i] + filename))
+            return (BasePath + paths[i] + filename).Replace("\\\\", "\\");
+    }
+    return "";
+}
+```
+From FileSystem.cs:136.
+
+## Compression Types
+
+Frostbite uses multiple compression algorithms:
+
+<CardGroup cols={2}>
+  <Card title="ZLIB" icon="file-zipper">
+    Legacy compression (pre-2017 games)
+  </Card>
+  <Card title="LZ4" icon="gauge-high">
+    Fast compression (2017-2018 games)
+  </Card>
+  <Card title="OODLE" icon="bolt">
+    High-performance compression (FIFA 18+, select assets)
+  </Card>
+  <Card title="ZSTD" icon="compress">
+    Modern compression (newer titles)
+  </Card>
+</CardGroup>
+
+**Compression Binding:**
+
+```csharp
+public void Initialize()
+{
+    // Bind compression libraries
+    ZStd.Bind();
+    Oodle.Bind(fs.BasePath);
+    
+    // Load compression dictionary for ZSTD
+    if (ProfilesLibrary.DataVersion == (int)ProfileVersion.Fifa18)
+    {
+        ZStd.SetDictionary(fs.GetFileFromMemoryFs("Dictionaries/ebx.dict"));
+    }
+}
+```
+From ResourceManager.cs:26.
+
+## Deobfuscation
+
+Many Frostbite files use simple XOR obfuscation:
+
+```csharp
+public interface IDeobfuscator
+{
+    void Deobfuscate(byte[] buffer, long offset, long size);
+}
+
+// Game-specific deobfuscators
+public class NullDeobfuscator : IDeobfuscator
+{
+    public void Deobfuscate(byte[] buffer, long offset, long size) { }
+}
+```
+
+The ProfilesLibrary specifies which deobfuscator to use per game.
+
+## Version and Patch Detection
+
+Frosty detects game versions and patches:
+
+```csharp
+public uint Base { get; private set; }  // Base game version
+public uint Head { get; private set; }  // Current patched version
+
+// Read from layout.toc
+Base = patchLayout.GetValue<uint>("base");
+Head = patchLayout.GetValue<uint>("head");
+```
+From FileSystem.cs:84.
+
+<Warning>
+When a new patch is detected, Frosty invalidates its cache and rebuilds the asset index. This ensures compatibility but requires a full reload.
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Asset System" href="/concepts/asset-system" icon="box">
+    Learn about EBX, RES, chunks, and how assets are structured
+  </Card>
+  <Card title="Architecture" href="/concepts/architecture" icon="sitemap">
+    Understand the overall Frosty system architecture
+  </Card>
+</CardGroup>

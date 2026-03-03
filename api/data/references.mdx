@@ -1,0 +1,346 @@
+---
+title: Reference Types
+description: ResourceRef, FileRef, and TypeRef structures for Frostbite asset references
+---
+
+## Overview
+
+Frostbite uses specialized reference types to point to different kinds of assets and resources. These lightweight structures provide type-safe ways to reference resources, files, and type definitions.
+
+## ResourceRef
+
+Represents a reference to a resource by its unique 64-bit identifier.
+
+### Structure
+
+```csharp
+public struct ResourceRef
+{
+    private readonly ulong resourceId;
+}
+```
+
+### Properties
+
+<ResponseField name="Zero" type="ResourceRef" static>
+  Static instance representing a null/zero resource reference
+</ResponseField>
+
+### Constructor
+
+<ParamField path="value" type="ulong" required>
+  The 64-bit resource identifier
+</ParamField>
+
+```csharp
+var resourceRef = new ResourceRef(0x123456789ABCDEF0);
+```
+
+### Implicit Conversions
+
+ResourceRef supports seamless conversion to and from `ulong`.
+
+```csharp
+// ulong to ResourceRef
+ResourceRef resRef = 0x123456789ABCDEF0;
+
+// ResourceRef to ulong
+ulong id = resRef;
+```
+
+### Methods
+
+#### Equals
+
+Compares resource references for equality. Supports comparison with both `ResourceRef` and `ulong` types.
+
+```csharp
+public override bool Equals(object obj)
+```
+
+#### GetHashCode
+
+Generates hash code using FNV-1a algorithm.
+
+```csharp
+public override int GetHashCode()
+```
+
+#### ToString
+
+Returns the resource ID as a hexadecimal string.
+
+```csharp
+public override string ToString()
+```
+
+**Example:**
+```csharp
+var resRef = new ResourceRef(0x123456789ABCDEF0);
+Console.WriteLine(resRef.ToString()); // "123456789ABCDEF0"
+```
+
+### Operators
+
+```csharp
+public static bool operator ==(ResourceRef a, ResourceRef b)
+public static bool operator !=(ResourceRef a, ResourceRef b)
+```
+
+### Usage Example
+
+```csharp
+// Create resource reference
+ResourceRef textureRef = 0x1A2B3C4D5E6F7890;
+
+// Check if valid
+if (textureRef != ResourceRef.Zero)
+{
+    var resource = resourceManager.GetResource(textureRef);
+}
+
+// Convert to string for logging
+Console.WriteLine($"Resource ID: {textureRef}");
+```
+
+---
+
+## FileRef
+
+Represents a reference to a file path within the Frostbite virtual file system.
+
+### Structure
+
+```csharp
+public struct FileRef
+{
+    private string fileName;
+}
+```
+
+### Constructor
+
+<ParamField path="value" type="string" required>
+  The file path string
+</ParamField>
+
+```csharp
+var fileRef = new FileRef("path/to/asset.bin");
+```
+
+### Implicit Conversions
+
+FileRef supports seamless conversion to and from `string`.
+
+```csharp
+// string to FileRef
+FileRef fileRef = "weapons/assault_rifle.mesh";
+
+// FileRef to string
+string path = fileRef;
+```
+
+### Methods
+
+#### ToString
+
+Returns a formatted string with the file path.
+
+```csharp
+public override string ToString()
+```
+
+**Example:**
+```csharp
+var fileRef = new FileRef("vehicles/tank.mesh");
+Console.WriteLine(fileRef.ToString()); // "FileRef 'vehicles/tank.mesh'"
+```
+
+### Usage Example
+
+```csharp
+// Assign file reference to property
+FileRef meshFile = "characters/soldier.mesh";
+meshComponent.SetPropertyValue("MeshRef", meshFile);
+
+// Read file reference from property
+FileRef soundFile = soundComponent.GetPropertyValue<FileRef>("SoundFile");
+Console.WriteLine($"Sound file: {soundFile}");
+```
+
+---
+
+## TypeRef
+
+Represents a reference to a type definition, identified by either name or GUID.
+
+### Structure
+
+```csharp
+public class TypeRef
+{
+    public string Name { get; }
+    public Guid Guid { get; }
+    private Guid typeGuid;
+    private readonly string typeName;
+}
+```
+
+### Properties
+
+<ResponseField name="Name" type="string">
+  The name of the referenced type
+</ResponseField>
+
+<ResponseField name="Guid" type="Guid">
+  The GUID of the referenced type
+</ResponseField>
+
+### Constructors
+
+#### TypeRef()
+
+Creates an empty type reference.
+
+```csharp
+var typeRef = new TypeRef(); // Empty type
+```
+
+#### TypeRef(string)
+
+Creates a type reference from a type name.
+
+<ParamField path="value" type="string" required>
+  The name of the type
+</ParamField>
+
+```csharp
+var typeRef = new TypeRef("MeshAsset");
+```
+
+#### TypeRef(Guid)
+
+Creates a type reference from a type GUID and looks up the name.
+
+<ParamField path="guid" type="Guid" required>
+  The GUID of the type
+</ParamField>
+
+```csharp
+var typeGuid = new Guid("A1B2C3D4-E5F6-7890-1234-56789ABCDEF0");
+var typeRef = new TypeRef(typeGuid);
+// Name is automatically looked up from TypeLibrary
+```
+
+### Implicit Conversions
+
+```csharp
+// string to TypeRef
+TypeRef typeRef = "SoundAsset";
+
+// TypeRef to string (returns GUID string if GUID is set, otherwise name)
+string typeStr = typeRef;
+
+// Guid to TypeRef
+TypeRef typeRef2 = typeGuid;
+```
+
+### Methods
+
+#### IsNull
+
+Checks if the type reference is empty.
+
+```csharp
+public bool IsNull()
+```
+
+**Returns:** `true` if the type name is null or empty.
+
+```csharp
+var emptyRef = new TypeRef();
+if (emptyRef.IsNull())
+{
+    Console.WriteLine("Type reference is empty");
+}
+```
+
+#### ToString
+
+Returns a formatted string with the type name.
+
+```csharp
+public override string ToString()
+```
+
+**Example:**
+```csharp
+var typeRef = new TypeRef("MeshAsset");
+Console.WriteLine(typeRef.ToString()); // "TypeRef 'MeshAsset'"
+
+var nullRef = new TypeRef();
+Console.WriteLine(nullRef.ToString()); // "TypeRef '(null)'"
+```
+
+### Usage Examples
+
+#### Type Filtering
+
+```csharp
+// Filter assets by type
+TypeRef meshType = "MeshAsset";
+var meshAssets = assetManager.EnumerateEbx()
+    .Where(entry => entry.Type == meshType.Name);
+```
+
+#### Type Validation
+
+```csharp
+var assetType = new TypeRef(asset.RootObject.GetType().Name);
+if (!assetType.IsNull())
+{
+    Console.WriteLine($"Asset is of type: {assetType.Name}");
+}
+```
+
+#### Working with TypeLibrary
+
+```csharp
+// Look up type by GUID
+var typeGuid = new Guid("...");
+var typeRef = new TypeRef(typeGuid);
+Console.WriteLine($"Type GUID {typeGuid} maps to {typeRef.Name}");
+
+// Convert between name and GUID
+TypeRef namedType = "TextureAsset";
+if (namedType.Guid != Guid.Empty)
+{
+    Console.WriteLine($"Type GUID: {namedType.Guid}");
+}
+```
+
+## Comparison Table
+
+| Type | Purpose | Key Type | Conversion |
+|------|---------|----------|------------|
+| **ResourceRef** | Reference runtime resources | `ulong` | ↔️ `ulong` |
+| **FileRef** | Reference file paths | `string` | ↔️ `string` |
+| **TypeRef** | Reference type definitions | `string` or `Guid` | ↔️ `string`, ↔️ `Guid` |
+
+## Best Practices
+
+### ResourceRef
+- Use `ResourceRef.Zero` to check for null/invalid references
+- Store as hex strings when serializing to text formats
+- Resource IDs are game-specific and not portable between titles
+
+### FileRef
+- File paths are relative to the game's virtual file system
+- Use forward slashes for path separators
+- Paths are case-insensitive on most platforms
+
+### TypeRef
+- Use GUID-based constructors when working with serialized data
+- Use name-based constructors for runtime type lookups
+- Always check `IsNull()` before using the reference
+- TypeLibrary must be initialized before GUID lookups work

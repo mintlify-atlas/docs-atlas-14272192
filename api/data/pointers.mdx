@@ -1,0 +1,197 @@
+---
+title: PointerRef
+description: Reference type for internal and external EBX object pointers
+---
+
+## Overview
+
+The `PointerRef` struct represents a reference to an EBX object, which can be either internal (within the same asset) or external (in another asset). It's a fundamental type used throughout the Frostbite engine for connecting objects together.
+
+## Structure
+
+```csharp
+public struct PointerRef
+{
+    public EbxImportReference External { get; }
+    public object Internal { get; }
+    public PointerRefType Type { get; }
+}
+```
+
+## Properties
+
+<ResponseField name="External" type="EbxImportReference">
+  External reference containing FileGuid and ClassGuid for cross-asset references
+</ResponseField>
+
+<ResponseField name="Internal" type="object">
+  Internal object reference for objects within the same asset
+</ResponseField>
+
+<ResponseField name="Type" type="PointerRefType">
+  Indicates whether this is a Null, Internal, or External reference
+</ResponseField>
+
+## Constructors
+
+### PointerRef(EbxImportReference)
+
+Creates an external pointer reference.
+
+<ParamField path="externalRef" type="EbxImportReference" required>
+  The external reference to wrap
+</ParamField>
+
+```csharp
+var externalRef = new EbxImportReference 
+{ 
+    FileGuid = assetGuid, 
+    ClassGuid = instanceGuid 
+};
+var pointer = new PointerRef(externalRef);
+```
+
+### PointerRef(Guid)
+
+Creates a pointer reference from a GUID.
+
+<ParamField path="guid" type="Guid" required>
+  The file GUID to reference. Empty GUID creates a null pointer.
+</ParamField>
+
+```csharp
+// Create external reference
+var pointer = new PointerRef(fileGuid);
+
+// Create null reference
+var nullPointer = new PointerRef(Guid.Empty);
+```
+
+### PointerRef(object)
+
+Creates an internal pointer reference.
+
+<ParamField path="internalRef" type="object" required>
+  The internal object to reference
+</ParamField>
+
+```csharp
+var obj = assetRoot.GetObject("MyObject");
+var pointer = new PointerRef(obj);
+```
+
+## Methods
+
+### Equals
+
+Compares two PointerRef instances for equality.
+
+```csharp
+public override bool Equals(object obj)
+```
+
+<ParamField path="obj" type="object" required>
+  The object to compare with
+</ParamField>
+
+Returns `true` if both pointers have the same Type and reference the same object/external asset.
+
+### GetHashCode
+
+Generates a hash code for the pointer reference.
+
+```csharp
+public override int GetHashCode()
+```
+
+Uses FNV-1a hashing algorithm to combine Type, Internal, and External values.
+
+## Operators
+
+### Equality Operators
+
+```csharp
+public static bool operator ==(PointerRef A, object B)
+public static bool operator !=(PointerRef A, object B)
+```
+
+Compares PointerRef instances using value equality.
+
+## Related Types
+
+### PointerRefType
+
+Enumeration indicating the type of pointer.
+
+```csharp
+public enum PointerRefType : byte
+{
+    Null = 0,      // No reference
+    Internal = 1,  // Reference to object in same asset
+    External = 2   // Reference to object in another asset
+}
+```
+
+### EbxImportReference
+
+Structure for external references.
+
+```csharp
+public struct EbxImportReference
+{
+    public Guid FileGuid;   // GUID of the referenced asset file
+    public Guid ClassGuid;  // GUID of the referenced instance
+}
+```
+
+## Usage Examples
+
+### Checking Pointer Type
+
+```csharp
+if (pointer.Type == PointerRefType.External)
+{
+    Console.WriteLine($"External reference: {pointer.External.FileGuid}");
+}
+else if (pointer.Type == PointerRefType.Internal)
+{
+    Console.WriteLine($"Internal reference: {pointer.Internal}");
+}
+else
+{
+    Console.WriteLine("Null pointer");
+}
+```
+
+### Resolving External Pointers
+
+```csharp
+if (pointer.Type == PointerRefType.External)
+{
+    var referencedAsset = assetManager.GetEbx(pointer.External.FileGuid);
+    var referencedObject = referencedAsset.GetObject(pointer.External.ClassGuid);
+}
+```
+
+### Creating Object Links
+
+```csharp
+// Link to another object in the same asset
+var targetObject = asset.RootObject.GetProperty("TargetEntity");
+myObject.SetPropertyValue("Reference", new PointerRef(targetObject));
+
+// Link to object in another asset
+var externalRef = new EbxImportReference
+{
+    FileGuid = targetAssetGuid,
+    ClassGuid = targetInstanceGuid
+};
+myObject.SetPropertyValue("ExternalLink", new PointerRef(externalRef));
+```
+
+## Best Practices
+
+- Always check `Type` before accessing `Internal` or `External` properties
+- Use `Guid.Empty` to create null pointers instead of default constructors
+- External references require both FileGuid and ClassGuid to be valid
+- Internal references maintain object identity within the asset's lifetime

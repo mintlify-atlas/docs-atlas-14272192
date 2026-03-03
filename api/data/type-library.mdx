@@ -1,0 +1,517 @@
+---
+title: TypeLibrary
+description: Dynamic type system for loading and managing Frostbite EBX class definitions
+---
+
+## Overview
+
+The `TypeLibrary` is a central component of FrostySdk that manages the runtime type system for Frostbite assets. It dynamically loads, constructs, and provides access to EBX class definitions specific to each game.
+
+## Key Features
+
+- **Dynamic Type Generation**: Creates .NET types from Frostbite class definitions at runtime
+- **Type Reflection**: Maps GUIDs and hashes to type names and instances
+- **SDK Caching**: Compiles and caches type assemblies for improved performance
+- **Type Hierarchy**: Manages inheritance and type relationships
+
+## Core Classes
+
+### TypeLibrary
+
+Main static class providing type management functionality.
+
+```csharp
+public static class TypeLibrary
+{
+    public static class Reflection { }
+}
+```
+
+---
+
+## Initialization
+
+### Initialize
+
+Initializes the TypeLibrary and optionally loads a cached SDK.
+
+```csharp
+public static void Initialize(bool loadSDK = true)
+```
+
+<ParamField path="loadSDK" type="bool" default="true">
+  Whether to load the cached SDK assembly for the current profile
+</ParamField>
+
+**Example:**
+```csharp
+// Initialize with SDK loading
+TypeLibrary.Initialize();
+
+// Initialize without SDK (for building new SDK)
+TypeLibrary.Initialize(loadSDK: false);
+```
+
+### GetSdkVersion
+
+Retrieves the version number of the currently loaded SDK.
+
+```csharp
+public static uint GetSdkVersion()
+```
+
+**Returns:** SDK version number, or 0 if no SDK is loaded.
+
+```csharp
+var version = TypeLibrary.GetSdkVersion();
+Console.WriteLine($"SDK Version: {version}");
+```
+
+---
+
+## Type Creation and Access
+
+### GetType (by name)
+
+Retrieves a type by its name.
+
+```csharp
+public static Type GetType(string name)
+```
+
+<ParamField path="name" type="string" required>
+  The name of the type to retrieve
+</ParamField>
+
+**Returns:** The Type object, or null if not found.
+
+```csharp
+Type meshAssetType = TypeLibrary.GetType("MeshAsset");
+if (meshAssetType != null)
+{
+    var instance = Activator.CreateInstance(meshAssetType);
+}
+```
+
+### GetType (by GUID)
+
+Retrieves a type by its unique identifier.
+
+```csharp
+public static Type GetType(Guid guid)
+```
+
+<ParamField path="guid" type="Guid" required>
+  The GUID of the type
+</ParamField>
+
+**Returns:** The Type object, or null if not found.
+
+```csharp
+var typeGuid = new Guid("...");
+Type type = TypeLibrary.GetType(typeGuid);
+```
+
+### GetType (by hash)
+
+Retrieves a type by its FNV hash.
+
+```csharp
+public static Type GetType(uint hash)
+```
+
+<ParamField path="hash" type="uint" required>
+  The FNV-1 hash of the type name
+</ParamField>
+
+**Returns:** The Type object, or null if not found.
+
+---
+
+## Type Queries
+
+### GetTypes
+
+Retrieves all types that inherit from or match a specific type.
+
+```csharp
+public static Type[] GetTypes(Type type)
+public static Type[] GetTypes(string name)
+```
+
+<ParamField path="type" type="Type">
+  The base type to search for
+</ParamField>
+
+<ParamField path="name" type="string">
+  The name of the base type
+</ParamField>
+
+**Returns:** Array of all matching types.
+
+**Example:**
+```csharp
+// Get all types inheriting from DataContainer
+Type[] dataContainers = TypeLibrary.GetTypes("DataContainer");
+
+foreach (var type in dataContainers)
+{
+    Console.WriteLine($"Found type: {type.Name}");
+}
+```
+
+### GetConcreteTypes
+
+Retrieves all concrete (non-abstract) types from the loaded SDK.
+
+```csharp
+public static Type[] GetConcreteTypes()
+```
+
+**Returns:** Array of all concrete types.
+
+```csharp
+var allTypes = TypeLibrary.GetConcreteTypes();
+Console.WriteLine($"Total types: {allTypes.Length}");
+```
+
+### GetDerivedTypes
+
+Retrieves all types that inherit from a specific type.
+
+```csharp
+public static Type[] GetDerivedTypes(Type type)
+```
+
+<ParamField path="type" type="Type" required>
+  The base type to search for derivatives
+</ParamField>
+
+**Example:**
+```csharp
+Type entityType = TypeLibrary.GetType("EntityData");
+Type[] entityTypes = TypeLibrary.GetDerivedTypes(entityType);
+```
+
+---
+
+## Type Checking
+
+### IsSubClassOf
+
+Checks if a type or object is a subclass of another type.
+
+```csharp
+public static bool IsSubClassOf(object obj, string name)
+public static bool IsSubClassOf(Type type, string name)
+public static bool IsSubClassOf(string type, string name)
+```
+
+<ParamField path="obj" type="object">
+  The object to check
+</ParamField>
+
+<ParamField path="type" type="Type | string">
+  The type to check
+</ParamField>
+
+<ParamField path="name" type="string" required>
+  The name of the base type
+</ParamField>
+
+**Returns:** `true` if the type is a subclass or exact match.
+
+**Example:**
+```csharp
+// Check object type
+if (TypeLibrary.IsSubClassOf(myObject, "MeshAsset"))
+{
+    Console.WriteLine("Object is a mesh asset");
+}
+
+// Check type hierarchy
+if (TypeLibrary.IsSubClassOf("SoldierWeaponData", "WeaponData"))
+{
+    Console.WriteLine("SoldierWeaponData inherits from WeaponData");
+}
+```
+
+---
+
+## Object Creation
+
+### CreateObject (by name)
+
+Creates a new instance of a type by name.
+
+```csharp
+public static dynamic CreateObject(string name)
+```
+
+<ParamField path="name" type="string" required>
+  The name of the type to instantiate
+</ParamField>
+
+**Returns:** New instance of the type, or null if type not found.
+
+```csharp
+dynamic meshAsset = TypeLibrary.CreateObject("MeshAsset");
+meshAsset.Name = "MyMesh";
+```
+
+### CreateObject (by GUID)
+
+Creates a new instance of a type by GUID.
+
+```csharp
+public static dynamic CreateObject(Guid guid)
+```
+
+<ParamField path="guid" type="Guid" required>
+  The GUID of the type to instantiate
+</ParamField>
+
+**Example:**
+```csharp
+var typeGuid = new Guid("A1B2C3D4-E5F6-7890-1234-56789ABCDEF0");
+dynamic obj = TypeLibrary.CreateObject(typeGuid);
+```
+
+---
+
+## Reflection Subsystem
+
+### TypeLibrary.Reflection
+
+Provides GUID and hash-based type lookups.
+
+#### LoadClassInfoAssets
+
+Loads type information from TypeInfoAsset entries and builds lookup cache.
+
+```csharp
+public static void LoadClassInfoAssets(AssetManager am)
+```
+
+<ParamField path="am" type="AssetManager" required>
+  The asset manager containing TypeInfoAsset entries
+</ParamField>
+
+**Example:**
+```csharp
+var assetManager = new AssetManager(fileSystem);
+TypeLibrary.Reflection.LoadClassInfoAssets(assetManager);
+```
+
+#### LookupGuid
+
+Finds the GUID for a type by name.
+
+```csharp
+public static Guid LookupGuid(string name)
+```
+
+<ParamField path="name" type="string" required>
+  The type name to look up
+</ParamField>
+
+**Returns:** The type's GUID, or `Guid.Empty` if not found.
+
+```csharp
+Guid meshGuid = TypeLibrary.Reflection.LookupGuid("MeshAsset");
+Console.WriteLine($"MeshAsset GUID: {meshGuid}");
+```
+
+#### LookupType (by GUID)
+
+Finds the type name for a GUID.
+
+```csharp
+public static string LookupType(Guid guid)
+```
+
+<ParamField path="guid" type="Guid" required>
+  The GUID to look up
+</ParamField>
+
+**Returns:** The type name, or the GUID as string if not found.
+
+```csharp
+var guid = new Guid("...");
+string typeName = TypeLibrary.Reflection.LookupType(guid);
+```
+
+#### LookupType (by hash)
+
+Finds the Type object for a FNV hash.
+
+```csharp
+public static Type LookupType(uint hash)
+```
+
+<ParamField path="hash" type="uint" required>
+  The FNV-1 hash of the type name
+</ParamField>
+
+**Returns:** The Type object, or null if not found.
+
+#### Cache Management
+
+```csharp
+public static bool ReadCache()
+public static void WriteToCache()
+```
+
+- **ReadCache**: Loads type information from cache file. Returns `true` if successful.
+- **WriteToCache**: Saves current type information to cache.
+
+**Cache Location:** `Caches/{ProfileName}_typeinfo.cache`
+
+---
+
+## SDK Building
+
+### LoadClassesSDK
+
+Loads class definitions from an SDK text file.
+
+```csharp
+public static DbObject LoadClassesSDK(Stream sdkStream)
+```
+
+<ParamField path="sdkStream" type="Stream" required>
+  Stream containing SDK class definitions
+</ParamField>
+
+**Returns:** DbObject containing parsed class definitions.
+
+### BuildModule
+
+Builds a dynamic assembly from class definitions.
+
+```csharp
+public static void BuildModule(string sdkFilename, DbObject classList)
+```
+
+<ParamField path="sdkFilename" type="string" required>
+  Output filename for the compiled assembly (without .dll extension)
+</ParamField>
+
+<ParamField path="classList" type="DbObject" required>
+  Class definitions from LoadClassesSDK
+</ParamField>
+
+**Example:**
+```csharp
+using (var stream = File.OpenRead("sdk_classes.txt"))
+{
+    var classList = TypeLibrary.LoadClassesSDK(stream);
+    TypeLibrary.BuildModule("MyGameSDK", classList);
+}
+```
+
+---
+
+## Helper Methods
+
+### InitializeArrays
+
+Initializes array properties on an object instance.
+
+```csharp
+internal static void InitializeArrays(object obj)
+```
+
+Automatically called during object creation to ensure List properties are instantiated.
+
+---
+
+## Usage Examples
+
+### Complete Initialization Flow
+
+```csharp
+// 1. Initialize the TypeLibrary
+TypeLibrary.Initialize();
+
+// 2. Load type reflection data
+var assetManager = new AssetManager(fileSystem);
+TypeLibrary.Reflection.LoadClassInfoAssets(assetManager);
+
+// 3. Create objects
+dynamic meshAsset = TypeLibrary.CreateObject("MeshAsset");
+```
+
+### Type Hierarchy Navigation
+
+```csharp
+// Get all weapon types
+Type[] weaponTypes = TypeLibrary.GetTypes("WeaponData");
+
+foreach (var weaponType in weaponTypes)
+{
+    Console.WriteLine($"Weapon Type: {weaponType.Name}");
+    
+    // Create instance
+    dynamic weapon = TypeLibrary.CreateObject(weaponType.Name);
+    
+    // Check specific subclass
+    if (TypeLibrary.IsSubClassOf(weaponType, "SoldierWeaponData"))
+    {
+        Console.WriteLine("  - This is a soldier weapon");
+    }
+}
+```
+
+### GUID-Based Type Resolution
+
+```csharp
+// Resolve type from GUID
+var typeGuid = ebxAsset.GetTypeGuid();
+Type assetType = TypeLibrary.GetType(typeGuid);
+
+if (assetType != null)
+{
+    dynamic instance = TypeLibrary.CreateObject(assetType.Name);
+    Console.WriteLine($"Created instance of {assetType.Name}");
+}
+```
+
+### Working with Reflection Cache
+
+```csharp
+// Try to load from cache first
+if (!TypeLibrary.Reflection.ReadCache())
+{
+    // Cache miss - load from assets
+    TypeLibrary.Reflection.LoadClassInfoAssets(assetManager);
+    
+    // Save for next time
+    TypeLibrary.Reflection.WriteToCache();
+}
+
+// Now lookups are available
+Guid meshGuid = TypeLibrary.Reflection.LookupGuid("MeshAsset");
+string meshName = TypeLibrary.Reflection.LookupType(meshGuid);
+```
+
+## Performance Considerations
+
+- **SDK Loading**: The first initialization can be slow. Use cached SDKs when possible.
+- **Type Lookups**: GUID and hash lookups build internal dictionaries on first use.
+- **Cache Files**: Type info caches significantly improve startup time.
+- **Assembly Generation**: Building dynamic assemblies is expensive - save to disk.
+
+## Thread Safety
+
+<Warning>
+  TypeLibrary operations are not thread-safe. Initialize and load types on a single thread before accessing from multiple threads.
+</Warning>
+
+## Best Practices
+
+1. **Initialize Once**: Call `TypeLibrary.Initialize()` once at application startup
+2. **Cache Aggressively**: Always use `ReadCache()` and `WriteToCache()` for reflection data
+3. **Validate Types**: Check for null returns from `GetType()` before using
+4. **SDK Versioning**: Use `GetSdkVersion()` to detect SDK changes
+5. **Type Checking**: Prefer `IsSubClassOf()` over direct type comparison for polymorphism

@@ -1,0 +1,321 @@
+---
+title: 'ResAssetEntry'
+description: 'Resource asset entry API for RES (Resource) assets'
+---
+
+## Overview
+
+The `ResAssetEntry` class represents resource assets in the Frostbite engine. Resource assets contain binary data such as textures, meshes, animations, and other game resources.
+
+## Class Definition
+
+```csharp
+public class ResAssetEntry : AssetEntry
+{
+    public override string Type => ((ResourceType)ResType).ToString();
+    public override string AssetType => "res";
+    
+    public ulong ResRid;
+    public uint ResType;
+    public byte[] ResMeta;
+}
+```
+
+Location: `FrostySdk/Managers/AssetManager.cs:379`
+
+## Properties
+
+<ParamField path="ResRid" type="ulong">
+  Resource ID - unique 64-bit identifier for the resource. Used for lookups and references.
+</ParamField>
+
+<ParamField path="ResType" type="uint">
+  Resource type enumeration value. Cast to `ResourceType` enum for readable type name.
+</ParamField>
+
+<ParamField path="ResMeta" type="byte[]">
+  Resource metadata - format varies by resource type. Contains resource-specific configuration.
+</ParamField>
+
+<ParamField path="Type" type="string" override>
+  Overrides base property to return the resource type name (e.g., `"Texture"`, `"MeshSet"`)
+</ParamField>
+
+<ParamField path="AssetType" type="string" override>
+  Returns `"res"` to identify this as a resource asset entry.
+</ParamField>
+
+### Inherited Properties
+
+See [EbxAssetEntry](/api/assets/ebx#inherited-properties) for complete list of base properties including:
+- Name, Filename, Path, DisplayName
+- Sha1, Size, OriginalSize
+- IsModified, IsDirty, IsAdded
+- Bundles, LinkedAssets
+
+## Resource Types
+
+The `ResourceType` enum defines all supported resource types:
+
+<Expandable title="Common Resource Types">
+  <ResponseField name="Texture" value="0x6BDE20BA">
+    Standard texture resource (DDS format)
+  </ResponseField>
+
+  <ResponseField name="MeshSet" value="0x49B156D4">
+    3D mesh geometry data
+  </ResponseField>
+
+  <ResponseField name="AtlasTexture" value="0x957C32B1">
+    Texture atlas for UI or sprites
+  </ResponseField>
+
+  <ResponseField name="SwfMovie" value="0x2D47A5FF">
+    Scaleform UI movie file
+  </ResponseField>
+
+  <ResponseField name="IShaderDatabase" value="0x36F3F2C0">
+    Shader program database
+  </ResponseField>
+
+  <ResponseField name="HavokPhysicsData" value="0x91043F65">
+    Havok physics collision/simulation data
+  </ResponseField>
+
+  <ResponseField name="AnimTrackData" value="0xD070EED1">
+    Animation track data
+  </ResponseField>
+
+  <ResponseField name="LocalizedStringResource" value="0x5E862E05">
+    Localized text strings
+  </ResponseField>
+
+  <ResponseField name="SvgImage" value="0x89983F10">
+    Scalable vector graphics image
+  </ResponseField>
+
+  <ResponseField name="RawFileData" value="0x3568E2B7">
+    Raw unprocessed file data
+  </ResponseField>
+</Expandable>
+
+<Expandable title="Graphics Resource Types">
+  <ResponseField name="DxTexture" value="0x5C4954A6">
+    DirectX texture resource
+  </ResponseField>
+
+  <ResponseField name="RenderTexture" value="0x41D57E10">
+    Render target texture
+  </ResponseField>
+
+  <ResponseField name="Dx11ShaderProgramDatabase" value="0xF04F0C81">
+    DirectX 11 shader database
+  </ResponseField>
+
+  <ResponseField name="Dx12PcRvmDatabase" value="0x6B4B6E85">
+    DirectX 12 PC RVM database
+  </ResponseField>
+
+  <ResponseField name="EnlightenDatabase" value="0x70C5CB3E">
+    Enlighten lighting database
+  </ResponseField>
+</Expandable>
+
+<Expandable title="Physics & Animation Types">
+  <ResponseField name="EAClothAssetData" value="0x85AC783D">
+    EA cloth simulation data
+  </ResponseField>
+
+  <ResponseField name="MorphTargetsResource" value="0x1091C8C5">
+    Mesh morph target data
+  </ResponseField>
+
+  <ResponseField name="RagdollResource" value="0x319D8CD0">
+    Character ragdoll physics data
+  </ResponseField>
+
+  <ResponseField name="AntResource" value="0xEC1B7BF4">
+    ANT animation runtime resource
+  </ResponseField>
+
+  <ResponseField name="CompressedClipData" value="0x85548684">
+    Compressed animation clip
+  </ResponseField>
+</Expandable>
+
+## Methods
+
+Resource entries inherit all methods from `AssetEntry`:
+
+- `AddToBundle(int bid)` - Add to bundle
+- `AddToBundles(IEnumerable<int>)` - Add to multiple bundles  
+- `IsInBundle(int bid)` - Check bundle membership
+- `EnumerateBundles(bool addedOnly)` - Iterate bundles
+- `LinkAsset(AssetEntry)` - Link to other assets
+
+See [EbxAssetEntry](/api/assets/ebx#inherited-methods) for detailed method documentation.
+
+## Usage Examples
+
+### Reading a Resource
+
+```csharp
+ResAssetEntry entry = assetManager.GetResEntry("textures/ui/icon");
+if (entry != null)
+{
+    Console.WriteLine($"Type: {entry.Type}");
+    Console.WriteLine($"ResRid: 0x{entry.ResRid:X16}");
+    Console.WriteLine($"Size: {entry.OriginalSize / 1024.0:F2} KB");
+    
+    // Get resource type
+    ResourceType resType = (ResourceType)entry.ResType;
+    Console.WriteLine($"Resource Type: {resType}");
+}
+```
+
+### Getting Resource by RID
+
+```csharp
+ulong resRid = 0x123456789ABCDEF0;
+ResAssetEntry entry = assetManager.GetResEntry(resRid);
+```
+
+### Modifying a Resource
+
+```csharp
+// Modify by resource ID
+ulong resRid = entry.ResRid;
+byte[] newData = /* ... your modified resource data ... */;
+byte[] newMeta = /* ... optional new metadata ... */;
+
+assetManager.ModifyRes(resRid, newData, newMeta);
+
+// Or modify by name
+assetManager.ModifyRes("textures/ui/icon", newData, newMeta);
+```
+
+### Working with Texture Resources
+
+```csharp
+ResAssetEntry texEntry = assetManager.GetResEntry("characters/hero/diffuse");
+if ((ResourceType)texEntry.ResType == ResourceType.Texture)
+{
+    // Load the texture resource
+    using (NativeReader reader = new NativeReader(
+        assetManager.GetRes(texEntry)))
+    {
+        Texture texture = new Texture(reader);
+        
+        // Modify texture data
+        byte[] newPixelData = /* ... */;
+        texture.SetData(0, newPixelData);
+        
+        // Save back
+        assetManager.ModifyRes(texEntry.ResRid, texture.SaveBytes());
+    }
+}
+```
+
+### Enumerating Resources by Type
+
+```csharp
+// Get all texture resources
+uint textureType = (uint)ResourceType.Texture;
+foreach (ResAssetEntry entry in assetManager.EnumerateRes(
+    resType: textureType))
+{
+    Console.WriteLine($"Texture: {entry.Name}");
+}
+```
+
+### Checking Resource Metadata
+
+```csharp
+ResAssetEntry entry = assetManager.GetResEntry("meshes/character");
+if (entry.ResMeta != null && entry.ResMeta.Length > 0)
+{
+    // Parse resource-specific metadata
+    using (var reader = new NativeReader(new MemoryStream(entry.ResMeta)))
+    {
+        // Read metadata fields based on resource type
+        if ((ResourceType)entry.ResType == ResourceType.MeshSet)
+        {
+            // Parse mesh metadata
+        }
+    }
+}
+```
+
+### Adding a New Resource
+
+```csharp
+string name = "textures/custom/mytexture";
+ResourceType resType = ResourceType.Texture;
+byte[] resMeta = /* ... texture metadata ... */;
+byte[] data = /* ... texture data ... */;
+int[] bundles = { bundleId };
+
+ResAssetEntry newRes = assetManager.AddRes(
+    name, resType, resMeta, data, bundles);
+    
+Console.WriteLine($"Created resource with RID: 0x{newRes.ResRid:X16}");
+```
+
+### Linking to EBX
+
+```csharp
+// Resources are typically linked to EBX assets
+EbxAssetEntry ebx = assetManager.GetEbxEntry("meshes/character");
+ResAssetEntry res = assetManager.GetResEntry("meshes/character");
+
+ebx.LinkAsset(res);
+
+// Now modifications to the resource mark the EBX as modified too
+res.IsDirty = true;
+Console.WriteLine($"EBX is modified: {ebx.IsModified}");  // True
+```
+
+## Storage Locations
+
+Resources can be stored in different locations:
+
+<ResponseField name="Cas" type="AssetDataLocation">
+  Stored in CAS (Content-Addressable Storage) archive files
+</ResponseField>
+
+<ResponseField name="SuperBundle" type="AssetDataLocation">
+  Embedded in binary superbundle files
+</ResponseField>
+
+<ResponseField name="Cache" type="AssetDataLocation">
+  Cached locally (for patched/modified data)
+</ResponseField>
+
+<ResponseField name="CasNonIndexed" type="AssetDataLocation">
+  Non-indexed CAS storage
+</ResponseField>
+
+## Modified Resource Data
+
+When a resource is modified, data is stored in `ModifiedEntry`:
+
+```csharp
+if (entry.HasModifiedData)
+{
+    ModifiedAssetEntry mod = entry.ModifiedEntry;
+    
+    // Modified data properties
+    byte[] data = mod.Data;              // Compressed modified data
+    long originalSize = mod.OriginalSize; // Uncompressed size
+    Sha1 sha1 = mod.Sha1;                // SHA-1 of modified data
+    byte[] resMeta = mod.ResMeta;         // Modified metadata
+    bool isInline = mod.IsInline;         // Inline in bundle?
+}
+```
+
+## Related Types
+
+- [EbxAssetEntry](/api/assets/ebx) - Entity assets that reference resources
+- [ChunkAssetEntry](/api/assets/chunks) - Chunk data for large resources
+- [AssetManager](/api/managers/asset-manager) - Resource management operations
+- [ResourceManager](/api/managers/resource-manager) - Low-level resource loading

@@ -1,0 +1,218 @@
+---
+title: System Architecture
+description: Understanding the Frosty Toolsuite architecture and core components
+---
+
+Frosty Toolsuite is built on a modular architecture designed to load, modify, and manage Frostbite engine game assets. The system consists of three primary layers: the SDK layer, the Core layer, and the Plugin layer.
+
+## Core Components
+
+The architecture is built around several key managers that coordinate asset handling:
+
+<CardGroup cols={2}>
+  <Card title="FileSystem" icon="folder-tree">
+    Manages game file paths, catalogs, and data sources
+  </Card>
+  <Card title="AssetManager" icon="database">
+    Tracks and manages all EBX, RES, and chunk assets
+  </Card>
+  <Card title="ResourceManager" icon="box-archive">
+    Handles CAS/CAT archive reading and decompression
+  </Card>
+  <Card title="PluginManager" icon="plug">
+    Loads and coordinates plugin extensions
+  </Card>
+</CardGroup>
+
+## System Layers
+
+### SDK Layer (FrostySdk)
+
+The SDK layer provides low-level access to Frostbite data structures and file formats.
+
+**Key Classes:**
+- `FileSystem` - Path resolution and catalog management (FileSystem.cs:58)
+- `AssetManager` - Asset tracking and modification (Managers/AssetManager.cs:440)
+- `ResourceManager` - CAS/CAT archive handling (Managers/ResourceManager.cs:10)
+- `TypeLibrary` - Runtime type information system
+- `ProfilesLibrary` - Game-specific configuration profiles
+
+**Responsibilities:**
+- Reading and writing Frostbite file formats (EBX, RES, chunks)
+- Managing game catalogs and superbundles
+- Handling asset compression/decompression
+- Providing game profile abstraction
+
+### Core Layer (FrostyPlugin/FrostyCore)
+
+The Core layer builds on the SDK to provide editor and mod management functionality.
+
+**Key Classes:**
+- `PluginManager` - Plugin discovery and lifecycle (PluginManager.cs:18)
+- `FrostyProject` - Project file management (FrostyProject.cs:16)
+- `App` - Application-wide state and managers
+- `Config` - User configuration and settings
+
+**Responsibilities:**
+- Plugin system and extensibility
+- Project save/load operations
+- Asset modification tracking
+- UI framework integration
+
+### Plugin Layer
+
+Plugins extend functionality through well-defined extension points:
+
+```csharp
+// Example: Asset Definition Plugin
+[RegisterAssetDefinition("TextureAsset", typeof(TextureAssetDefinition))]
+public class TextureAssetDefinition : AssetDefinition
+{
+    public override void GetSupportedFileTypes(List<string> extensions)
+    {
+        extensions.Add(".dds");
+        extensions.Add(".png");
+    }
+}
+```
+
+## Data Flow
+
+<Steps>
+  <Step title="Initialization">
+    FileSystem loads layout.toc and catalogs to build the game file index
+  </Step>
+  <Step title="Asset Loading">
+    AssetManager reads superbundle TOC files and populates asset registries
+  </Step>
+  <Step title="Data Access">
+    ResourceManager retrieves compressed data from CAS archives
+  </Step>
+  <Step title="Modification">
+    AssetManager tracks changes and maintains modified asset state
+  </Step>
+  <Step title="Export">
+    FrostyProject serializes modifications to .fbproject or .fbmod files
+  </Step>
+</Steps>
+
+## Asset Management Architecture
+
+The AssetManager maintains three primary registries:
+
+<Tabs>
+  <Tab title="EBX Assets">
+    Entity data stored in `ebxList` dictionary:
+    ```csharp
+    private Dictionary<string, EbxAssetEntry> ebxList = 
+        new Dictionary<string, EbxAssetEntry>(StringComparer.OrdinalIgnoreCase);
+    private Dictionary<Guid, EbxAssetEntry> ebxGuidList = 
+        new Dictionary<Guid, EbxAssetEntry>();
+    ```
+    Provides lookup by name (case-insensitive) or GUID.
+  </Tab>
+  <Tab title="Resource Assets">
+    Binary resources stored in `resList` dictionary:
+    ```csharp
+    private Dictionary<string, ResAssetEntry> resList = 
+        new Dictionary<string, ResAssetEntry>();
+    private Dictionary<ulong, ResAssetEntry> resRidList = 
+        new Dictionary<ulong, ResAssetEntry>();
+    ```
+    Provides lookup by name or Resource ID (RID).
+  </Tab>
+  <Tab title="Chunks">
+    Binary data chunks stored by GUID:
+    ```csharp
+    private Dictionary<Guid, ChunkAssetEntry> chunkList = 
+        new Dictionary<Guid, ChunkAssetEntry>();
+    ```
+    Chunks are referenced by textures, meshes, and other resources.
+  </Tab>
+</Tabs>
+
+## Modification Tracking
+
+Frosty tracks asset modifications at multiple levels:
+
+**Asset States:**
+- `IsAdded` - Asset created by user
+- `IsModified` - Asset or linked asset has changes
+- `IsDirty` - Asset has unsaved changes
+- `HasModifiedData` - Asset data has been altered
+
+**ModifiedAssetEntry Structure:**
+```csharp
+public class ModifiedAssetEntry
+{
+    public Sha1 Sha1;              // Hash of modified data
+    public byte[] Data;            // Compressed modified data
+    public object DataObject;      // Deserialized object (EBX/Resource)
+    public long OriginalSize;      // Uncompressed size
+    public bool IsDirty;           // Has unsaved changes
+    public List<Guid> DependentAssets;  // Asset dependencies
+}
+```
+
+From AssetManager.cs:326.
+
+<Info>
+The system uses a lazy modification approach - assets are only fully loaded and deserialized when accessed for editing. This keeps memory usage low even with large game files.
+</Info>
+
+## Cache System
+
+Frosty maintains a cache to speed up subsequent loads:
+
+**Cache Contents:**
+- Asset registry (EBX/RES/Chunk lists)
+- Bundle and superbundle structure
+- Asset metadata (type, size, location)
+- Dependency graphs
+
+**Cache Invalidation:**
+The cache is regenerated when:
+- Game version changes (patch detection)
+- Cache version mismatch
+- Profile changes
+- Cache file corrupted or missing
+
+Cache files are stored in `Caches/{ProfileName}_*.cache`.
+
+## Profile System
+
+Profiles provide game-specific configuration:
+
+```csharp
+public class Profile
+{
+    public string Name;           // Internal identifier
+    public string DisplayName;    // User-facing name
+    public int DataVersion;       // Game version ID
+    public string Deobfuscator;   // Deobfuscation strategy
+    public string AssetLoader;    // Asset loading strategy
+    public List<FileSystemSource> Sources;  // Data paths
+}
+```
+
+Profiles are stored in compiled `Profiles.bin` and loaded via ProfilesLibrary.cs:12.
+
+## Thread Safety
+
+<Warning>
+Most AssetManager operations are NOT thread-safe. The UI layer must ensure operations are serialized or use appropriate locking when accessing assets from background threads.
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Frostbite Engine" href="/concepts/frostbite-engine" icon="gamepad">
+    Learn about Frostbite file formats and structure
+  </Card>
+  <Card title="Asset System" href="/concepts/asset-system" icon="box">
+    Understand EBX, RES, chunks, and bundles
+  </Card>
+  <Card title="Plugin System" href="/concepts/plugin-system" icon="puzzle-piece">
+    Extend Frosty with custom plugins
+  </Card>
+</CardGroup>

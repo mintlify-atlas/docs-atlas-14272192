@@ -1,0 +1,604 @@
+---
+title: Custom Asset Editors
+description: Build custom editors and property grid type editors for game assets
+---
+
+## Overview
+
+Frosty Toolsuite provides two main approaches to customizing the editing experience:
+
+1. **Asset Editors**: Full custom editors for specific asset types (inherit from `FrostyAssetEditor`)
+2. **Type Editors**: Custom property grid editors for specific field types (inherit from `FrostyTypeEditor<T>`)
+
+## FrostyAssetEditor
+
+Create custom editors for entire asset types by inheriting from `FrostyAssetEditor`.
+
+### Base Class
+
+```csharp
+public class FrostyAssetEditor : Control
+```
+
+### Constructor
+
+```csharp
+public FrostyAssetEditor(ILogger inLogger)
+```
+
+<ParamField path="inLogger" type="ILogger" required>
+  The logger instance for the editor to use
+</ParamField>
+
+### Properties
+
+#### RootObject
+
+```csharp
+public object RootObject { get; }
+```
+
+Gets the root object of the currently loaded asset.
+
+#### RootObjects
+
+```csharp
+public IEnumerable<object> RootObjects { get; }
+```
+
+Gets all root objects in the asset (some assets may have multiple roots).
+
+#### Objects
+
+```csharp
+public IEnumerable<object> Objects { get; }
+```
+
+Gets all objects in the asset, including nested objects.
+
+#### AssetEntry
+
+```csharp
+public AssetEntry AssetEntry { get; }
+```
+
+Gets the asset entry for the currently loaded asset.
+
+#### Asset
+
+```csharp
+public EbxAsset Asset { get; }
+```
+
+Gets the loaded EBX asset.
+
+#### AssetModified
+
+```csharp
+public bool AssetModified { get; set; }
+```
+
+Set to true to mark the asset as modified and save changes to the AssetManager.
+
+### Methods
+
+#### SetAsset
+
+```csharp
+public int SetAsset(AssetEntry entry)
+```
+
+Loads the specified asset into the editor. Called automatically by the editor framework.
+
+<ParamField path="entry" type="AssetEntry" required>
+  The asset entry to load
+</ParamField>
+
+#### LoadAsset
+
+```csharp
+protected virtual EbxAsset LoadAsset(EbxAssetEntry entry)
+```
+
+Override to customize how the asset is loaded.
+
+<ParamField path="entry" type="EbxAssetEntry" required>
+  The asset entry to load
+</ParamField>
+
+<ResponseField name="return" type="EbxAsset">
+  The loaded asset
+</ResponseField>
+
+#### AddDependentObject
+
+```csharp
+public void AddDependentObject(Guid guid)
+```
+
+Adds a dependent object to the asset and loads it.
+
+<ParamField path="guid" type="Guid" required>
+  The GUID of the asset to add as a dependency
+</ParamField>
+
+#### GetDependentObject
+
+```csharp
+public virtual EbxAsset GetDependentObject(Guid guid)
+```
+
+Retrieves a dependent object by GUID.
+
+<ParamField path="guid" type="Guid" required>
+  The GUID of the dependent asset
+</ParamField>
+
+<ResponseField name="return" type="EbxAsset">
+  The dependent asset, or null if not found
+</ResponseField>
+
+#### RefreshDependentObject
+
+```csharp
+public virtual EbxAsset RefreshDependentObject(Guid guid)
+```
+
+Reloads a dependent object from the AssetManager.
+
+<ParamField path="guid" type="Guid" required>
+  The GUID of the dependent asset to refresh
+</ParamField>
+
+#### AddObject
+
+```csharp
+public virtual void AddObject(object obj)
+```
+
+Adds a new object to the asset.
+
+#### RemoveObject
+
+```csharp
+public virtual void RemoveObject(object obj)
+```
+
+Removes an object from the asset.
+
+#### RegisterToolbarItems
+
+```csharp
+public virtual List<ToolbarItem> RegisterToolbarItems()
+```
+
+Override to add custom toolbar buttons to the editor.
+
+<ResponseField name="return" type="List<ToolbarItem>">
+  List of toolbar items to add to the editor
+</ResponseField>
+
+#### Closed
+
+```csharp
+public virtual void Closed()
+```
+
+Override to perform cleanup when the editor is closed.
+
+### Events
+
+#### OnAssetModified
+
+```csharp
+public event RoutedEventHandler OnAssetModified
+```
+
+Fired when the asset is modified.
+
+### Complete Example
+
+<CodeGroup>
+```csharp MeshAssetEditor.cs
+using Frosty.Core.Controls;
+using FrostySdk.Interfaces;
+using System.Collections.Generic;
+using System.Windows;
+using System.Windows.Controls;
+
+public class MeshAssetEditor : FrostyAssetEditor
+{
+    private MeshViewport viewport;
+    private FrostyPropertyGrid propertyGrid;
+    
+    static MeshAssetEditor()
+    {
+        DefaultStyleKeyProperty.OverrideMetadata(
+            typeof(MeshAssetEditor),
+            new FrameworkPropertyMetadata(typeof(MeshAssetEditor)));
+    }
+    
+    public MeshAssetEditor(ILogger inLogger) : base(inLogger)
+    {
+    }
+    
+    public override void OnApplyTemplate()
+    {
+        base.OnApplyTemplate();
+        
+        viewport = GetTemplateChild("PART_Viewport") as MeshViewport;
+        propertyGrid = GetTemplateChild("PART_PropertyGrid") as FrostyPropertyGrid;
+        
+        if (viewport != null && Asset != null)
+        {
+            viewport.LoadMesh(Asset.RootObject);
+        }
+        
+        if (propertyGrid != null && Asset != null)
+        {
+            propertyGrid.Object = Asset.RootObject;
+        }
+    }
+    
+    protected override void InvokeOnAssetModified()
+    {
+        base.InvokeOnAssetModified();
+        
+        // Refresh viewport when asset changes
+        if (viewport != null)
+        {
+            viewport.LoadMesh(Asset.RootObject);
+        }
+    }
+    
+    public override List<ToolbarItem> RegisterToolbarItems()
+    {
+        var items = base.RegisterToolbarItems();
+        
+        items.Add(new ToolbarItem(
+            "Export Mesh",
+            "Export mesh to FBX",
+            "Images/ExportIcon.png",
+            new RelayCommand(ExportMesh_Click, ExportMesh_CanClick)));
+            
+        items.Add(new ToolbarItem(
+            "Import Mesh",
+            "Import mesh from FBX",
+            "Images/ImportIcon.png",
+            new RelayCommand(ImportMesh_Click, ImportMesh_CanClick)));
+            
+        return items;
+    }
+    
+    private void ExportMesh_Click(object state)
+    {
+        // Export logic
+        Microsoft.Win32.SaveFileDialog dialog = new Microsoft.Win32.SaveFileDialog()
+        {
+            Filter = "FBX Files (*.fbx)|*.fbx",
+            DefaultExt = "fbx"
+        };
+        
+        if (dialog.ShowDialog() == true)
+        {
+            // Export mesh
+            ExportToFbx(Asset.RootObject, dialog.FileName);
+        }
+    }
+    
+    private bool ExportMesh_CanClick(object state) => true;
+    
+    private void ImportMesh_Click(object state)
+    {
+        // Import logic
+        Microsoft.Win32.OpenFileDialog dialog = new Microsoft.Win32.OpenFileDialog()
+        {
+            Filter = "FBX Files (*.fbx)|*.fbx",
+            DefaultExt = "fbx"
+        };
+        
+        if (dialog.ShowDialog() == true)
+        {
+            // Import mesh
+            ImportFromFbx(Asset.RootObject, dialog.FileName);
+            AssetModified = true;
+        }
+    }
+    
+    private bool ImportMesh_CanClick(object state) => true;
+    
+    public override void Closed()
+    {
+        base.Closed();
+        
+        // Clean up viewport resources
+        viewport?.Dispose();
+    }
+}
+```
+
+```xaml Themes/MeshAssetEditor.xaml
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:MeshPlugin">
+    
+    <Style TargetType="{x:Type local:MeshAssetEditor}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:MeshAssetEditor}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="300"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <!-- Viewport -->
+                        <local:MeshViewport x:Name="PART_Viewport" Grid.Column="0"/>
+                        
+                        <!-- Splitter -->
+                        <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch"/>
+                        
+                        <!-- Property Grid -->
+                        <FrostyPropertyGrid x:Name="PART_PropertyGrid" Grid.Column="2"/>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+</ResourceDictionary>
+```
+</CodeGroup>
+
+## FrostyTypeEditor
+
+Create custom property grid editors for specific field types.
+
+### Base Class
+
+```csharp
+public abstract class FrostyTypeEditor<T> : FrostyBaseTypeEditor where T : FrameworkElement, new()
+```
+
+### Properties
+
+<ParamField path="ValuePath" type="string" default="Value">
+  The property path to bind to on the item data
+</ParamField>
+
+<ParamField path="BindingMode" type="BindingMode" default="TwoWay">
+  The binding mode for the value property
+</ParamField>
+
+<ParamField path="ValueProperty" type="DependencyProperty">
+  The dependency property to bind to on the editor control
+</ParamField>
+
+<ParamField path="ValueConverter" type="IValueConverter">
+  Optional value converter for the binding
+</ParamField>
+
+<ParamField path="ValueConverterParameter" type="object">
+  Parameter to pass to the value converter
+</ParamField>
+
+<ParamField path="ValidationRule" type="ValidationRule">
+  Optional validation rule for the binding
+</ParamField>
+
+<ParamField path="NotifyOnTargetUpdated" type="bool" default="false">
+  Whether to notify when the binding target is updated
+</ParamField>
+
+### Methods
+
+#### CreateEditor
+
+```csharp
+public T CreateEditor(FrostyPropertyGridItemData item)
+```
+
+Creates the editor control. Called automatically by the property grid.
+
+#### CustomizeEditor
+
+```csharp
+protected virtual void CustomizeEditor(T editor, FrostyPropertyGridItemData item)
+```
+
+Override to customize the editor after creation.
+
+#### RefreshEditor
+
+```csharp
+protected virtual void RefreshEditor(T editor)
+```
+
+Override to refresh the editor when the value changes.
+
+### Registration
+
+Register type editors globally using the `RegisterGlobalTypeEditorAttribute`:
+
+<CodeGroup>
+```csharp AssemblyInfo.cs
+using Frosty.Core.Attributes;
+
+[assembly: RegisterGlobalTypeEditor("Vec3", typeof(Vec3Editor))]
+[assembly: RegisterGlobalTypeEditor("LinearTransform", typeof(LinearTransformEditor))]
+```
+</CodeGroup>
+
+### Example: Vec3 Editor
+
+<CodeGroup>
+```csharp Vec3Editor.cs
+using Frosty.Core.Controls.Editors;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+
+public class Vec3Editor : FrostyTypeEditor<Vec3EditorControl>
+{
+    public Vec3Editor()
+    {
+        ValueProperty = Vec3EditorControl.ValueProperty;
+    }
+    
+    protected override void CustomizeEditor(Vec3EditorControl editor, FrostyPropertyGridItemData item)
+    {
+        base.CustomizeEditor(editor, item);
+        
+        // Additional customization
+        editor.ShowLabels = true;
+    }
+}
+
+public class Vec3EditorControl : Control
+{
+    public static readonly DependencyProperty ValueProperty =
+        DependencyProperty.Register(
+            "Value",
+            typeof(object),
+            typeof(Vec3EditorControl),
+            new PropertyMetadata(null, OnValueChanged));
+    
+    public object Value
+    {
+        get => GetValue(ValueProperty);
+        set => SetValue(ValueProperty, value);
+    }
+    
+    public bool ShowLabels { get; set; } = true;
+    
+    private TextBox xBox, yBox, zBox;
+    
+    static Vec3EditorControl()
+    {
+        DefaultStyleKeyProperty.OverrideMetadata(
+            typeof(Vec3EditorControl),
+            new FrameworkPropertyMetadata(typeof(Vec3EditorControl)));
+    }
+    
+    public override void OnApplyTemplate()
+    {
+        base.OnApplyTemplate();
+        
+        xBox = GetTemplateChild("PART_X") as TextBox;
+        yBox = GetTemplateChild("PART_Y") as TextBox;
+        zBox = GetTemplateChild("PART_Z") as TextBox;
+        
+        if (xBox != null)
+        {
+            xBox.TextChanged += (s, e) => UpdateValue();
+        }
+        if (yBox != null)
+        {
+            yBox.TextChanged += (s, e) => UpdateValue();
+        }
+        if (zBox != null)
+        {
+            zBox.TextChanged += (s, e) => UpdateValue();
+        }
+        
+        UpdateDisplay();
+    }
+    
+    private static void OnValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        (d as Vec3EditorControl)?.UpdateDisplay();
+    }
+    
+    private void UpdateDisplay()
+    {
+        if (Value == null || xBox == null)
+            return;
+            
+        dynamic vec = Value;
+        xBox.Text = vec.x.ToString();
+        yBox.Text = vec.y.ToString();
+        zBox.Text = vec.z.ToString();
+    }
+    
+    private void UpdateValue()
+    {
+        if (Value == null || xBox == null)
+            return;
+            
+        dynamic vec = Value;
+        
+        if (float.TryParse(xBox.Text, out float x))
+            vec.x = x;
+        if (float.TryParse(yBox.Text, out float y))
+            vec.y = y;
+        if (float.TryParse(zBox.Text, out float z))
+            vec.z = z;
+    }
+}
+```
+
+```xaml Themes/Vec3EditorControl.xaml
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:YourPlugin">
+    
+    <Style TargetType="{x:Type local:Vec3EditorControl}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:Vec3EditorControl}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="X:" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                        <TextBox x:Name="PART_X" Width="60" Margin="0,0,10,0"/>
+                        
+                        <TextBlock Text="Y:" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                        <TextBox x:Name="PART_Y" Width="60" Margin="0,0,10,0"/>
+                        
+                        <TextBlock Text="Z:" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                        <TextBox x:Name="PART_Z" Width="60"/>
+                    </StackPanel>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+</ResourceDictionary>
+```
+</CodeGroup>
+
+## ToolbarItem
+
+Define custom toolbar buttons for asset editors.
+
+```csharp
+public class ToolbarItem
+{
+    public string Text { get; }
+    public string ToolTip { get; }
+    public ImageSource Icon { get; }
+    public RelayCommand Command { get; }
+    
+    public ToolbarItem(string text, string tooltip, string icon, RelayCommand inCommand)
+}
+```
+
+<ParamField path="text" type="string" required>
+  Button text
+</ParamField>
+
+<ParamField path="tooltip" type="string" required>
+  Tooltip text
+</ParamField>
+
+<ParamField path="icon" type="string">
+  Path to icon image relative to plugin assembly
+</ParamField>
+
+<ParamField path="inCommand" type="RelayCommand" required>
+  Command to execute when clicked
+</ParamField>
+
+## See Also
+
+- [AssetDefinition API](/api/asset-definition)
+- [PluginManager API](/api/plugin-manager)

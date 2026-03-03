@@ -1,0 +1,224 @@
+---
+title: FIFA Series
+description: Frosty Toolsuite support for FIFA games
+---
+
+Frosty Toolsuite provides modding support for multiple FIFA titles running on EA's Frostbite engine.
+
+## Supported Titles
+
+<CardGroup cols={2}>
+  <Card title="FIFA 17" icon="futbol">
+    Released: 2016
+    
+    Profile: `Fifa17SDK.dll`
+  </Card>
+  
+  <Card title="FIFA 18" icon="futbol">
+    Released: 2017
+    
+    Profile: `Fifa18SDK.dll`
+  </Card>
+  
+  <Card title="FIFA 19" icon="futbol">
+    Released: 2018
+    
+    Profile: `FIFA19SDK.dll`
+  </Card>
+  
+  <Card title="FIFA 20" icon="futbol">
+    Released: 2019
+    
+    Profile: `FIFA20SDK.dll`
+  </Card>
+</CardGroup>
+
+## Game-Specific Features
+
+### FIFA 17 (2016)
+
+- Profile Version: `20160927`
+- First FIFA title with full Frostbite support
+- Profile size: ~3.8 MB
+- Introduction of The Journey story mode
+- Enhanced player models with detailed facial scanning
+
+### FIFA 18 (2017)
+
+- Profile Version: `20170929`
+- Profile size: ~5.4 MB
+- Improved character rendering
+- Enhanced stadium environments
+- Real Player Motion Technology assets
+
+**Technical Details:**
+- Uses UINT for bone count in mesh structures
+- Special mesh format handling for FIFA-specific animations
+- Enhanced texture support for player faces and kits
+
+### FIFA 19 (2018)
+
+- Profile Version: `20180914`
+- Profile size: ~5.9 MB
+- UEFA Champions League integration
+- Advanced player likeness technology
+- Expanded asset library for global leagues
+
+**Technical Details:**
+- Similar mesh structure to FIFA 18
+- UINT bone count storage
+- Enhanced texture compression for performance
+
+### FIFA 20 (2019)
+
+- Profile Version: `20190911`
+- Profile size: ~9.4 MB (largest FIFA SDK)
+- VOLTA Football mode assets
+- Most comprehensive asset library
+- Advanced facial animation system
+
+**Technical Details:**
+- Most mature FIFA profile on Frostbite
+- UINT bone count in mesh format
+- Extensive shared bundle definitions
+- Enhanced asset loader capabilities
+
+## Modding Capabilities
+
+### Popular Modifications
+
+<Accordion title="Player Customization">
+  FIFA mods commonly include:
+  
+  - **Face Imports**: Add or update player faces with photo-realistic textures
+  - **Kit Designs**: Create custom team kits and alternate uniforms
+  - **Player Stats**: Modify player attributes and ratings
+  - **Team Lineups**: Update rosters and formations
+  
+  FIFA games store extensive player data that can be modified through Frosty.
+</Accordion>
+
+<Accordion title="Visual Enhancements">
+  Texture and graphical improvements:
+  
+  - **Stadium Textures**: Enhanced pitch, crowd, and advertising boards
+  - **Ball Designs**: Custom match balls and special editions
+  - **Boots & Equipment**: Modified player gear and accessories
+  - **UI Elements**: Custom menus, overlays, and scoreboards
+  
+  All FIFA titles support high-resolution texture replacement.
+</Accordion>
+
+<Accordion title="Gameplay Assets">
+  Beyond cosmetics:
+  
+  - **Commentary**: Audio file modifications
+  - **Celebrations**: Custom animation imports
+  - **Camera Angles**: Modified broadcast perspectives
+  - **Weather Effects**: Enhanced visual effects
+</Accordion>
+
+## Technical Considerations
+
+### Mesh Format
+
+FIFA games use a unique mesh structure optimized for sports game characters:
+
+- **Bone Count**: Stored as UINT (unsigned integer) across all FIFA titles
+- **Animation Rigging**: Specialized for player movements and celebrations
+- **LOD System**: Multiple levels of detail for performance optimization
+- **Facial Animation**: Advanced blend shapes for realistic expressions
+
+<Note>
+  FIFA mesh formats differ from Battlefield and Star Wars games. The MeshSet plugin includes FIFA-specific handling code for proper asset processing.
+</Note>
+
+### Asset Structure
+
+FIFA games organize assets uniquely:
+
+- **Player Database**: Centralized player attribute storage
+- **Kit System**: Modular team uniform components
+- **Stadium Assets**: Separated pitch, stands, and environment bundles
+- **League Data**: Competition-specific branding and presentation
+
+### Profile Loading
+
+Each FIFA version has distinct profile characteristics:
+
+```
+FIFA 17: 3.8 MB - Base Frostbite implementation
+FIFA 18: 5.4 MB - Enhanced with Real Player Motion
+FIFA 19: 5.9 MB - UEFA Champions League expansion
+FIFA 20: 9.4 MB - VOLTA and comprehensive feature set
+```
+
+## Known Quirks
+
+<Accordion title="FIFA 18 Special Handling">
+  FIFA 18 requires special mesh format handling in the MeshSet plugin. The game uses specific vertex attribute configurations that differ from other Frostbite titles.
+  
+  Code reference: `source/Plugins/MeshSetPlugin/Resources/MeshSet.cs:1026`
+</Accordion>
+
+<Accordion title="Bone Count Storage">
+  Unlike Battlefield and Star Wars games that use ushort for bone counts, all FIFA titles use UINT:
+  
+  ```csharp
+  // FIFA 17/18/19/20 store boneCount in a UINT
+  ProfileVersion.Fifa17, ProfileVersion.Fifa18,
+  ProfileVersion.Fifa19, ProfileVersion.Fifa20
+  ```
+  
+  This affects mesh import/export operations.
+</Accordion>
+
+## DRM & Online Considerations
+
+<Warning>
+  FIFA games may have online DRM and anti-cheat measures:
+  
+  - Mods may not work in FIFA Ultimate Team (FUT) mode
+  - Some modifications can trigger anti-cheat detection
+  - Always backup original files before modding
+  - Use mods in offline Career Mode for safety
+  - Respect EA's Terms of Service
+</Warning>
+
+## Getting Started with FIFA Modding
+
+1. **Install Frosty Tools**
+   - Download Frosty Editor and Mod Manager
+   - Ensure you have the correct FIFA version installed
+
+2. **Launch Frosty Editor**
+   - Select your FIFA game from the profile list
+   - Wait for asset database indexing (can take 5-10 minutes)
+
+3. **Browse Assets**
+   - Use Data Explorer to find player faces, kits, or stadiums
+   - Search for specific teams or players
+
+4. **Make Modifications**
+   - Use Texture Editor for faces and kits
+   - Use Mesh Editor for 3D models
+   - Use appropriate plugins for other asset types
+
+5. **Export and Apply**
+   - Save your modifications as a .fbmod file
+   - Apply through Frosty Mod Manager
+   - Launch the game to test
+
+For detailed tutorials, see the [Getting Started](/installation) guide.
+
+## Community Resources
+
+The FIFA modding community is highly active:
+
+- Face creator tools and databases
+- Kit template repositories
+- Stadium enhancement projects
+- Roster update mods
+- Gameplay rebalancing modifications
+
+Check community forums and mod sites for extensive FIFA modding resources.

@@ -1,0 +1,650 @@
+---
+title: "Best Practices"
+description: "Best practices for creating high-quality, compatible mods"
+---
+
+## Overview
+
+Follow these best practices to create mods that are stable, compatible, and easy to maintain.
+
+## Project Organization
+
+### File Naming
+
+<Tip>
+**Use descriptive, meaningful names:**
+
+✅ **Good:**
+- `weapon-rebalance-v2.fbproject`
+- `4k-character-textures.fbproject`
+- `enhanced-lighting-overhaul.fbproject`
+
+❌ **Avoid:**
+- `project1.fbproject`
+- `mod.fbproject`
+- `asdf.fbproject`
+</Tip>
+
+### Directory Structure
+
+Organize your modding workspace:
+
+```
+MyMods/
+├─ Projects/           # Source .fbproject files
+│   ├─ weapon-mod/
+│   │   ├─ weapon-rebalance.fbproject
+│   │   ├─ notes.txt
+│   │   └─ reference/
+│   └─ texture-pack/
+├─ Exports/            # Built .fbmod files
+│   ├─ weapon-rebalance-v1.0.fbmod
+│   └─ texture-pack-v2.1.fbmod
+├─ Resources/          # Source assets
+│   ├─ textures/
+│   ├─ meshes/
+│   └─ audio/
+└─ Documentation/      # Guides and notes
+```
+
+### Version Control
+
+<AccordionGroup>
+  <Accordion title="Using Git">
+    Track your projects with Git:
+    
+    ```bash
+    # Initialize repository
+    git init
+    git add *.fbproject
+    git commit -m "Initial commit"
+    
+    # Tag releases
+    git tag -a v1.0 -m "Version 1.0 release"
+    ```
+    
+    **.gitignore for mods:**
+    ```
+    # Ignore built mods
+    *.fbmod
+    
+    # Ignore temp files
+    *.tmp
+    *.bak
+    
+    # Keep projects
+    !*.fbproject
+    ```
+  </Accordion>
+  
+  <Accordion title="Commit Messages">
+    Write clear commit messages:
+    
+    ✅ **Good:**
+    ```
+    Increase assault rifle damage by 15%
+    Add 4K textures for main character
+    Fix crash when loading custom level
+    ```
+    
+    ❌ **Avoid:**
+    ```
+    Update
+    Fixed stuff
+    changes
+    ```
+  </Accordion>
+  
+  <Accordion title="Branching Strategy">
+    Use branches for major changes:
+    
+    ```
+    main        - Stable releases
+    develop     - Active development
+    feature/*   - New features
+    bugfix/*    - Bug fixes
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Asset Modification
+
+### Texture Best Practices
+
+<Tabs>
+  <Tab title="Format Selection">
+    Choose appropriate texture formats:
+    
+    | Use Case | Format | Notes |
+    |----------|--------|-------|
+    | Color (no alpha) | BC1 | 6:1 compression |
+    | Color + alpha | BC3 | Good quality |
+    | High quality | BC7 | Best quality, larger |
+    | Normal maps | BC5 | Optimized for normals |
+    | HDR lighting | BC6H | High dynamic range |
+    
+    <Warning>
+    Don't use uncompressed formats (RGBA8) for shipped mods. They're 4-6x larger and hurt performance.
+    </Warning>
+  </Tab>
+  
+  <Tab title="Resolution">
+    Choose appropriate resolutions:
+    
+    **General Guidelines:**
+    - **Characters**: 2048x2048 or 4096x4096
+    - **Weapons**: 2048x2048
+    - **Props**: 512x512 to 2048x2048
+    - **Terrain**: 4096x4096+
+    - **UI**: Match original resolution
+    
+    **Performance Impact:**
+    - 4K textures: High VRAM, best quality
+    - 2K textures: Balanced
+    - 1K textures: Performance-friendly
+    
+    <Tip>
+    Provide multiple resolution options for users with different hardware.
+    </Tip>
+  </Tab>
+  
+  <Tab title="Mipmaps">
+    Always generate mipmaps:
+    
+    **Why Mipmaps Matter:**
+    - Prevent aliasing/shimmering
+    - Improve performance
+    - Reduce VRAM usage at distance
+    - Required by most games
+    
+    **Mipmap Settings:**
+    - Filter: Kaiser (best quality) or Box (faster)
+    - Levels: Auto-generate all levels
+    - Don't skip levels
+  </Tab>
+</Tabs>
+
+### Mesh Best Practices
+
+<AccordionGroup>
+  <Accordion title="Topology">
+    Maintain good mesh topology:
+    
+    - **Quad-based**: Use quads where possible
+    - **Triangulate**: Triangulate before export
+    - **No N-gons**: Avoid faces with >4 sides
+    - **Clean geometry**: Remove doubles, fix normals
+    - **Proper UVs**: No overlapping (unless intentional)
+  </Accordion>
+  
+  <Accordion title="Polygon Count">
+    Match or slightly improve original counts:
+    
+    ```
+    Original: 5,000 triangles
+    ✅ Good: 4,500 - 6,000 triangles
+    ⚠️ Warning: 10,000 triangles (2x)
+    ❌ Bad: 50,000 triangles (10x)
+    ```
+    
+    High poly counts hurt performance, especially for multiple instances.
+  </Accordion>
+  
+  <Accordion title="Vertex Data">
+    Preserve vertex channel requirements:
+    
+    **Required Channels:**
+    - Position (always)
+    - Normal (always)
+    - UV0 (almost always)
+    - Tangent/Bitangent (for normal maps)
+    - Vertex Colors (if original had them)
+    - Additional UVs (match original count)
+    
+    **Bone Weights:**
+    - Max bones per vertex: Match original
+    - Normalize weights
+    - Remove unused influences
+  </Accordion>
+  
+  <Accordion title="Material Assignment">
+    Keep materials organized:
+    
+    - Use descriptive material names
+    - Match original material count
+    - Preserve material IDs
+    - Don't create unnecessary materials
+  </Accordion>
+</AccordionGroup>
+
+### EBX Property Editing
+
+<Warning>
+**Before editing EBX properties:**
+- Understand what the property does
+- Note the original value
+- Test changes incrementally
+- Check for dependent properties
+</Warning>
+
+<Tabs>
+  <Tab title="Safe Changes">
+    Generally safe to modify:
+    
+    - **Numeric values**: Damage, range, speed
+    - **Boolean flags**: Enable/disable features
+    - **Strings**: Names, descriptions
+    - **Colors**: RGB values
+    - **Asset references**: Swap textures/meshes
+  </Tab>
+  
+  <Tab title="Risky Changes">
+    Be careful with:
+    
+    - **Array sizes**: May cause crashes if wrong
+    - **GUID references**: Breaking links causes issues
+    - **Enums**: Invalid values can crash
+    - **Transient properties**: Require special handling
+    - **Runtime-generated**: May be overwritten
+  </Tab>
+  
+  <Tab title="Testing">
+    Test EBX changes thoroughly:
+    
+    1. Make small changes
+    2. Test immediately
+    3. Document what you changed
+    4. Revert if issues occur
+    5. Test edge cases
+  </Tab>
+</Tabs>
+
+## Compatibility
+
+### Mod Conflicts
+
+<Steps>
+  <Step title="Minimize Conflicts">
+    Reduce chances of conflicts:
+    
+    - **Modify only what's needed**: Don't change unnecessary assets
+    - **Avoid popular assets**: Commonly modded assets conflict more
+    - **Provide alternatives**: Offer compatible versions
+    - **Document changes**: List all modified assets
+  </Step>
+  
+  <Step title="Test with Popular Mods">
+    Before release, test with:
+    - Top 10 most downloaded mods
+    - Mods in same category
+    - Known overhaul mods
+    - Different load orders
+  </Step>
+  
+  <Step title="Communicate Conflicts">
+    Document known incompatibilities:
+    
+    ```markdown
+    ## Compatibility
+    
+    **Compatible with:**
+    - UI Enhancement Mod v2.1+
+    - Performance Optimizer
+    
+    **Incompatible with:**
+    - Total Overhaul Mod (conflicts with weapon stats)
+    - Texture Mega Pack (use our textures OR theirs)
+    
+    **Load Order:**
+    Load this mod AFTER gameplay mods, BEFORE texture mods.
+    ```
+  </Step>
+</Steps>
+
+### Game Version Compatibility
+
+<AccordionGroup>
+  <Accordion title="Version Tracking">
+    Track which game version your mod targets:
+    
+    - **Project file**: Stores game version (head revision)
+    - **Description**: Document game version in mod description
+    - **Updates**: Test after game patches
+    - **Changelog**: Note when updating for new game version
+  </Accordion>
+  
+  <Accordion title="Handling Updates">
+    When game updates:
+    
+    1. **Wait for Frosty update**: Ensure toolsuite supports new version
+    2. **Test existing mod**: Check if still works
+    3. **Update if needed**: Fix broken assets
+    4. **Increment version**: Update mod version number
+    5. **Notify users**: Announce compatibility
+  </Accordion>
+</AccordionGroup>
+
+## Performance Optimization
+
+### Resource Size
+
+<Tip>
+**Optimize mod size without sacrificing quality:**
+
+1. **Use compressed formats**: BC1/BC3/BC7 for textures
+2. **Remove unused mipmaps**: Don't include more than needed
+3. **Optimize mesh data**: Remove unused vertex channels
+4. **Avoid duplicates**: Reuse assets where possible
+5. **Test compression**: Different formats for different use cases
+</Tip>
+
+### Runtime Performance
+
+<AccordionGroup>
+  <Accordion title="Texture Streaming">
+    Be mindful of texture streaming:
+    
+    - **Mipmap chains**: Ensure proper mipmap generation
+    - **Chunk ranges**: Don't break texture chunk data
+    - **FirstMip value**: Maintain for streaming textures
+    - **LogicalOffset/Size**: Required for proper loading
+  </Accordion>
+  
+  <Accordion title="Mesh Optimization">
+    Optimize mesh rendering:
+    
+    - **LOD levels**: Provide multiple detail levels
+    - **Polygon budget**: Stay within reasonable limits
+    - **Vertex cache**: Optimize vertex order
+    - **Material count**: Minimize draw calls
+  </Accordion>
+  
+  <Accordion title="Bundle Organization">
+    Organize assets efficiently:
+    
+    - **Related assets**: Keep in same bundle
+    - **Streaming**: Use appropriate bundle types
+    - **Size balance**: Don't create massive bundles
+  </Accordion>
+</AccordionGroup>
+
+## Documentation
+
+### Mod Description Template
+
+```markdown
+# [Mod Name] v[Version]
+
+## Description
+[Brief summary of what your mod does]
+
+## Features
+- Feature 1
+- Feature 2
+- Feature 3
+
+## Installation
+1. Download [ModName].fbmod
+2. Open Frosty Mod Manager
+3. Import the mod
+4. Enable and apply
+5. Launch game
+
+## Requirements
+- Game version: [version]
+- Frosty Mod Manager: [version]
+- Dependencies: [list any required mods]
+
+## Compatibility
+- Compatible with: [list]
+- Incompatible with: [list]
+- Load order: [instructions]
+
+## Configuration
+[If mod has options or settings]
+
+## Known Issues
+- Issue 1 (workaround: ...)
+- Issue 2
+
+## Changelog
+### v1.1 (2024-01-15)
+- Fixed bug X
+- Added feature Y
+
+### v1.0 (2024-01-01)
+- Initial release
+
+## Credits
+- Author: [Your name]
+- Thanks to: [contributors, testers]
+- Tools: Frosty Toolsuite
+
+## License
+[License terms]
+
+## Support
+[How to get help or report bugs]
+```
+
+### Screenshots
+
+<Tip>
+**Take quality screenshots:**
+
+1. **In-game**: Show mod in actual gameplay
+2. **Comparisons**: Before/after shots
+3. **Key features**: Highlight main changes
+4. **Resolution**: 1080p or higher
+5. **Clean UI**: Hide debugging overlays
+6. **Good lighting**: Show details clearly
+</Tip>
+
+## Testing
+
+### Pre-Release Testing
+
+<Steps>
+  <Step title="Functional Testing">
+    Verify core functionality:
+    - [ ] All modified assets load
+    - [ ] No crashes during normal gameplay
+    - [ ] Visual changes appear correctly
+    - [ ] Gameplay changes work as intended
+    - [ ] No console errors
+  </Step>
+  
+  <Step title="Compatibility Testing">
+    Test with other mods:
+    - [ ] Works alone
+    - [ ] Works with popular mods
+    - [ ] No conflicts in multiple load orders
+    - [ ] Performance acceptable
+  </Step>
+  
+  <Step title="Edge Case Testing">
+    Test unusual scenarios:
+    - [ ] Quick save/load
+    - [ ] Long play sessions (memory leaks)
+    - [ ] Different graphics settings
+    - [ ] Minimum spec hardware (if possible)
+  </Step>
+  
+  <Step title="User Testing">
+    Get feedback before release:
+    - Share with trusted testers
+    - Gather feedback on usability
+    - Fix critical bugs
+    - Refine based on suggestions
+  </Step>
+</Steps>
+
+### Bug Reporting Template
+
+Provide users with a bug report template:
+
+```markdown
+## Bug Report
+
+**Mod Version:** 
+**Game Version:** 
+**Frosty Version:** 
+
+**Description:**
+[What happened?]
+
+**Expected Behavior:**
+[What should happen?]
+
+**Steps to Reproduce:**
+1. 
+2. 
+3. 
+
+**Other Mods:**
+[List other enabled mods]
+
+**Screenshots/Videos:**
+[Attach if relevant]
+
+**Console Errors:**
+[Any error messages]
+```
+
+## Release Process
+
+<Steps>
+  <Step title="Final Testing">
+    Before release:
+    - Full playthrough test
+    - Clean game install test
+    - Performance profiling
+    - Asset validation
+  </Step>
+  
+  <Step title="Prepare Release">
+    Package for distribution:
+    - Export final .fbmod
+    - Write/update README
+    - Create changelog
+    - Gather screenshots
+    - Record demonstration video (optional)
+  </Step>
+  
+  <Step title="Upload">
+    Publish to platforms:
+    - Choose appropriate category
+    - Add descriptive tags
+    - Include all screenshots
+    - Link to documentation
+    - Set correct game version
+  </Step>
+  
+  <Step title="Post-Release">
+    After publishing:
+    - Monitor comments/feedback
+    - Fix critical bugs quickly
+    - Update documentation as needed
+    - Thank users for feedback
+  </Step>
+</Steps>
+
+## Maintenance
+
+### Update Strategy
+
+<AccordionGroup>
+  <Accordion title="Version Numbering">
+    Use semantic versioning:
+    
+    **Format: MAJOR.MINOR.PATCH**
+    
+    - **MAJOR**: Breaking changes, incompatible
+    - **MINOR**: New features, backwards compatible
+    - **PATCH**: Bug fixes only
+    
+    Examples:
+    - `1.0.0` → `1.0.1`: Bug fix
+    - `1.0.1` → `1.1.0`: New feature
+    - `1.1.0` → `2.0.0`: Major overhaul
+  </Accordion>
+  
+  <Accordion title="Changelog Format">
+    Maintain detailed changelogs:
+    
+    ```markdown
+    ## v1.2.0 (2024-03-01)
+    
+    ### Added
+    - New weapon textures
+    - Alternate color options
+    
+    ### Changed
+    - Improved mesh quality
+    - Updated for game patch 1.5
+    
+    ### Fixed
+    - Crash when using feature X
+    - Visual glitch on weapon Y
+    
+    ### Removed
+    - Deprecated feature Z
+    ```
+  </Accordion>
+  
+  <Accordion title="Deprecation">
+    When retiring features:
+    
+    1. **Announce early**: Warn users in advance
+    2. **Provide alternatives**: Suggest replacements
+    3. **Gradual removal**: Mark deprecated first
+    4. **Archive old versions**: Keep available for existing users
+  </Accordion>
+</AccordionGroup>
+
+## Community
+
+### Being a Good Mod Author
+
+<Tip>
+**Community Best Practices:**
+
+- **Respond to feedback**: Engage with users
+- **Credit others**: Acknowledge help and inspiration
+- **Be receptive**: Accept constructive criticism
+- **Share knowledge**: Help other modders learn
+- **Respect licenses**: Follow other mods' terms
+- **Be patient**: Users have varying technical knowledge
+</Tip>
+
+### Licensing
+
+Consider your mod's license:
+
+- **Open Source**: Allow others to learn/modify
+- **Restrictive**: Prevent unauthorized use
+- **Credits Required**: Ensure attribution
+- **Commercial Use**: Allow/disallow monetization
+
+Common licenses:
+- **MIT**: Very permissive
+- **CC BY 4.0**: Requires attribution
+- **CC BY-NC-SA 4.0**: Non-commercial, share-alike
+- **All Rights Reserved**: Most restrictive
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="Create Mods" icon="hammer" href="/modding/creating-mods">
+    Start creating your first mod
+  </Card>
+  <Card title="Asset Modification" icon="image" href="/modding/asset-modification">
+    Learn to edit different asset types
+  </Card>
+  <Card title="Package Mods" icon="box" href="/modding/mod-packaging">
+    Export and distribute your mods
+  </Card>
+  <Card title="Install Mods" icon="download" href="/modding/mod-installation">
+    Use Frosty Mod Manager
+  </Card>
+</CardGroup>

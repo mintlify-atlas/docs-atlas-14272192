@@ -1,0 +1,587 @@
+---
+title: Plugin Attributes Reference
+description: Complete reference for all plugin metadata and registration attributes
+---
+
+Plugin attributes are assembly-level attributes applied in `AssemblyInfo.cs` to define plugin metadata and register extensions.
+
+## Metadata Attributes
+
+These attributes define basic plugin information displayed in the Frosty UI.
+
+### PluginDisplayNameAttribute
+
+Sets the display name shown in the plugin manager.
+
+From `~/workspace/source/FrostyPlugin/Attributes/PluginDisplayNameAttribute.cs:9`:
+
+```csharp
+[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false)]
+public class PluginDisplayNameAttribute : Attribute
+{
+    public string DisplayName { get; private set; }
+    
+    public PluginDisplayNameAttribute(string displayName)
+    {
+        DisplayName = displayName;
+    }
+}
+```
+
+**Usage:**
+```csharp
+[assembly: PluginDisplayName("Texture Editor")]
+```
+
+### PluginAuthorAttribute
+
+Specifies the plugin author.
+
+From `~/workspace/source/FrostyPlugin/Attributes/PluginAuthorAttribute.cs:9`:
+
+```csharp
+[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false)]
+public class PluginAuthorAttribute : Attribute
+{
+    public string Author { get; private set; }
+    
+    public PluginAuthorAttribute(string author)
+    {
+        Author = author;
+    }
+}
+```
+
+**Usage:**
+```csharp
+[assembly: PluginAuthor("GalaxyMan2015")]
+```
+
+### PluginVersionAttribute
+
+Defines the plugin version.
+
+From `~/workspace/source/FrostyPlugin/Attributes/PluginVersionAttribute.cs:9`:
+
+```csharp
+[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false)]
+public class PluginVersionAttribute : Attribute
+{
+    public string Version { get; private set; }
+    
+    public PluginVersionAttribute(string version)
+    {
+        Version = version;
+    }
+}
+```
+
+**Usage:**
+```csharp
+[assembly: PluginVersion("1.0.1.0")]
+```
+
+## Profile Validation Attributes
+
+Control which game profiles load the plugin.
+
+### PluginValidForProfileAttribute
+
+Restricts the plugin to specific game profiles. Can be applied multiple times.
+
+From `~/workspace/source/FrostyPlugin/Attributes/PluginValidForProfileAttribute.cs:9`:
+
+```csharp
+[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
+public class PluginValidForProfileAttribute : Attribute
+{
+    public int ProfileVersion { get; private set; }
+    
+    public PluginValidForProfileAttribute(int profileVersion)
+    {
+        ProfileVersion = profileVersion;
+    }
+}
+```
+
+**Usage:**
+```csharp
+[assembly: PluginValidForProfile((int)ProfileVersion.StarWarsBattlefrontII)]
+[assembly: PluginValidForProfile((int)ProfileVersion.Battlefield1)]
+```
+
+### PluginNotValidForProfileAttribute
+
+Excludes the plugin from specific game profiles.
+
+From `~/workspace/source/FrostyPlugin/Attributes/PluginNotValidForProfileAttribute.cs:9`:
+
+```csharp
+[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
+public class PluginNotValidForProfileAttribute : Attribute
+{
+    public int ProfileVersion { get; private set; }
+    
+    public PluginNotValidForProfileAttribute(int profileVersion)
+    {
+        ProfileVersion = profileVersion;
+    }
+}
+```
+
+**Usage:**
+```csharp
+[assembly: PluginNotValidForProfile((int)ProfileVersion.Anthem)]
+```
+
+<Note>
+Without profile attributes, plugins load for all game profiles by default.
+</Note>
+
+## Registration Attributes
+
+These attributes register plugin extensions with the PluginManager.
+
+### RegisterAssetDefinitionAttribute
+
+Registers an `AssetDefinition` for a specific asset type.
+
+From `~/workspace/source/FrostyPlugin/Attributes/RegisterAssetDefinitionAttribute.cs:9`:
+
+```csharp
+[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true, Inherited = false)]
+public class RegisterAssetDefinitionAttribute : Attribute
+{
+    public string LookupType { get; set; }
+    public Type AssetDefinitionType { get; set; }
+    
+    public RegisterAssetDefinitionAttribute(string lookupType, Type type)
+    {
+        LookupType = lookupType;
+        AssetDefinitionType = type;
+    }
+}
+```
+
+<ParamField path="lookupType" type="string" required>
+  The asset type name from the game's type library (e.g., `"TextureAsset"`, `"MeshAsset"`)
+</ParamField>
+
+<ParamField path="type" type="Type" required>
+  The class type that inherits from `AssetDefinition`
+</ParamField>
+
+**Usage:**
+```csharp
+[assembly: RegisterAssetDefinition("TextureAsset", typeof(TextureAssetDefinition))]
+[assembly: RegisterAssetDefinition("RigidMeshAsset", typeof(RigidMeshAssetDefinition))]
+[assembly: RegisterAssetDefinition("SkinnedMeshAsset", typeof(SkinnedMeshAssetDefinition))]
+```
+
+### RegisterMenuExtensionAttribute
+
+Registers a custom menu item.
+
+From `~/workspace/source/FrostyPlugin/Attributes/RegisterMenuExtensionAttribute.cs:9`:
+
+```csharp
+[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true, Inherited = false)]
+public class RegisterMenuExtensionAttribute : Attribute
+{
+    public Type MenuExtensionType { get; private set; }
+    public PluginManagerType ManagerType { get; private set; }
+    
+    public RegisterMenuExtensionAttribute(Type type)
+    {
+        MenuExtensionType = type;
+        ManagerType = PluginManagerType.Editor;
+    }
+    
+    public RegisterMenuExtensionAttribute(Type type, PluginManagerType managerType)
+    {
+        MenuExtensionType = type;
+        ManagerType = managerType;
+    }
+}
+```
+
+<ParamField path="type" type="Type" required>
+  Class that inherits from `MenuExtension`
+</ParamField>
+
+<ParamField path="managerType" type="PluginManagerType" default="Editor">
+  Where to show the menu: `Editor`, `ModManager`, or `Both`
+</ParamField>
+
+**Usage:**
+```csharp
+// Editor only (default)
+[assembly: RegisterMenuExtension(typeof(MyMenuExtension))]
+
+// Both Editor and Mod Manager
+[assembly: RegisterMenuExtension(typeof(MyMenuExtension), PluginManagerType.Both)]
+```
+
+### RegisterDataExplorerContextMenuAttribute
+
+Registers a context menu item for the Data Explorer.
+
+From `~/workspace/source/FrostyPlugin/Attributes/RegisterDataExplorerContextMenuAttribute.cs:11`:
+
+```csharp
+[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true, Inherited = true)]
+public class RegisterDataExplorerContextMenuAttribute : Attribute
+{
+    public Type ContextMenuItemExtensionType { get; private set; }
+    
+    public RegisterDataExplorerContextMenuAttribute(Type type)
+    {
+        ContextMenuItemExtensionType = type;
+    }
+}
+```
+
+<ParamField path="type" type="Type" required>
+  Class that inherits from `DataExplorerContextMenuExtension`
+</ParamField>
+
+**Usage:**
+```csharp
+[assembly: RegisterDataExplorerContextMenu(typeof(DuplicateContextMenuItem))]
+```
+
+### RegisterCustomHandlerAttribute
+
+Registers a custom handler for specific asset or resource types.
+
+From `~/workspace/source/FrostyPlugin/Attributes/RegisterCustomHandlerAttribute.cs:12`:
+
+```csharp
+public enum CustomHandlerType
+{
+    Ebx,   // EBX asset handler
+    Res    // Resource handler
+}
+
+[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
+public class RegisterCustomHandlerAttribute : Attribute
+{
+    public CustomHandlerType HandlerType { get; set; }
+    public Type HandlerClassType { get; set; }
+    public string EbxType { get; set; }           // For Ebx handlers
+    public ResourceType ResType { get; set; }     // For Res handlers
+    
+    public RegisterCustomHandlerAttribute(
+        CustomHandlerType inType, 
+        Type inClassType, 
+        ResourceType resType = ResourceType.Invalid, 
+        string ebxType = "")
+    {
+        HandlerType = inType;
+        HandlerClassType = inClassType;
+        ResType = resType;
+        EbxType = ebxType;
+    }
+}
+```
+
+<ParamField path="inType" type="CustomHandlerType" required>
+  `CustomHandlerType.Ebx` or `CustomHandlerType.Res`
+</ParamField>
+
+<ParamField path="inClassType" type="Type" required>
+  Handler class implementing `ICustomActionHandler`
+</ParamField>
+
+<ParamField path="resType" type="ResourceType">
+  Resource type for `Res` handlers
+</ParamField>
+
+<ParamField path="ebxType" type="string">
+  EBX asset type name for `Ebx` handlers
+</ParamField>
+
+**Usage:**
+```csharp
+// EBX handler
+[assembly: RegisterCustomHandler(
+    CustomHandlerType.Ebx,
+    typeof(MyEbxHandler),
+    ebxType: "MyAssetType")]
+
+// Resource handler
+[assembly: RegisterCustomHandler(
+    CustomHandlerType.Res,
+    typeof(ShaderBlockDepotCustomActionHandler),
+    resType: ResourceType.ShaderBlockDepot)]
+```
+
+### RegisterExecutionAction
+
+Registers an action to run during mod execution (Mod Manager only).
+
+From `~/workspace/source/FrostyPlugin/Attributes/RegisterExecutionAction.cs:7`:
+
+```csharp
+[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
+public class RegisterExecutionAction : Attribute
+{
+    public Type ExecutionActionType { get; private set; }
+    
+    public RegisterExecutionAction(Type type)
+    {
+        ExecutionActionType = type;
+    }
+}
+```
+
+<ParamField path="type" type="Type" required>
+  Class that inherits from `ExecutionAction`
+</ParamField>
+
+**Usage:**
+```csharp
+[assembly: RegisterExecutionAction(typeof(MyExecutionAction))]
+```
+
+### RegisterTabExtensionAttribute
+
+Registers a custom tab in the editor.
+
+From `~/workspace/source/FrostyPlugin/Attributes/RegisterTabExtensionAttribute.cs:10`:
+
+```csharp
+[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true, Inherited = true)]
+public class RegisterTabExtensionAttribute : Attribute
+{
+    public Type TabExtensionType { get; private set; }
+    
+    public RegisterTabExtensionAttribute(Type type)
+    {
+        TabExtensionType = type;
+    }
+}
+```
+
+<ParamField path="type" type="Type" required>
+  Class that inherits from `TabExtension`
+</ParamField>
+
+**Usage:**
+```csharp
+[assembly: RegisterTabExtension(typeof(MyCustomTab))]
+```
+
+### RegisterGlobalTypeEditorAttribute
+
+Registers a custom editor for a specific type, used globally across all property grids.
+
+```csharp
+[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true, Inherited = false)]
+public class RegisterGlobalTypeEditorAttribute : Attribute
+{
+    public string LookupName { get; set; }
+    public Type EditorType { get; set; }
+}
+```
+
+<ParamField path="lookupName" type="string" required>
+  The type name to match
+</ParamField>
+
+<ParamField path="editorType" type="Type" required>
+  Custom editor control type
+</ParamField>
+
+**Usage:**
+```csharp
+[assembly: RegisterGlobalTypeEditor("Vec3", typeof(Vector3Editor))]
+```
+
+### RegisterTypeOverrideAttribute
+
+Overrides the default type handling with a custom class.
+
+```csharp
+[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
+public class RegisterTypeOverrideAttribute : Attribute
+{
+    public string LookupName { get; set; }
+    public Type EditorType { get; set; }
+}
+```
+
+**Usage:**
+```csharp
+[assembly: RegisterTypeOverride("UnlockDataCollection", typeof(CustomUnlockDataCollection))]
+```
+
+### RegisterStartupActionAttribute
+
+Registers an action that runs when Frosty starts, before profile loading.
+
+From `~/workspace/source/FrostyPlugin/Attributes/RegisterStartupActionAttribute.cs:6`:
+
+```csharp
+[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
+public class RegisterStartupActionAttribute : Attribute
+{
+    public Type StartupActionType { get; private set; }
+    
+    public RegisterStartupActionAttribute(Type inActionType)
+    {
+        StartupActionType = inActionType;
+    }
+}
+```
+
+**Usage:**
+```csharp
+[assembly: RegisterStartupAction(typeof(MyStartupAction))]
+```
+
+### RegisterOptionsExtensionAttribute
+
+Registers an options page in the settings dialog.
+
+```csharp
+[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
+public class RegisterOptionsExtensionAttribute : Attribute
+{
+    public Type OptionsType { get; set; }
+    public PluginManagerType ManagerType { get; set; }
+}
+```
+
+**Usage:**
+```csharp
+[assembly: RegisterOptionsExtension(typeof(MeshOptions))]
+```
+
+### RegisterProfileAttribute
+
+Registers a custom game profile.
+
+```csharp
+[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
+public class RegisterProfileAttribute : Attribute
+{
+    public Type ProfileType { get; set; }
+}
+```
+
+**Usage:**
+```csharp
+[assembly: RegisterProfile(typeof(MyGameProfile))]
+```
+
+### RegisterThirdPartyDllAttribute
+
+Marks a DLL as a third-party dependency that shouldn't be treated as a plugin.
+
+```csharp
+[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
+public class RegisterThirdPartyDllAttribute : Attribute
+{
+    public string DllName { get; set; }
+}
+```
+
+**Usage:**
+```csharp
+[assembly: RegisterThirdPartyDll("Newtonsoft.Json.dll")]
+```
+
+## Complete Example
+
+Here's a complete `AssemblyInfo.cs` from the MeshSetPlugin:
+
+```csharp
+using MeshSetPlugin;
+using Frosty.Core.Attributes;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Windows;
+using MeshSetPlugin.Handlers;
+using FrostySdk.Managers;
+
+[assembly: ComVisible(false)]
+[assembly: Guid("4b612468-9b6a-4304-88a5-055c3575eb3d")]
+
+[assembly: ThemeInfo(
+    ResourceDictionaryLocation.None,
+    ResourceDictionaryLocation.SourceAssembly
+)]
+
+// Plugin metadata
+[assembly: PluginDisplayName("MeshSet Editor")]
+[assembly: PluginAuthor("GalaxyMan2015")]
+[assembly: PluginVersion("1.0.1.0")]
+
+// Register options
+[assembly: RegisterOptionsExtension(typeof(MeshOptions))]
+
+// Register asset definitions
+[assembly: RegisterAssetDefinition("RigidMeshAsset", typeof(RigidMeshAssetDefinition))]
+[assembly: RegisterAssetDefinition("SkinnedMeshAsset", typeof(SkinnedMeshAssetDefinition))]
+[assembly: RegisterAssetDefinition("CompositeMeshAsset", typeof(CompositeMeshAssetDefinition))]
+
+// Register custom handler
+[assembly: RegisterCustomHandler(
+    CustomHandlerType.Res,
+    typeof(ShaderBlockDepotCustomActionHandler),
+    resType: ResourceType.ShaderBlockDepot)]
+```
+
+## Attribute Load Phases
+
+### Startup Phase
+
+Loaded before profile selection:
+- `RegisterProfileAttribute`
+- `RegisterTypeOverrideAttribute`
+- `RegisterGlobalTypeEditorAttribute`
+- `RegisterStartupActionAttribute`
+
+### Initialize Phase
+
+Loaded after profile is selected:
+- `RegisterAssetDefinitionAttribute`
+- `RegisterMenuExtensionAttribute`
+- `RegisterOptionsExtensionAttribute`
+- `RegisterThirdPartyDllAttribute`
+- `RegisterLocalizedStringDatabaseAttribute`
+- `RegisterShaderAttribute`
+- `RegisterTabExtensionAttribute`
+- `RegisterDataExplorerContextMenuAttribute`
+- `RegisterExecutionAction`
+- `RegisterCustomHandlerAttribute`
+
+See `~/workspace/source/FrostyPlugin/PluginManager.cs:419` for the implementation.
+
+## Best Practices
+
+<Warning>
+Always use `AllowMultiple = true` attributes (like `RegisterAssetDefinition`) multiple times rather than trying to register multiple items in one attribute.
+</Warning>
+
+<Accordion title="Correct: Multiple Attributes">
+```csharp
+[assembly: RegisterAssetDefinition("TypeA", typeof(DefinitionA))]
+[assembly: RegisterAssetDefinition("TypeB", typeof(DefinitionB))]
+[assembly: RegisterAssetDefinition("TypeC", typeof(DefinitionC))]
+```
+</Accordion>
+
+<Accordion title="Naming Conventions">
+- Use descriptive display names
+- Version using semantic versioning (major.minor.patch.build)
+- Match asset type names exactly as they appear in the game's type library
+</Accordion>
+
+<Accordion title="Profile Validation">
+Only use profile validation when necessary:
+- Game-specific features that won't work in other games
+- Features that conflict with other games' implementations
+- Otherwise, let plugins work universally
+</Accordion>

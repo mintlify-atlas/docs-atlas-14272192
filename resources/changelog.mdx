@@ -1,0 +1,387 @@
+---
+title: Changelog
+description: Version history and changes for Frosty Toolsuite
+icon: clock-rotate-left
+---
+
+## Version 1.0.6.3
+
+### Core Improvements
+
+- Improved performance of the EbxWriter
+- Improved import for collections (#317)
+- Added option to manage ModData from the ModManager (#271, #314)
+- Added whitelist option for bundles (#275)
+- Added rename and duplicate pack options to the ModManager (#280)
+- Added MenuExtension support to ModManager (#311)
+- Added Math expressions in number textboxes (#291)
+
+### Game Support
+
+- Added ReadOnly Star Wars Squadrons profile (#301)
+- Added full Battlefield V profile (#301)
+
+### Bug Fixes
+
+- Fixed launching issues on Steam
+- Fixed bundle adding for manifest games
+- Fixed crashing issues (#260, #261)
+- Fixed small UI inconsistencies (#265, #267, #268)
+- Fixed issue where editor mods didn't get removed (#274)
+- Changed Rotations from YPR to XYZ (#304)
+
+### Plugin Changes
+
+- Added support for more types to the duplication and bundle editor plugins (#276, #277)
+- Added importing support for composite meshes (#262)
+- Added importing support for raw ealayer3 audio
+- Fixed crashing issues when adding meshes to bundles (#313)
+- Fixed crashing issue when exporting certain textures
+
+---
+
+## Version 1.0.6.2
+
+### Core Improvements
+
+- Fixed memory issue and writing of cat files
+- Fixed issue with bundle editing in older games
+- Improved applying speed in Mod Manager
+- Improved Loaded Plugins List in Editor
+- Added filter to PointerRef Editor
+- Added Recent Projects to Editor
+- Added option to change ordering of Mod Manager's Applied Mods list
+
+### Plugin Changes
+
+- Fixed MeshSetEditor inverted tangents
+- Fixed issues with DAI texture edits
+- Fixed issue with texture duplication
+- Fixed issues with rivals meshes and textures
+- Fixed issues with ealayer3 sounds
+- Updated BWLocalizationPlugin
+- Added CompositeMeshAsset part exporting
+
+---
+
+## Version 1.0.6.1
+
+### Bug Fixes
+
+- Fixed NFS: Heat profile being read only
+- Temporarily disabled Update Checker
+
+---
+
+## Version 1.0.6
+
+<Note>
+  This was a major release introducing the plugin system and many new features.
+</Note>
+
+### Major Features
+
+- **Added plugin support** - Extensible architecture for custom functionality
+- **Added Sound Import functionality**
+- **Added Mesh Import functionality**
+- **Added Bundle Editor**
+- **Added TextureAsset duplication support** (for some games)
+- **Added InitFS Viewer**
+- **Added Type Viewer**
+- **Added Localized String Editor**
+
+### Core Improvements
+
+- Added "Copy Guid" button to PointerRef Property Grid items
+- Added cancel button to Mod Applying process
+- Added modding categories to Mod Export window
+- Added Scan for Games functionality to Prelaunch window
+- Added Refresh MeshVariations functionality
+- Added MeshVariation caching
+- Added TypeInfo caching
+- Added warnings for games containing EasyAntiCheat
+- Added BoxedValueRef editing functionality
+- Added new Type Editor for Event/Property/Link Connections
+- Added pack zipping and loading
+- Added collections
+
+### UI/UX Changes
+
+- Moved location of Editor and Explorer menu items (from Tools to View)
+- Moved to JSON format for configs
+- Moved config files to AppData for global access
+- Revamped Sound Editor
+- Revamped layout for Prelaunch window
+- Revamped Home Page
+- Redesigned theme
+
+### Game Support
+
+- Added experimental NFS: Heat support
+
+### Plugin Extension Points
+
+- TypeEditor extension
+- Menu extension
+- Tab extension
+- Option extension
+- Data Explorer Context Menu Item extension
+- Asset Definition extension
+- Localized String Database extension
+- ThirdPartyDll extension
+- Type Override extension
+- Custom Handler extension
+- Custom Asset Manager extension
+- Custom User Shader extension
+- Custom Type Field extension
+- Startup Action extension
+- ExecutionAction extension
+
+---
+
+## Version 1.0.5.9
+
+- Added Battlefield: Hardline profile
+- Fix for FIFA20 launching issues
+
+---
+
+## Version 1.0.5.8
+
+- Added Plants vs Zombies: Battle for Neighbourville Read Only profile
+- Added ability to update a game's profile SDK when game is updated
+- Export settings for meshes now remember the last skeleton used
+- Added ability to select the render device the viewport will use
+- Added ability to merge ShaderBlockDepot changes from multiple mods
+- Fixed issue with exporting BFV meshes with skeletons
+
+---
+
+## Version 1.0.5.7
+
+- Added FIFA20 full profile
+- Updated SDK for SWBF2
+- Updated SDK for BFV
+- Updated SDK for Anthem
+- Fixed crash when attempting to load meshes in BFV
+
+---
+
+## Version 1.0.5.6
+
+- Added filtering to the property grid (by name or GUID)
+- Fixed issue where newer format EBX were not rewriting correctly
+- Fixed crash when trying to display an invalid reference
+- Fixed some reference assigning issues
+
+---
+
+## Version 1.0.5.5
+
+- Fix for legacy db changes causing game crash in Madden20
+- Fix for crash when editing network registry assets
+- Small fix for ShaderBlockDepot boolean edits
+- Fix for extra / detection in duplicate asset filename
+
+---
+
+## Version 1.0.5.4
+
+### Major Features
+
+- Added Madden20 full profile
+- Added Plants vs Zombies Garden Warfare read only profile
+- Added ability to add and remove root level instances to EBX
+- Added ability to rename and duplicate instances
+- Added ability to copy and paste objects and arrays
+- Added ability to duplicate an asset (and change its type)
+
+### Game-Specific
+
+- Modifying mesh materials and object variations in SWBF2 now updates ShaderBlockDepot files
+- Added more inline classes to SWBF2 profile
+
+### Bug Fixes
+
+- Fixed crash when saving during autosave
+- Fixed issue causing white pitch in FIFA19
+- Fixed type info generation issues for Mass Effect
+- Fixed PointerRef dropdown appearing cut off
+- Fixed setting shader to null causing crash
+
+---
+
+## Version 1.0.5
+
+### Major Features
+
+- **Added reference viewer** - See where assets are referenced
+- **Added bundle reference viewer**
+- **Added experimental kit previewer for FIFA**
+- **Added shader compilation system** - Author custom shaders
+- **Added experimental resource explorer**
+- **Added experimental localized string viewer**
+- **Added discord RPC functionality**
+
+### Game Support
+
+- Added read only profile for Anthem
+- Added read only profile for Battlefield V
+- Added read only profile for Need for Speed Rivals
+- Added FIFA19 full profile (editing enabled)
+
+### UI Improvements
+
+- Added bookmark functionality for legacy items
+- Added legacy asset editors/viewers (DB, DDS, BIG, AST)
+- Added mod category grouping to Mod Manager
+- Added LinearTransform editor (position, rotation, scale)
+- Added patch summary window for game updates
+- Added profile selection window to Mod Manager
+- Added options window for configuration
+- Added new skeleton picker with filtering and folders
+- Added branch tree view for conversations (DAI, MEA, Anthem)
+
+### Performance
+
+- Improved start times and apply times for most games
+
+### Other
+
+- Exporting composite mesh now exports embedded transforms
+- Revamped Property Grid with increased functionality
+- Revamped mesh renderer with better performance
+- Fixed save on close prompt
+- Fixed affected files listing freezing UI
+- Fixed crash with volume texture export
+- Fixed FIFA19 mesh export issues
+- Updated SDKs to latest patch versions
+
+---
+
+## Version 1.0.4.5
+
+- Added Battlefield 4 profile
+- Added ability to import/export textures to PNG/TGA/HDR and DDS
+- Fixed issue with Windows 10 update 1809 unable to launch modded games
+- Updated various SDKs to latest patch version
+
+---
+
+## Version 1.0.4.4
+
+- Added read-only FIFA19 profile
+- Added Cubemap/Volume and Texture array import support
+- Fixed crash when viewing specific SWBF2 models
+- Fixed issue where PVZ2 changes would cause game crash
+
+---
+
+## Version 1.0.4.3
+
+- Added Madden NFL 19 profile
+- Added Plants vs Zombies 2 profile
+- Added Battlefield 1 profile
+- Added screen to show mod conflicts in Mod Manager
+- Fixed numerous window issues and enabled DPI support
+- Out of date mods now show warning on import
+- Fixed crash with NFS16 and DAI when loading data
+- Fixed corrupted textures in DAI when using daimods
+- Fixed legacy file changes in FIFA/Madden not applying
+
+---
+
+## Version 1.0.4
+
+### Major Features
+
+- Config selection at launch
+- SVG Preview/Import/Export
+- AtlasTexture Preview/Import/Export
+- DelayLoadBundle explorer for DAI
+- IES Preview
+- NFS Payback support
+
+### Improvements
+
+- Dialog paths saved to INI
+- New mod export window
+- Mod settings saved to project
+- Various prompts to save project
+- Autosave with configurable settings
+- Auto hash text in int/uint fields
+- EBX writing speed improvements
+- Using actual Frostbite BRDFs in renderer
+- Copy/Paste for Property Grid
+- Insert and RemoveAll for lists
+- daimod files can be imported in Mod Manager
+- Variation database lazy loading
+- Data accessible while game is running
+
+---
+
+## Earlier Versions
+
+For complete version history including v1.0.3 and earlier, please refer to the ChangeLog.txt file in the source repository.
+
+### Notable Early Milestones
+
+<AccordionGroup>
+  <Accordion title="v1.0.3 - Dragon Age & More" icon="gamepad">
+    - Added support for Dragon Age: Inquisition
+    - Added support for Need for Speed games
+    - Added support for FIFA 17
+    - Added mesh 3D preview
+    - Added sound preview and export
+    - Added Lua asset editing
+    - Added searching/filtering in Data Explorer
+    - Added bookmarks
+  </Accordion>
+
+  <Accordion title="v1.0.2 - Enhanced Editing" icon="pen">
+    - Array and ref editing in Property Grid
+    - Localized string parser and editor
+    - Double click to expand Property Grid entries
+    - Unreferenced EBX classes now editable
+  </Accordion>
+
+  <Accordion title="v1.0.1 - Import/Export" icon="file-import">
+    - ASCII FBX, OBJ, and DAE export for meshes
+    - Multi-dimensional texture support
+    - Individual slice viewing for textures
+    - Exception window for errors
+  </Accordion>
+
+  <Accordion title="v1.0.0 - Public Release" icon="rocket">
+    First public release of Frosty Toolsuite!
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Third-Party Components
+
+Frosty Toolsuite uses the following third-party libraries:
+
+- **Json.NET** - Copyright (c) 2007 James Newton-King (MIT License)
+- **SharpDX** - Copyright (c) 2010-2014 SharpDX - Alexandre Mutel (MIT License)
+- **libfbx** - Copyright (c) 2014 Autodesk, Inc.
+- **libzstd** - Copyright (c) 2016-present, Facebook, Inc. (BSD License)
+- **Zlib** - Copyright (c) 1995-2017 Jean-loup Gailly and Mark Adler
+- **ealayer3** - Copyright (c) 2010, Ben Moench
+- **libmpg123** - Copyright (c) 1995-2013 by Michael Hipp and others (LGPL v2.1)
+- **Icons8** - Creative Commons License
+
+---
+
+## Stay Updated
+
+For the latest updates and releases:
+
+- Watch the GitHub repository
+- Join the community Discord
+- Follow development discussions
+
+<Note>
+  This changelog is based on version 1.0.6.3. For the most current information, check the repository.
+</Note>

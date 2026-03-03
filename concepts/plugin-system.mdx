@@ -1,0 +1,709 @@
+---
+title: Plugin System
+description: Extending Frosty Toolsuite with plugins for custom asset types and functionality
+---
+
+Frosty Toolsuite's plugin system provides a flexible architecture for extending functionality without modifying core code. Plugins can add support for new asset types, custom editors, menu items, and more.
+
+## Plugin Architecture
+
+Plugins are .NET assemblies loaded dynamically at runtime.
+
+**Plugin Discovery:**
+
+```csharp
+public class PluginManager
+{
+    private List<Plugin> m_plugins = new List<Plugin>();
+    private List<Plugin> m_loadedPlugins = new List<Plugin>();
+    
+    public PluginManager(ILogger logger, PluginManagerType context)
+    {
+        m_managerType = context;
+        
+        // Scan Plugins directory
+        foreach (string item in Directory.EnumerateFiles(
+            "Plugins", "*.dll", SearchOption.AllDirectories))
+        {
+            FileInfo fileInfo = new FileInfo(item);
+            m_plugins.Add(LoadPlugin(fileInfo.FullName, PluginLoadType.Startup));
+        }
+    }
+}
+```
+From PluginManager.cs:122.
+
+## Plugin Lifecycle
+
+Plugins are loaded in two phases:
+
+<Steps>
+  <Step title="Startup Phase">
+    Loaded before game profile selection:
+    - Profile definitions
+    - Global type editors
+    - Type overrides
+    - Startup actions
+  </Step>
+  <Step title="Initialize Phase">
+    Loaded after profile is selected:
+    - Asset definitions (game-specific)
+    - Custom handlers
+    - Menu extensions
+    - Tab extensions
+    - Options pages
+  </Step>
+</Steps>
+
+**Loading Process:**
+
+```csharp
+public void Initialize()
+{
+    foreach (Plugin plugin in m_plugins)
+    {
+        if (IsValidToLoadPlugin(plugin.Assembly))
+        {
+            LoadDefinitionsFromAssembly(PluginLoadType.Initialize, plugin.Assembly);
+            m_loadedPlugins.Add(plugin);
+        }
+        else
+        {
+            plugin.Status = PluginLoadStatus.LoadedInvalid;
+        }
+    }
+}
+```
+From PluginManager.cs:151.
+
+## Plugin Attributes
+
+Plugins use assembly-level attributes to declare functionality:
+
+### Core Attributes
+
+<Tabs>
+  <Tab title="Plugin Metadata">
+    ```csharp
+    using Frosty.Core.Attributes;
+    
+    [assembly: PluginDisplayName("My Plugin")]
+    [assembly: PluginAuthor("Your Name")]
+    [assembly: PluginVersion("1.0.0.0")]
+    ```
+    
+    These attributes provide plugin information in the UI.
+  </Tab>
+  <Tab title="Profile Validation">
+    ```csharp
+    // Only load for specific games
+    [assembly: PluginValidForProfile((int)ProfileVersion.Battlefield5)]
+    [assembly: PluginValidForProfile((int)ProfileVersion.Battlefield1)]
+    
+    // Exclude specific games
+    [assembly: PluginNotValidForProfile((int)ProfileVersion.Fifa18)]
+    ```
+    
+    Controls which games the plugin supports.
+  </Tab>
+  <Tab title="Third-Party DLLs">
+    ```csharp
+    // Prevent Frosty from loading as plugin
+    [assembly: RegisterThirdPartyDll("Newtonsoft.Json")]
+    [assembly: RegisterThirdPartyDll("SharpDX")]
+    ```
+    
+    Marks dependency DLLs to skip during plugin scan.
+  </Tab>
+</Tabs>
+
+## Extension Types
+
+### Asset Definitions
+
+Define how asset types are displayed and edited:
+
+```csharp
+[RegisterAssetDefinition("MeshAsset", typeof(MeshAssetDefinition))]
+public class MeshAssetDefinition : AssetDefinition
+{
+    public override void GetSupportedFileTypes(List<string> extensions)
+    {
+        extensions.Add(".fbx");
+        extensions.Add(".obj");
+    }
+    
+    public override bool CanExport(object asset)
+    {
+        return asset is MeshAsset;
+    }
+    
+    public override async Task<bool> Export(
+        EbxAssetEntry entry, 
+        string path, 
+        string filterType)
+    {
+        MeshAsset meshAsset = App.AssetManager.GetEbx(entry).RootObject;
+        // Export logic...
+        return true;
+    }
+}
+```
+
+From PluginManager.cs:452.
+
+<Info>
+Asset definitions registered for a base type automatically apply to all derived types via the TypeLibrary.
+</Info>
+
+### Custom Handlers
+
+Provide specialized editing for specific asset types:
+
+<Tabs>
+  <Tab title="EBX Handler">
+    ```csharp
+    [RegisterCustomHandler(
+        CustomHandlerType.Ebx, 
+        "TextureAsset", 
+        typeof(TextureAssetHandler))]
+    public class TextureAssetHandler : ICustomActionHandler
+    {
+        public bool CanEdit(object asset)
+        {
+            return asset is TextureAsset;
+        }
+        
+        public void Edit(EbxAssetEntry entry)
+        {
+            // Open texture editor
+            TextureEditorWindow window = new TextureEditorWindow(entry);
+            window.ShowDialog();
+        }
+    }
+    ```
+  </Tab>
+  <Tab title="Resource Handler">
+    ```csharp
+    [RegisterCustomHandler(
+        CustomHandlerType.Res, 
+        ResourceType.SwfMovie, 
+        typeof(SwfMovieHandler))]
+    public class SwfMovieHandler : ICustomActionHandler
+    {
+        public void Import(ResAssetEntry entry, string filename)
+        {
+            // Import SWF file
+            byte[] data = File.ReadAllBytes(filename);
+            App.AssetManager.ModifyRes(entry.Name, data);
+        }
+        
+        public void Export(ResAssetEntry entry, string filename)
+        {
+            using (Stream stream = App.AssetManager.GetRes(entry))
+            {
+                using (FileStream fs = new FileStream(
+                    filename, FileMode.Create))
+                {
+                    stream.CopyTo(fs);
+                }
+            }
+        }
+    }
+    ```
+    From PluginManager.cs:540.
+  </Tab>
+</Tabs>
+
+### Menu Extensions
+
+Add custom menu items to the editor:
+
+```csharp
+[RegisterMenuExtension(typeof(MyMenuExtension))]
+public class MyMenuExtension : MenuExtension
+{
+    public override string TopLevelMenuName => "Tools";
+    public override string SubLevelMenuName => null;
+    public override string MenuItemName => "My Custom Tool";
+    
+    public override void MenuItemClicked(ILogger logger, object dataContext)
+    {
+        // Handle menu click
+        CustomToolWindow window = new CustomToolWindow();
+        window.ShowDialog();
+    }
+}
+```
+
+From PluginManager.cs:485.
+
+### Tab Extensions
+
+Add custom tabs to the main editor window:
+
+```csharp
+[RegisterTabExtension(typeof(MyCustomTab))]
+public class MyCustomTab : TabExtension
+{
+    public override string TabItemName => "My Tab";
+    public override int TabItemPriority => 100;
+    
+    public override FrostyTabItem CreateTabItem()
+    {
+        return new FrostyTabItem
+        {
+            Content = new MyCustomTabControl(),
+            Header = TabItemName
+        };
+    }
+}
+```
+
+From PluginManager.cs:524.
+
+### Data Explorer Context Menu
+
+Add right-click menu items in the asset browser:
+
+```csharp
+[RegisterDataExplorerContextMenu(typeof(ExportAllTexturesMenu))]
+public class ExportAllTexturesMenu : DataExplorerContextMenuExtension
+{
+    public override string ContextItemName => "Export All Textures";
+    
+    public override bool IsValidForSelection(
+        IEnumerable<EbxAssetEntry> selectedAssets)
+    {
+        return selectedAssets.Any(
+            a => a.Type == "TextureAsset");
+    }
+    
+    public override void ContextItemClicked(
+        IEnumerable<EbxAssetEntry> selectedAssets, 
+        ILogger logger)
+    {
+        foreach (var asset in selectedAssets)
+        {
+            if (asset.Type == "TextureAsset")
+            {
+                // Export texture...
+            }
+        }
+    }
+}
+```
+
+From PluginManager.cs:530.
+
+### Startup Actions
+
+Execute code during application startup:
+
+```csharp
+[RegisterStartupAction(typeof(MyStartupAction))]
+public class MyStartupAction : StartupAction
+{
+    public override void Run(ILogger logger, PluginManagerType type)
+    {
+        // Initialize libraries
+        // Load configuration
+        // Register handlers
+        logger.Log("MyPlugin initialized");
+    }
+}
+```
+
+From PluginManager.cs:445.
+
+### Execution Actions (Mod Manager)
+
+Execute during mod application:
+
+```csharp
+[RegisterExecutionAction(typeof(MyExecutionAction))]
+public class MyExecutionAction : ExecutionAction
+{
+    public override string ActionName => "Custom Asset Patcher";
+    
+    public override void Execute(
+        ILogger logger, 
+        IEnumerable<EbxAssetEntry> modifiedAssets)
+    {
+        // Patch assets during mod application
+        foreach (var asset in modifiedAssets)
+        {
+            // Custom processing...
+        }
+    }
+}
+```
+
+From PluginManager.cs:536.
+
+## Type System Integration
+
+### Global Type Editors
+
+Custom editors for specific field types:
+
+```csharp
+[RegisterGlobalTypeEditor("Vec3", typeof(Vec3Editor))]
+public class Vec3Editor : FrostyTypeEditor
+{
+    public override void CreateUI(object value)
+    {
+        Vec3 vec = (Vec3)value;
+        // Create X, Y, Z input controls
+    }
+    
+    public override object GetValue()
+    {
+        return new Vec3(xValue, yValue, zValue);
+    }
+}
+```
+
+From PluginManager.cs:441.
+
+### Type Overrides
+
+Replace type handling entirely:
+
+```csharp
+[RegisterTypeOverride("LinearTransform", typeof(CustomTransformType))]
+public class CustomTransformType
+{
+    // Custom implementation...
+}
+```
+
+From PluginManager.cs:437.
+
+## Shader Registration
+
+Register custom shaders for rendering:
+
+```csharp
+[assembly: RegisterShader(
+    ShaderType.VertexShader, 
+    "MyShader", 
+    "Shaders.MyVertexShader.cso")]
+[assembly: RegisterShader(
+    ShaderType.PixelShader, 
+    "MyShader", 
+    "Shaders.MyPixelShader.cso")]
+```
+
+Shader bytecode must be embedded as manifest resources.
+
+## Custom Asset Managers
+
+Handle non-standard asset storage:
+
+```csharp
+[RegisterCustomAssetManager(
+    "legacy", 
+    typeof(LegacyAssetManager))]
+public class LegacyAssetManager : ICustomAssetManager
+{
+    public void Initialize(ILogger logger)
+    {
+        // Load legacy file formats
+    }
+    
+    public AssetEntry GetAssetEntry(string key)
+    {
+        // Retrieve from custom storage
+    }
+    
+    public Stream GetAsset(AssetEntry entry)
+    {
+        // Read asset data
+    }
+    
+    public void ModifyAsset(string key, byte[] data)
+    {
+        // Save modifications
+    }
+    
+    public IEnumerable<AssetEntry> EnumerateAssets(bool modifiedOnly)
+    {
+        // Iterate custom assets
+    }
+}
+```
+
+From PluginManager.cs:576 and AssetManager.cs:430.
+
+## Profile Registration
+
+Add support for new games:
+
+```csharp
+[RegisterProfile(typeof(MyGameProfile))]
+public class MyGameProfile : IProfile
+{
+    public Profile CreateProfile()
+    {
+        return new Profile
+        {
+            Name = "MyGame",
+            DisplayName = "My Game (2024)",
+            DataVersion = 20240101,
+            Deobfuscator = "MyGameDeobfuscator",
+            AssetLoader = "MyGameAssetLoader",
+            Sources = new List<FileSystemSource>
+            {
+                new FileSystemSource { Path = "Data", SubDirs = false }
+            },
+            // Additional configuration...
+        };
+    }
+}
+```
+
+From PluginManager.cs:433.
+
+## Plugin Example: Texture Plugin
+
+Complete example of a texture handling plugin:
+
+```csharp
+using Frosty.Core;
+using Frosty.Core.Attributes;
+using FrostySdk.Managers;
+
+[assembly: PluginDisplayName("Texture Plugin")]
+[assembly: PluginAuthor("Plugin Author")]
+[assembly: PluginVersion("1.0.0.0")]
+
+// Register for all Frostbite games
+[assembly: RegisterAssetDefinition(
+    "TextureAsset", 
+    typeof(TextureAssetDefinition))]
+
+[assembly: RegisterCustomHandler(
+    CustomHandlerType.Res, 
+    ResourceType.Texture, 
+    typeof(TextureResourceHandler))]
+
+namespace TexturePlugin
+{
+    public class TextureAssetDefinition : AssetDefinition
+    {
+        public override void GetSupportedFileTypes(List<string> extensions)
+        {
+            extensions.Add(".dds");
+            extensions.Add(".png");
+            extensions.Add(".tga");
+        }
+        
+        public override async Task<bool> Export(
+            EbxAssetEntry entry, 
+            string path, 
+            string filterType)
+        {
+            // Get texture resource
+            TextureAsset texAsset = 
+                App.AssetManager.GetEbx(entry).RootObject;
+            ResAssetEntry resEntry = 
+                App.AssetManager.GetResEntry(texAsset.Resource);
+            Texture texture = 
+                App.AssetManager.GetResAs<Texture>(resEntry);
+            
+            // Export based on filter type
+            if (filterType == ".dds")
+            {
+                texture.SaveToDds(path);
+            }
+            else if (filterType == ".png")
+            {
+                texture.SaveToPng(path);
+            }
+            
+            return true;
+        }
+        
+        public override async Task<bool> Import(
+            EbxAssetEntry entry, 
+            string path, 
+            ILogger logger)
+        {
+            // Load texture from file
+            Texture newTexture = Texture.LoadFromFile(path);
+            
+            // Get existing texture resource
+            TextureAsset texAsset = 
+                App.AssetManager.GetEbx(entry).RootObject;
+            ResAssetEntry resEntry = 
+                App.AssetManager.GetResEntry(texAsset.Resource);
+            
+            // Modify resource with new data
+            App.AssetManager.ModifyRes(
+                resEntry.ResRid, 
+                newTexture);
+            
+            logger.Log($"Imported texture: {entry.Name}");
+            return true;
+        }
+    }
+    
+    public class TextureResourceHandler : ICustomActionHandler
+    {
+        public bool CanEdit(object asset)
+        {
+            return asset is Texture;
+        }
+        
+        public void Edit(ResAssetEntry entry)
+        {
+            // Open texture viewer/editor
+            TextureEditorWindow editor = 
+                new TextureEditorWindow(entry);
+            editor.ShowDialog();
+        }
+    }
+}
+```
+
+## Plugin Best Practices
+
+<Note>
+**Recommendations:**
+
+1. **Use appropriate load phases** - Startup for core functionality, Initialize for game-specific
+2. **Validate profile compatibility** - Use PluginValidForProfile attributes
+3. **Handle errors gracefully** - Catch exceptions and log to ILogger
+4. **Mark dependencies** - Use RegisterThirdPartyDll for libraries
+5. **Follow naming conventions** - Clear, descriptive class and attribute names
+6. **Document public APIs** - Add XML comments for plugin developers
+7. **Test across games** - Verify behavior with different profiles
+8. **Version appropriately** - Use semantic versioning
+</Note>
+
+## Plugin Development Workflow
+
+<Steps>
+  <Step title="Create Project">
+    Create a .NET Framework 4.6.1+ class library project
+  </Step>
+  <Step title="Reference Frosty">
+    Add references to FrostySdk.dll and FrostyCore.dll
+  </Step>
+  <Step title="Implement Extensions">
+    Add classes with appropriate attributes
+  </Step>
+  <Step title="Build Plugin">
+    Compile to DLL
+  </Step>
+  <Step title="Deploy">
+    Copy DLL to Plugins folder in Frosty installation
+  </Step>
+  <Step title="Test">
+    Launch Frosty Editor/Mod Manager and verify plugin loads
+  </Step>
+</Steps>
+
+## Plugin Debugging
+
+Attach Visual Studio debugger to Frosty process:
+
+```xml
+<!-- project.csproj -->
+<PropertyGroup>
+  <DebugType>full</DebugType>
+  <DebugSymbols>true</DebugSymbols>
+  <OutputPath>C:\Path\To\Frosty\Plugins\MyPlugin\</OutputPath>
+</PropertyGroup>
+```
+
+Set breakpoints and use Debug → Attach to Process → FrostyEditor.exe
+
+## Common Plugin Patterns
+
+<Accordion title="Batch Asset Processing">
+  ```csharp
+  [RegisterMenuExtension(typeof(BatchProcessMenu))]
+  public class BatchProcessMenu : MenuExtension
+  {
+      public override void MenuItemClicked(ILogger logger, object context)
+      {
+          foreach (var entry in App.AssetManager.EnumerateEbx("MyAssetType"))
+          {
+              EbxAsset asset = App.AssetManager.GetEbx(entry);
+              // Process asset
+              App.AssetManager.ModifyEbx(entry.Name, asset);
+          }
+          logger.Log("Batch processing complete");
+      }
+  }
+  ```
+</Accordion>
+
+<Accordion title="Custom File Format Import">
+  ```csharp
+  public override async Task<bool> Import(
+      EbxAssetEntry entry, 
+      string path, 
+      ILogger logger)
+  {
+      try
+      {
+          // Parse custom format
+          CustomFormat data = CustomFormat.Parse(path);
+          
+          // Convert to Frostbite format
+          EbxAsset asset = ConvertToFrostbite(data);
+          
+          // Save to asset manager
+          App.AssetManager.ModifyEbx(entry.Name, asset);
+          
+          return true;
+      }
+      catch (Exception ex)
+      {
+          logger.LogError($"Import failed: {ex.Message}");
+          return false;
+      }
+  }
+  ```
+</Accordion>
+
+<Accordion title="Resource Preview">
+  ```csharp
+  public class ResourcePreviewTab : TabExtension
+  {
+      public override FrostyTabItem CreateTabItem()
+      {
+          var tab = new FrostyTabItem
+          {
+              Header = "Preview",
+              Content = new PreviewControl()
+          };
+          
+          // Update preview when asset selection changes
+          App.SelectedAssetChanged += (s, e) =>
+          {
+              if (e.Asset is ResAssetEntry resEntry)
+              {
+                  UpdatePreview(resEntry);
+              }
+          };
+          
+          return tab;
+      }
+  }
+  ```
+</Accordion>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Architecture" href="/concepts/architecture" icon="sitemap">
+    Understand the overall system architecture
+  </Card>
+  <Card title="Asset System" href="/concepts/asset-system" icon="box">
+    Learn about EBX, RES, and chunk asset management
+  </Card>
+</CardGroup>

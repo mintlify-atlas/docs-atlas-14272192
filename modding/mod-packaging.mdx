@@ -1,0 +1,407 @@
+---
+title: "Mod Packaging"
+description: "Package and export mods for distribution using Frosty Mod Manager"
+---
+
+## Overview
+
+Once you've finished modifying assets in your Frosty project, you need to package it as a `.fbmod` file for distribution and use with Frosty Mod Manager.
+
+## Exporting a Mod
+
+<Steps>
+  <Step title="Open Launch Window">
+    With your project open in Frosty Editor:
+    
+    1. Click **Launch** in the toolbar (or press **F5**)
+    2. This opens the Launch window where you can either:
+       - Launch the game with your mod
+       - Package the mod for distribution
+  </Step>
+  
+  <Step title="Configure Export Settings">
+    In the Launch window, verify your mod settings:
+    
+    **Mod Information:**
+    - **Title**: Display name (shown in Mod Manager)
+    - **Author**: Your name
+    - **Version**: Mod version (e.g., "1.0.0")
+    - **Category**: Helps users organize mods
+    - **Description**: Detailed explanation of what your mod does
+    - **Link**: Optional URL to mod page or documentation
+    
+    **Visual Assets:**
+    - **Icon**: Small image shown in mod list (PNG/JPG)
+    - **Screenshots**: Up to 4 preview images
+  </Step>
+  
+  <Step title="Export Mod File">
+    1. Click **Package Mod** button
+    2. Choose save location for the `.fbmod` file
+    3. Wait for packaging to complete
+    
+    The export process:
+    - Compiles all modified assets
+    - Generates resource archives
+    - Creates bundle modification data
+    - Writes mod metadata
+  </Step>
+</Steps>
+
+<Tip>
+Choose a descriptive filename like `enhanced-graphics-v1.0.fbmod` rather than generic names. This helps users identify mod versions.
+</Tip>
+
+## Mod File Format
+
+Frosty mods use a structured binary format optimized for fast loading:
+
+### File Structure
+
+```
+Magic Header: "FrostyMod"
+Format Version: Current mod format version
+
+Metadata Section:
+  - Title, Author, Category, Version
+  - Description and Link
+  - Icon image data
+  - Screenshot image data (4 max)
+
+Resource Section:
+  - Bundle resources (added bundles)
+  - EBX resources (entity modifications)
+  - RES resources (texture, mesh, etc.)
+  - Chunk resources (binary data)
+  - Embedded resources (custom data)
+
+Archive Section:
+  - Compressed resource data
+  - Offset/size manifest
+  - SHA1 checksums
+
+Action Section:
+  - Bundle add/modify/remove operations
+  - Asset bundle assignments
+  - Custom handler data
+```
+
+### Resource Types
+
+<Tabs>
+  <Tab title="EBX Resources">
+    Entity data modifications:
+    ```
+    - Name (lowercase)
+    - SHA1 hash
+    - Original size
+    - Compressed data
+    - User data
+    - Bundle assignments
+    ```
+    
+    Compression:
+    - **Default**: OODLE or LZ4 (game-dependent)
+    - **Fifa 18+**: ZStd compression
+  </Tab>
+  
+  <Tab title="RES Resources">
+    Resource file modifications:
+    ```
+    - Name (lowercase)
+    - Resource Type (uint)
+    - Resource RID (ulong)
+    - Resource Meta (16 bytes)
+    - SHA1 hash
+    - Data + compression
+    - Inline flag (bundle vs CAS)
+    ```
+  </Tab>
+  
+  <Tab title="Chunk Resources">
+    Binary chunk data:
+    ```
+    - GUID identifier
+    - SHA1 hash
+    - Range (start/end offsets)
+    - Logical offset/size
+    - H32 hash (for linking)
+    - First mip (for textures)
+    - User data
+    - Add to chunk bundle flag
+    ```
+  </Tab>
+  
+  <Tab title="Bundle Resources">
+    Custom bundles:
+    ```
+    - Bundle name
+    - Superbundle hash
+    - Bundle type
+    - Added assets list
+    ```
+  </Tab>
+</Tabs>
+
+## Mod Metadata Best Practices
+
+### Title
+
+<Tip>
+**Good titles are:**
+- Descriptive: "4K Enhanced Weapon Textures"
+- Concise: Avoid overly long names
+- Versioned: Include version in title if major changes
+
+**Avoid:**
+- ❌ "My Mod"
+- ❌ "asdfmod123"
+- ❌ "THE ULTIMATE BEST MOD EVER!!!!"
+</Tip>
+
+### Version Numbers
+
+Use semantic versioning: `MAJOR.MINOR.PATCH`
+
+```
+1.0.0 - Initial release
+1.1.0 - New features added
+1.1.1 - Bug fixes
+2.0.0 - Major changes/breaking updates
+```
+
+### Categories
+
+Choose appropriate categories to help users find your mod:
+
+- **Gameplay**: Mechanics, balance, difficulty
+- **Graphics**: Textures, visual effects, lighting
+- **Audio**: Sound effects, music
+- **UI**: Interface modifications
+- **Characters**: Player/NPC modifications
+- **Weapons**: Weapon models, stats, textures
+- **Vehicles**: Vehicle modifications
+- **Misc**: Other modifications
+
+### Description
+
+Write clear descriptions that include:
+
+1. **What it does**: Brief summary of changes
+2. **Features**: List of modifications
+3. **Requirements**: Dependencies on other mods
+4. **Known issues**: Bugs or limitations
+5. **Installation**: Special instructions if needed
+
+Example:
+```
+Enhanced Weapon Textures v1.2
+
+Replaces all weapon textures with 4K high-resolution versions.
+
+Features:
+- 4096x4096 base textures
+- Enhanced normal maps
+- Improved metallic/roughness
+- All 23 weapons covered
+
+Requirements:
+- None
+
+Known Issues:
+- May impact performance on low-end systems
+```
+
+## Compression and Optimization
+
+### Asset Compression
+
+Frosty automatically compresses mod data:
+
+<AccordionGroup>
+  <Accordion title="EBX Compression">
+    Entity data uses game-specific compression:
+    - **Pre-Fifa 18**: OODLE or LZ4
+    - **Fifa 18+**: ZStd for better ratio
+    - Compression is automatic based on game profile
+  </Accordion>
+  
+  <Accordion title="Resource Deduplication">
+    The packaging system deduplicates resources:
+    - Same SHA1 = stored once
+    - Reference counting for shared data
+    - Reduces final mod size
+  </Accordion>
+  
+  <Accordion title="Archive Manifests">
+    Resource data stored in archives:
+    - Offset/size lookup table
+    - Fast random access
+    - No need to decompress entire mod
+  </Accordion>
+</AccordionGroup>
+
+### File Size Tips
+
+<Tip>
+**Reduce mod size:**
+- Use BC compression for textures (BC1, BC3, BC7)
+- Don't include unnecessary mipmap levels
+- Avoid modifying large assets if only small changes needed
+- Remove test modifications before packaging
+</Tip>
+
+## Testing Your Mod
+
+<Steps>
+  <Step title="Test Launch from Editor">
+    Before packaging:
+    
+    1. Click **Launch** in Frosty Editor
+    2. Select **Launch Game**
+    3. Game launches with your mod applied
+    4. Test all modifications in-game
+    5. Check for crashes or visual issues
+  </Step>
+  
+  <Step title="Test Packaged Mod">
+    After packaging:
+    
+    1. Open Frosty Mod Manager
+    2. Import your `.fbmod` file
+    3. Enable the mod
+    4. Apply mods
+    5. Launch game
+    6. Verify everything works as expected
+  </Step>
+  
+  <Step title="Test Compatibility">
+    If distributing publicly:
+    
+    1. Test with other popular mods
+    2. Check for conflicts
+    3. Document any incompatibilities
+    4. Test on clean game install
+  </Step>
+</Steps>
+
+<Warning>
+Always test your packaged mod before distributing it. Issues in the editor may not appear until the mod is applied through Mod Manager.
+</Warning>
+
+## Distribution
+
+### Where to Share
+
+Popular platforms for sharing Frosty mods:
+
+1. **Nexus Mods**: Large modding community
+2. **Game-specific forums**: Direct audience
+3. **GitHub**: For open-source mods with source projects
+4. **Discord communities**: Quick sharing and feedback
+
+### What to Include
+
+<AccordionGroup>
+  <Accordion title="Required Files">
+    At minimum, provide:
+    - The `.fbmod` file
+    - README with description and instructions
+    - Version number and changelog
+  </Accordion>
+  
+  <Accordion title="Optional Files">
+    Consider including:
+    - Screenshots/preview images
+    - Video demonstration
+    - Source `.fbproject` file (if open-source)
+    - Detailed installation guide
+    - Compatibility notes
+  </Accordion>
+  
+  <Accordion title="Documentation">
+    Good documentation includes:
+    - Feature list
+    - Installation steps
+    - Uninstallation steps
+    - Troubleshooting guide
+    - Credits and acknowledgments
+    - License information
+  </Accordion>
+</AccordionGroup>
+
+### Mod Updates
+
+When releasing updates:
+
+1. **Increment version number** following semantic versioning
+2. **Document changes** in changelog
+3. **Test compatibility** with previous versions
+4. **Notify users** of breaking changes
+5. **Archive old versions** for users who need them
+
+## Advanced: Custom Actions
+
+Mods can include custom action handlers for complex modifications:
+
+### Legacy Custom Actions
+
+For backwards compatibility with old mod formats:
+
+```csharp
+ILegacyCustomActionHandler handler = new LegacyCustomActionHandler();
+handler.SaveToProject(writer);
+```
+
+### Specialized Handlers
+
+Plugins can define custom handlers:
+
+- **ShaderBlockDepot**: Merges shader definitions
+- **Modified Resources**: Complex resource types
+- **Game-specific**: Custom per-game logic
+
+Handlers are registered by hash and automatically invoked during mod loading.
+
+## Troubleshooting Packaging Issues
+
+<AccordionGroup>
+  <Accordion title="Packaging Takes Too Long">
+    Large mods may take time to package:
+    - **Normal**: 1-5 minutes for typical mods
+    - **Large**: 10+ minutes for extensive texture mods
+    - **Check progress**: Watch the progress bar
+    
+    If stuck:
+    - Verify no corrupted assets in project
+    - Check available disk space
+    - Try closing other applications
+  </Accordion>
+  
+  <Accordion title="Mod File Too Large">
+    If your mod is unexpectedly large:
+    - Check for duplicate asset modifications
+    - Verify texture formats are compressed (BC formats)
+    - Remove test assets from project
+    - Consider splitting into multiple mods
+  </Accordion>
+  
+  <Accordion title="Error During Packaging">
+    If packaging fails:
+    - Check Frosty Editor console for errors
+    - Verify all modified assets are valid
+    - Try removing recently modified assets
+    - Ensure project file isn't corrupted (load/save)
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Install Mods" icon="download" href="/modding/mod-installation">
+    Learn how to install and manage mods with Frosty Mod Manager
+  </Card>
+  <Card title="Best Practices" icon="check" href="/modding/best-practices">
+    Follow best practices for quality and compatibility
+  </Card>
+</CardGroup>

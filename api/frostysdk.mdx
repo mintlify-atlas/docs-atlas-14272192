@@ -1,0 +1,160 @@
+---
+title: 'FrostySdk Namespace'
+description: 'Core SDK namespace providing game file system and profile management'
+---
+
+## Overview
+
+The `FrostySdk` namespace contains the core components for interacting with Frostbite engine game files. It provides fundamental classes for file system access, profile management, and asset manipulation.
+
+## Key Classes
+
+### FileSystem
+
+Manages game file system access, catalog enumeration, and path resolution.
+
+<CodeGroup>
+```csharp Constructor
+FileSystem fs = new FileSystem(string basePath);
+fs.Initialize(byte[] key = null);
+```
+
+```csharp SuperBundle Enumeration
+foreach (string sbName in fs.SuperBundles)
+{
+    // Process superbundle
+}
+```
+</CodeGroup>
+
+**Properties:**
+
+<ResponseField name="SuperBundleCount" type="int">
+Number of superbundles in the game
+</ResponseField>
+
+<ResponseField name="CatalogCount" type="int">
+Number of catalogs in the game
+</ResponseField>
+
+<ResponseField name="BasePath" type="string">
+Base installation path of the game
+</ResponseField>
+
+<ResponseField name="CacheName" type="string">
+Path to the cache file
+</ResponseField>
+
+**Methods:**
+
+<ParamField path="ResolvePath" type="string" required>
+Resolves a game-relative path to an absolute file path
+
+```csharp
+string fullPath = fs.ResolvePath("native_data/installpackage_00/cas.cat");
+```
+</ParamField>
+
+<ParamField path="GetCatalogFromSuperBundle" type="string" required>
+Gets the catalog name that contains a specific superbundle
+
+```csharp
+string catalog = fs.GetCatalogFromSuperBundle("win32/levels/mp_001");
+```
+</ParamField>
+
+<ParamField path="EnumerateCatalogInfos" type="IEnumerable<CatalogInfo>">
+Enumerates all catalog information objects
+
+```csharp
+foreach (CatalogInfo catalog in fs.EnumerateCatalogInfos())
+{
+    Console.WriteLine($"Catalog: {catalog.Name}");
+}
+```
+</ParamField>
+
+### ProfilesLibrary
+
+Static class providing access to game profile information and configuration.
+
+```csharp
+string profileName = ProfilesLibrary.ProfileName;
+int dataVersion = ProfilesLibrary.DataVersion;
+Type deobfuscator = ProfilesLibrary.Deobfuscator;
+```
+
+**Static Properties:**
+
+<ResponseField name="ProfileName" type="string">
+Current game profile name (e.g., "FIFA20", "Battlefield5")
+</ResponseField>
+
+<ResponseField name="DataVersion" type="int">
+Game data version identifier
+</ResponseField>
+
+<ResponseField name="CacheName" type="string">
+Cache file name for the current profile
+</ResponseField>
+
+<ResponseField name="Deobfuscator" type="Type">
+Deobfuscator type for this game profile
+</ResponseField>
+
+<ResponseField name="AssetLoader" type="Type">
+Asset loader implementation for this game
+</ResponseField>
+
+### TypeLibrary
+
+Provides runtime type information and reflection for game asset types.
+
+```csharp
+bool isSubclass = TypeLibrary.IsSubClassOf("MeshAsset", "Asset");
+```
+
+## Usage Example
+
+<CodeGroup>
+```csharp Initialization
+using FrostySdk;
+using FrostySdk.Managers;
+
+// Initialize file system
+FileSystem fs = new FileSystem(@"C:\Program Files\FIFA 20");
+fs.Initialize();
+
+// Create managers
+ResourceManager rm = new ResourceManager(fs);
+rm.Initialize();
+
+AssetManager am = new AssetManager(fs, rm);
+am.Initialize();
+
+// Access current profile
+Console.WriteLine($"Profile: {ProfilesLibrary.ProfileName}");
+Console.WriteLine($"Data Version: {ProfilesLibrary.DataVersion}");
+```
+
+```csharp File System Access
+// Enumerate superbundles
+foreach (string sb in fs.SuperBundles)
+{
+    Console.WriteLine($"SuperBundle: {sb}");
+}
+
+// Resolve paths
+string catPath = fs.ResolvePath("native_data/installpackage_00/cas.cat");
+if (File.Exists(catPath))
+{
+    Console.WriteLine($"Found catalog at: {catPath}");
+}
+```
+</CodeGroup>
+
+## See Also
+
+- [AssetManager API](/api/asset-manager) - Asset enumeration and modification
+- [ResourceManager API](/api/resource-manager) - Resource data access
+- [Frosty.Core Namespace](/api/frostycore) - High-level editor integration

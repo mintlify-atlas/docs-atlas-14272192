@@ -1,0 +1,668 @@
+---
+title: Frequently Asked Questions
+description: Common questions about Frosty Toolsuite
+icon: circle-question
+---
+
+## General Questions
+
+<AccordionGroup>
+  <Accordion title="What is Frosty Toolsuite?">
+    Frosty Toolsuite is the most advanced modding platform for games running on DICE's Frostbite engine. It consists of:
+    
+    - **Frosty Editor**: Full-featured mod creation tool
+    - **Frosty Mod Manager**: Mod loading and management
+    - **Frosty SDK**: Core libraries for Frostbite file formats
+    - **Plugin System**: Extensible architecture for custom functionality
+    
+    It supports a wide range of Frostbite games including Battlefield, FIFA, Need for Speed, Dragon Age, Mass Effect, and more.
+  </Accordion>
+
+  <Accordion title="Which games are supported?">
+    Frosty supports many Frostbite games with varying levels of functionality:
+    
+    **Full Support (Editing Enabled):**
+    - Star Wars Battlefront II
+    - Battlefield 1, 4, Hardline, V
+    - FIFA 18, 19, 20
+    - Madden 19, 20
+    - Need for Speed Heat, Payback, Rivals
+    - Dragon Age: Inquisition
+    - Mass Effect: Andromeda
+    - Plants vs Zombies: Garden Warfare 2
+    
+    **Read-Only Support:**
+    - Anthem
+    - Star Wars Squadrons
+    - Plants vs Zombies: Battle for Neighborville
+    - Plants vs Zombies: Garden Warfare 1
+    
+    <Note>
+      Game support depends on having the correct profile SDK. Some games may require profile updates after patches.
+    </Note>
+  </Accordion>
+
+  <Accordion title="Is Frosty free to use?">
+    Yes, Frosty Toolsuite is completely free and open-source.
+    
+    **License**: Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License
+    
+    This means:
+    - Free to use for personal modding
+    - Cannot be used commercially
+    - Cannot create derivative works
+    - Must provide attribution
+  </Accordion>
+
+  <Accordion title="Can I mod online multiplayer games?">
+    <Warning>
+      You should ONLY use mods in offline/single-player modes.
+    </Warning>
+    
+    **Important:**
+    - Using mods in multiplayer can result in **permanent bans**
+    - Some games use EasyAntiCheat which will detect modifications
+    - Always play offline when mods are active
+    - Disable mods before playing online
+    
+    **EasyAntiCheat Games:**
+    Frosty displays warnings for games with EasyAntiCheat. Proceed at your own risk.
+  </Accordion>
+
+  <Accordion title="What's the difference between Frosty Editor and Mod Manager?">
+    **Frosty Editor:**
+    - Create and edit mods
+    - Browse game assets
+    - Import/export assets (meshes, textures, sounds)
+    - Save projects and export mods
+    
+    **Frosty Mod Manager:**
+    - Load and apply mods to games
+    - Manage mod load order
+    - Create mod collections and packs
+    - Launch games with mods enabled
+    
+    <Note>
+      Think of the Editor as a development tool and Mod Manager as an end-user tool.
+    </Note>
+  </Accordion>
+</AccordionGroup>
+
+## Getting Started
+
+<AccordionGroup>
+  <Accordion title="How do I install Frosty?">
+    1. Download the latest release from GitHub
+    2. Extract to a folder of your choice
+    3. Run `FrostyEditor.exe` or `FrostyModManager.exe`
+    4. Select your game on first launch
+    
+    **Requirements:**
+    - Windows 10 or later
+    - .NET Framework 4.8
+    - Visual C++ Redistributables
+    - 8GB+ RAM recommended
+  </Accordion>
+
+  <Accordion title="How do I create my first mod?">
+    <Steps>
+      <Step title="Launch Frosty Editor">
+        Run `FrostyEditor.exe` and select your game.
+      </Step>
+      
+      <Step title="Create a New Project">
+        File → New Project
+      </Step>
+      
+      <Step title="Browse Assets">
+        Use the Data Explorer to find assets you want to modify.
+      </Step>
+      
+      <Step title="Edit Assets">
+        Double-click assets to open them in the editor. Make your changes in the Property Grid.
+      </Step>
+      
+      <Step title="Save Project">
+        File → Save Project (Ctrl+S)
+      </Step>
+      
+      <Step title="Export Mod">
+        File → Export to Mod → Configure mod details → Export
+      </Step>
+    </Steps>
+  </Accordion>
+
+  <Accordion title="How do I apply mods to my game?">
+    <Steps>
+      <Step title="Launch Mod Manager">
+        Run `FrostyModManager.exe` and select your game.
+      </Step>
+      
+      <Step title="Add Mods">
+        Click "Import Mod" and select `.fbmod` or `.zip` files.
+      </Step>
+      
+      <Step title="Enable Mods">
+        Check the boxes next to mods you want to use, or drag them to the Applied Mods list.
+      </Step>
+      
+      <Step title="Adjust Load Order">
+        Drag mods in the Applied Mods list to reorder (bottom mods override top mods).
+      </Step>
+      
+      <Step title="Apply and Launch">
+        Click "Apply Mods" then "Launch Game".
+      </Step>
+    </Steps>
+  </Accordion>
+
+  <Accordion title="Do I need the encryption key?">
+    Some games require an encryption key to load game data.
+    
+    <Warning>
+      Frosty developers **cannot** and **will not** provide encryption keys.
+    </Warning>
+    
+    - You must obtain the key through legitimate means
+    - The key prompt window will appear if required
+    - Keys are game-specific
+    
+    **Games that may require keys:**
+    - Some older Frostbite titles
+    - Console versions (not supported)
+  </Accordion>
+</AccordionGroup>
+
+## Using Frosty Editor
+
+<AccordionGroup>
+  <Accordion title="How do I find specific assets?">
+    The Data Explorer offers several ways to find assets:
+    
+    **Search/Filter:**
+    1. Click in the filter box at the top
+    2. Type asset name or part of the path
+    3. Filter ignores case (v1.0.3+)
+    
+    **Bookmarks:**
+    1. Right-click an asset → Add Bookmark
+    2. Access bookmarks from the Bookmarks panel
+    3. Organize with folders (v1.0.3 alpha 4)
+    4. Rename bookmarks (v1.0.3 alpha 4)
+    
+    **Recent Items:**
+    - Recently opened assets appear in File → Recent
+    
+    **Find in Data Explorer:**
+    - When viewing references, right-click → Find in Data Explorer
+  </Accordion>
+
+  <Accordion title="How do I import custom meshes?">
+    Mesh import was added in v1.0.6.
+    
+    **Supported Formats:**
+    - FBX (ASCII and Binary)
+    - OBJ
+    - DAE (Collada)
+    
+    **Steps:**
+    1. Open a mesh asset in the Editor
+    2. Click Import in the mesh viewer
+    3. Select your mesh file
+    4. Choose the correct skeleton (very important!)
+    5. Configure import settings
+    6. Import and save
+    
+    <Warning>
+      Always export meshes with the correct skeleton to avoid crashes.
+    </Warning>
+    
+    **Tips:**
+    - Export settings remember the last skeleton used (v1.0.5.8)
+    - Composite mesh support added in v1.0.6.3
+    - Check for inverted normals (fixed in v1.0.6.2)
+  </Accordion>
+
+  <Accordion title="How do I import custom textures?">
+    Texture import/export was added in v1.0.4.5.
+    
+    **Supported Formats:**
+    - **2D Textures**: DDS, PNG, TGA, HDR
+    - **Array Textures**: DDS only
+    - **Cubemaps**: DDS only
+    - **3D/Volume Textures**: DDS only
+    
+    **Steps:**
+    1. Open a texture asset
+    2. Click Export to save current texture
+    3. Click Import to load a new texture
+    4. Select your texture file
+    5. Frosty will validate format and dimensions
+    
+    **Requirements:**
+    - Dimensions must match or be power of 2
+    - Format must be compatible
+    - DDS recommended for best compatibility
+  </Accordion>
+
+  <Accordion title="How do I import custom sounds?">
+    Sound import was added in v1.0.6.
+    
+    **Supported Formats:**
+    - WAV files
+    - Raw ealayer3 format (v1.0.6.3)
+    
+    **Steps:**
+    1. Open a sound asset in the Sound Editor
+    2. Click Import
+    3. Select your audio file
+    4. Frosty will convert and encode the audio
+    
+    <Note>
+      Some sounds may not support import. The import button will be disabled for unsupported sounds.
+    </Note>
+  </Accordion>
+
+  <Accordion title="What is the Property Grid?">
+    The Property Grid is where you edit asset properties.
+    
+    **Features:**
+    - Edit values by clicking on them
+    - Expand objects and arrays
+    - Copy/paste values (v1.0.4)
+    - Filter by property name or GUID (v1.0.5.6)
+    - Math expressions in number fields (v1.0.6.3)
+    
+    **Special Editors:**
+    - PointerRef: Select referenced objects from dropdown
+    - LinearTransform: Position, rotation (YPR/XYZ), scale editor
+    - Array: Add, remove, insert elements
+    - Localized Strings: String ID and text editor
+    
+    **Tips:**
+    - Double-click to expand entries (v1.0.2)
+    - Use Tab to navigate between fields
+    - Right-click for copy/paste options
+    - Filter auto-focuses when window opens (v1.0.4)
+  </Accordion>
+
+  <Accordion title="How do I duplicate assets?">
+    Asset duplication was added in v1.0.5.4.
+    
+    **Steps:**
+    1. Right-click an asset in Data Explorer
+    2. Select "Duplicate Asset"
+    3. Choose new name and optionally change type
+    4. New asset is created with unique GUIDs
+    
+    **Supported Assets:**
+    - Most EBX assets
+    - TextureAsset (some games, v1.0.6 Alpha 2)
+    - Through DuplicationPlugin (v1.0.6+)
+    
+    **Caveats:**
+    - Not all asset types support duplication
+    - Complex assets may need manual fixing
+    - References must be updated manually
+    
+    <Note>
+      The DuplicationPlugin was moved to its own plugin in v1.0.6 (Alpha 2).
+    </Note>
+  </Accordion>
+
+  <Accordion title="What are bundles and how do I edit them?">
+    Bundles are Frostbite's way of packaging assets.
+    
+    **Bundle Editor** (Added in v1.0.6):
+    - View which bundles contain an asset
+    - Add/remove assets from bundles
+    - Create new bundles
+    - Whitelist bundles (v1.0.6.3)
+    
+    **Access:**
+    - Tools → Bundle Editor
+    - Right-click asset → View Bundles
+    - Bundle reference viewer in asset editor
+    
+    <Warning>
+      Bundle editing can cause crashes if done incorrectly. Only modify bundles if you understand the system.
+    </Warning>
+    
+    **Game-Specific:**
+    - Manifest games: Issues fixed in v1.0.6.3
+    - Older games: Issues fixed in v1.0.6.2
+  </Accordion>
+</AccordionGroup>
+
+## Using Frosty Mod Manager
+
+<AccordionGroup>
+  <Accordion title="What is mod load order and why does it matter?">
+    Load order determines which mod's changes take priority when multiple mods modify the same file.
+    
+    **How it works:**
+    - Mods are applied from **top to bottom**
+    - **Bottom mods override top mods**
+    - Last mod applied wins for conflicting changes
+    
+    **Managing Load Order:**
+    1. Drag and drop mods in the Applied Mods list
+    2. Order can be changed (v1.0.6.2 Alpha 1)
+    3. Use the conflict viewer to see overlaps
+    
+    **Example:**
+    ```
+    Mod A - Changes texture to red
+    Mod B - Changes same texture to blue
+    Result: Texture will be blue (Mod B wins)
+    ```
+  </Accordion>
+
+  <Accordion title="What are mod collections and packs?">
+    **Collections** (Added in v1.0.6 Beta 3):
+    - Grouped sets of mods
+    - Enable/disable multiple mods at once
+    - Can include legacy mods (v1.0.6 Beta 4)
+    - Organize mods by category or purpose
+    
+    **Packs** (Added in v1.0.6 Alpha 5):
+    - Previously called "Profiles"
+    - Different mod configurations for the same game
+    - Compressed .zip format support
+    - Rename and duplicate options (v1.0.6.3)
+    
+    **Use Cases:**
+    - Different mod sets for different playthroughs
+    - Organize by mod type (graphics, gameplay, etc.)
+    - Share mod configurations with friends
+  </Accordion>
+
+  <Accordion title="How do I manage ModData files?">
+    ModData files store applied mod information. Over time they can accumulate and cause issues.
+    
+    **Manage ModData** (Added in v1.0.6.3):
+    1. Open Mod Manager
+    2. Go to Actions → Manage ModData
+    3. View and delete old ModData files
+    
+    **When to clean:**
+    - Mods not applying correctly
+    - Game crashes on startup
+    - After major mod changes
+    - Before troubleshooting issues
+    
+    <Note>
+      ModData cas files are automatically cleaned between launches (v1.0.6 Alpha 2).
+    </Note>
+  </Accordion>
+
+  <Accordion title="What platforms are supported for launching games?">
+    Frosty supports multiple game platforms (Added in v1.0.6 Alpha 3):
+    
+    **Supported Platforms:**
+    - EA Desktop (Origin)
+    - Steam
+    - Epic Games Store
+    
+    **LaunchPlatformPlugin:**
+    - Automatic platform detection
+    - Manual platform selection in options
+    - Keep platform open after exit option (v1.0.6.2 Alpha 1)
+    
+    **Troubleshooting:**
+    - Steam launch issues fixed in v1.0.6.3
+    - Platform detection improved in v1.0.6.2 Alpha 1
+  </Accordion>
+
+  <Accordion title="Can I import mods from other formats?">
+    Yes, Frosty supports multiple mod formats:
+    
+    **Supported Formats:**
+    - `.fbmod` - Native Frosty mod format
+    - `.zip` - Zipped mod packs (v1.0.6 Alpha 5)
+    - `.daimod` - Dragon Age: Inquisition mods (v1.0.4)
+    
+    **Legacy Mods:**
+    - FIFA/Madden legacy mods supported
+    - Can be added to collections (v1.0.6 Beta 4)
+    - Proper launch support (v1.0.6 Beta 4)
+    
+    **Importing:**
+    1. Click "Import Mod"
+    2. Select mod file(s)
+    3. Mod is copied to Mods folder
+    4. Enable and apply as normal
+  </Accordion>
+</AccordionGroup>
+
+## Plugin System
+
+<AccordionGroup>
+  <Accordion title="What are plugins?">
+    Plugins extend Frosty's functionality. The plugin system was added in v1.0.6.
+    
+    **Plugin Types:**
+    - **Editors**: Custom asset editors (Mesh, Texture, Sound, etc.)
+    - **UI Extensions**: Menu items, tabs, options pages
+    - **Data Extensions**: Custom asset types, handlers
+    - **Type Editors**: Custom property editors in Property Grid
+    
+    **Built-in Plugins:**
+    - MeshSetPlugin
+    - TexturePlugin
+    - SoundEditorPlugin
+    - BundleEditorPlugin
+    - LocalizedStringPlugin
+    - And many more!
+  </Accordion>
+
+  <Accordion title="How do I install third-party plugins?">
+    <Steps>
+      <Step title="Download Plugin">
+        Get the plugin `.dll` file from a trusted source.
+      </Step>
+      
+      <Step title="Place in Plugins Folder">
+        Copy to the `Plugins` folder in your Frosty installation.
+      </Step>
+      
+      <Step title="Unblock DLL">
+        Right-click the DLL → Properties → Unblock (if present)
+      </Step>
+      
+      <Step title="Restart Frosty">
+        Close and reopen Frosty Editor or Mod Manager.
+      </Step>
+      
+      <Step title="Verify Loading">
+        Check the loaded plugins list (improved in v1.0.6.2).
+      </Step>
+    </Steps>
+    
+    <Warning>
+      Only install plugins from trusted sources. Malicious plugins can compromise your system.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="Can I create my own plugins?">
+    Yes! Frosty has an extensive plugin API.
+    
+    **Getting Started:**
+    1. Use `BlankPlugin` as a template
+    2. Reference `FrostySdk` and `FrostyCore`
+    3. Implement your extension point
+    4. Build and place DLL in Plugins folder
+    
+    **Extension Points:**
+    - TypeEditor - Custom property editors
+    - MenuExtension - Menu items
+    - TabExtension - Custom tabs
+    - AssetDefinition - Custom asset types
+    - CustomHandler - Mod handling logic
+    - StartupAction - Run on startup
+    - And many more!
+    
+    See the [Contributing Guide](/resources/contributing) for detailed plugin development information.
+  </Accordion>
+</AccordionGroup>
+
+## Advanced Topics
+
+<AccordionGroup>
+  <Accordion title="What is the Type Explorer?">
+    The Type Explorer (added in v1.0.6) lets you browse Frostbite's type system.
+    
+    **Features:**
+    - View all game types and classes
+    - See class properties and structure
+    - Understand data relationships
+    - Reference for scripting and modding
+    
+    **Access:**
+    - View → Type Viewer/Explorer
+  </Accordion>
+
+  <Accordion title="What is the InitFS Viewer?">
+    The InitFS Viewer (added in v1.0.6) explores the InitFS archive.
+    
+    **InitFS:**
+    - Contains game initialization data
+    - File system metadata
+    - Bundle information
+    
+    **Access:**
+    - View → InitFS Viewer
+    
+    **Improvements:**
+    - Support for PVZ: Garden Warfare 1 & 2 (v1.0.6 Beta 1)
+    - Fixed loading for multiple games (v1.0.6 Beta 1)
+  </Accordion>
+
+  <Accordion title="What is EBX to XML export?">
+    EBX to XML (added in v1.0.6) exports asset data to XML format.
+    
+    **Use Cases:**
+    - External processing of asset data
+    - Scripting and automation
+    - Data analysis
+    - Backup and documentation
+    
+    **Access:**
+    - Tools → Export EBX to XML
+    
+    <Note>
+      This is an experimental feature for advanced users.
+    </Note>
+  </Accordion>
+
+  <Accordion title="Can I use Frosty with RenderDoc?">
+    Yes! Frosty has RenderDoc integration for graphics debugging.
+    
+    **Features:**
+    - Capture render frames
+    - Analyze shader execution
+    - Debug rendering issues
+    
+    **Custom Shaders:**
+    - Shader compilation system (v1.0.5)
+    - Author custom shaders
+    - Replace built-in shaders
+    
+    **Access:**
+    - RenderDoc button in mesh viewer toolbar
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Frosty crashes on startup, what do I do?">
+    Common causes and solutions:
+    
+    1. **Corrupted config**: Delete configs in `%LOCALAPPDATA%\Frosty`
+    2. **Missing dependencies**: Install Visual C++ Redistributables
+    3. **Blocked DLLs**: Unblock all DLLs in ThirdParty folder
+    4. **Outdated game**: Update game to latest version
+    
+    See the [Troubleshooting Guide](/resources/troubleshooting) for detailed solutions.
+  </Accordion>
+
+  <Accordion title="My mods aren't working, help!">
+    Check these common issues:
+    
+    1. **Mod load order**: Check for conflicts
+    2. **Old ModData**: Clean ModData files
+    3. **Outdated mods**: Update or rebuild mods
+    4. **Game patches**: Some patches break mods
+    
+    See [Troubleshooting → Modding Issues](/resources/troubleshooting#modding-issues).
+  </Accordion>
+
+  <Accordion title="Where can I get help?">
+    **Resources:**
+    - [Troubleshooting Guide](/resources/troubleshooting)
+    - [Changelog](/resources/changelog) - Check if your issue was fixed
+    - Community Discord
+    - GitHub Issues
+    
+    **Before Asking:**
+    1. Check this FAQ
+    2. Review troubleshooting guide
+    3. Search existing issues
+    4. Have your Frosty version and game info ready
+  </Accordion>
+</AccordionGroup>
+
+## Version Information
+
+<AccordionGroup>
+  <Accordion title="What version should I use?">
+    Always use the **latest stable release** for the best experience.
+    
+    **Current Stable:** v1.0.6.3
+    
+    **Version Types:**
+    - **Final**: Stable production releases
+    - **Beta**: Feature-complete, testing phase
+    - **Alpha**: Experimental, may have bugs
+    - **Developer**: Development builds, unstable
+    
+    <Note>
+      Check the [Changelog](/resources/changelog) to see what's new in each version.
+    </Note>
+  </Accordion>
+
+  <Accordion title="How do I update Frosty?">
+    <Steps>
+      <Step title="Download Latest Version">
+        Get the latest release from GitHub.
+      </Step>
+      
+      <Step title="Backup Your Data">
+        Save your projects and mod collections.
+      </Step>
+      
+      <Step title="Extract New Version">
+        Extract to a new folder or overwrite existing.
+      </Step>
+      
+      <Step title="Migrate Configs">
+        Configs in AppData are preserved automatically.
+      </Step>
+    </Steps>
+    
+    **Version Checking:**
+    - Automatic version checking added in v1.0.6 (Beta 3)
+    - Temporarily disabled in v1.0.6.1
+  </Accordion>
+</AccordionGroup>
+
+## Need More Help?
+
+If your question isn't answered here:
+
+- Check the [Troubleshooting Guide](/resources/troubleshooting)
+- Review the [Changelog](/resources/changelog)
+- Visit the [Contributing Guide](/resources/contributing) for development questions
+- Join the community Discord
+- Create a GitHub discussion or issue

@@ -1,0 +1,324 @@
+---
+title: 'EbxAssetEntry'
+description: 'Entity asset entry API for EBX (Entity Blueprint XML) assets'
+---
+
+## Overview
+
+The `EbxAssetEntry` class represents entity assets in the Frostbite engine. EBX assets are the primary data format for game entities, containing blueprints, levels, and gameplay data.
+
+## Class Definition
+
+```csharp
+public class EbxAssetEntry : AssetEntry
+{
+    public Guid Guid;
+    public List<Guid> DependentAssets;
+    public override string AssetType => "ebx";
+}
+```
+
+Location: `FrostySdk/Managers/AssetManager.cs:353`
+
+## Properties
+
+<ParamField path="Guid" type="Guid">
+  Unique identifier for the EBX asset. Used for cross-referencing and dependency tracking.
+</ParamField>
+
+<ParamField path="DependentAssets" type="List<Guid>">
+  List of asset GUIDs that this EBX asset depends on. Represents import references.
+</ParamField>
+
+<ParamField path="AssetType" type="string">
+  Returns `"ebx"` to identify this as an entity asset entry.
+</ParamField>
+
+### Inherited Properties
+
+<Expandable title="Base AssetEntry Properties">
+  <ParamField path="Name" type="string">
+    Full path name of the asset (e.g., `"characters/hero/mesh"`)
+  </ParamField>
+
+  <ParamField path="Type" type="string">
+    Type name of the root object (e.g., `"MeshAsset"`, `"BlueprintBundle"`)
+  </ParamField>
+
+  <ParamField path="Filename" type="string">
+    Asset filename extracted from the full path
+  </ParamField>
+
+  <ParamField path="Path" type="string">
+    Directory path portion of the asset name
+  </ParamField>
+
+  <ParamField path="DisplayName" type="string">
+    Filename with asterisk suffix if dirty (modified but not saved)
+  </ParamField>
+
+  <ParamField path="Sha1" type="Sha1">
+    SHA-1 hash of the asset data
+  </ParamField>
+
+  <ParamField path="BaseSha1" type="Sha1">
+    Base SHA-1 for patched assets
+  </ParamField>
+
+  <ParamField path="Size" type="long">
+    Compressed size of the asset in bytes
+  </ParamField>
+
+  <ParamField path="OriginalSize" type="long">
+    Uncompressed size of the asset in bytes
+  </ParamField>
+
+  <ParamField path="IsInline" type="bool">
+    True if asset data is embedded inline in the bundle
+  </ParamField>
+
+  <ParamField path="Location" type="AssetDataLocation">
+    Storage location: `Cas`, `SuperBundle`, `Cache`, or `CasNonIndexed`
+  </ParamField>
+
+  <ParamField path="Bundles" type="List<int>">
+    List of bundle indices containing this asset
+  </ParamField>
+
+  <ParamField path="IsAdded" type="bool">
+    True if this asset was added via modding (not in base game)
+  </ParamField>
+
+  <ParamField path="IsModified" type="bool">
+    True if this asset or any linked asset is modified
+  </ParamField>
+
+  <ParamField path="IsDirectlyModified" type="bool">
+    True if only this asset is modified (not through linked assets)
+  </ParamField>
+
+  <ParamField path="HasModifiedData" type="bool">
+    True if the asset has modified data in memory
+  </ParamField>
+
+  <ParamField path="IsDirty" type="bool">
+    True if this asset has unsaved changes
+  </ParamField>
+
+  <ParamField path="LinkedAssets" type="List<AssetEntry>">
+    Other assets linked to this one (resources, chunks)
+  </ParamField>
+
+  <ParamField path="ModifiedEntry" type="ModifiedAssetEntry">
+    Contains modified asset data if the asset has been changed
+  </ParamField>
+</Expandable>
+
+## Methods
+
+### ContainsDependency
+
+```csharp
+public bool ContainsDependency(Guid guid)
+```
+
+Checks if this EBX asset depends on another asset.
+
+<ParamField path="guid" type="Guid" required>
+  GUID of the asset to check for dependency
+</ParamField>
+
+<ResponseField name="return" type="bool">
+  True if the specified GUID is in the dependency list
+</ResponseField>
+
+### EnumerateDependencies
+
+```csharp
+public IEnumerable<Guid> EnumerateDependencies()
+```
+
+Iterates through all asset dependencies. Returns modified dependencies if the asset has been modified.
+
+<ResponseField name="return" type="IEnumerable<Guid>">
+  Enumerable collection of dependent asset GUIDs
+</ResponseField>
+
+### Inherited Methods
+
+<Expandable title="Base AssetEntry Methods">
+  ### LinkAsset
+
+  ```csharp
+  public void LinkAsset(AssetEntry assetToLink)
+  ```
+
+  Links another asset (resource or chunk) to this EBX asset.
+
+  <ParamField path="assetToLink" type="AssetEntry" required>
+    Asset to link (typically ResAssetEntry or ChunkAssetEntry)
+  </ParamField>
+
+  ### AddToBundle
+
+  ```csharp
+  public virtual bool AddToBundle(int bid)
+  ```
+
+  Adds this asset to the specified bundle.
+
+  <ParamField path="bid" type="int" required>
+    Bundle index to add the asset to
+  </ParamField>
+
+  <ResponseField name="return" type="bool">
+    True if successfully added, false if already in bundle
+  </ResponseField>
+
+  ### AddToBundles
+
+  ```csharp
+  public bool AddToBundles(IEnumerable<int> bundles)
+  ```
+
+  Adds this asset to multiple bundles.
+
+  <ParamField path="bundles" type="IEnumerable<int>" required>
+    Collection of bundle indices
+  </ParamField>
+
+  <ResponseField name="return" type="bool">
+    True if added to any bundle
+  </ResponseField>
+
+  ### IsInBundle
+
+  ```csharp
+  public bool IsInBundle(int bid)
+  ```
+
+  Checks if the asset is in the specified bundle.
+
+  <ParamField path="bid" type="int" required>
+    Bundle index to check
+  </ParamField>
+
+  <ResponseField name="return" type="bool">
+    True if asset is in the bundle
+  </ResponseField>
+
+  ### EnumerateBundles
+
+  ```csharp
+  public IEnumerable<int> EnumerateBundles(bool addedOnly = false)
+  ```
+
+  Iterates through all bundles containing this asset.
+
+  <ParamField path="addedOnly" type="bool" default="false">
+    If true, only returns bundles added via modding
+  </ParamField>
+
+  <ResponseField name="return" type="IEnumerable<int>">
+    Enumerable collection of bundle indices
+  </ResponseField>
+</Expandable>
+
+## Usage Examples
+
+### Reading an EBX Asset
+
+```csharp
+EbxAssetEntry entry = assetManager.GetEbxEntry("characters/hero/mesh");
+if (entry != null)
+{
+    Console.WriteLine($"Type: {entry.Type}");
+    Console.WriteLine($"GUID: {entry.Guid}");
+    Console.WriteLine($"Dependencies: {entry.DependentAssets.Count}");
+}
+```
+
+### Checking Dependencies
+
+```csharp
+Guid targetGuid = /* ... */;
+if (entry.ContainsDependency(targetGuid))
+{
+    Console.WriteLine("Asset depends on target");
+}
+
+// Enumerate all dependencies
+foreach (Guid depGuid in entry.EnumerateDependencies())
+{
+    var depEntry = assetManager.GetEbxEntry(depGuid);
+    Console.WriteLine($"Depends on: {depEntry?.Name}");
+}
+```
+
+### Linking Resources
+
+```csharp
+EbxAssetEntry ebx = assetManager.GetEbxEntry("textures/ui/icon");
+ResAssetEntry res = assetManager.GetResEntry("textures/ui/icon");
+
+// Link the resource to the EBX
+ebx.LinkAsset(res);
+```
+
+## EBX-Specific Types
+
+EBX assets use specialized reference types for linking:
+
+### PointerRef
+
+References to other EBX objects (internal or external).
+
+```csharp
+public struct PointerRef
+{
+    public EbxImportReference External;  // External asset reference
+    public object Internal;              // Internal object reference
+    public PointerRefType Type;          // Internal, External, or Null
+}
+```
+
+### ResourceRef
+
+References to resource assets by resource ID.
+
+```csharp
+public struct ResourceRef
+{
+    public ulong resourceId;  // Resource identifier
+}
+```
+
+### TypeRef
+
+References to type definitions.
+
+```csharp
+public class TypeRef
+{
+    public string Name;  // Type name
+    public Guid Guid;    // Type GUID
+}
+```
+
+### FileRef
+
+References to external files.
+
+```csharp
+public struct FileRef
+{
+    public string fileName;  // File path
+}
+```
+
+## Related Types
+
+- [ResAssetEntry](/api/assets/res) - Resource assets linked to EBX
+- [ChunkAssetEntry](/api/assets/chunks) - Chunk assets for texture/mesh data
+- [BundleEntry](/api/assets/bundles) - Bundle containers
+- [AssetManager](/api/managers/asset-manager) - Asset management operations

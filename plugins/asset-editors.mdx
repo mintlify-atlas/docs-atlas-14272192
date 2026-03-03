@@ -1,0 +1,435 @@
+---
+title: Creating Asset Editors
+description: Build custom editors for game assets
+---
+
+Custom asset editors provide specialized UI for viewing and editing specific asset types. They inherit from `FrostyAssetEditor` and integrate with the Frosty Editor's tab system.
+
+## FrostyAssetEditor Base Class
+
+From `~/workspace/source/FrostyPlugin/Controls/FrostyAssetEditor.cs:32`:
+
+```csharp
+public class FrostyAssetEditor : Control
+{
+    // Access to the loaded asset
+    public object RootObject => asset.RootObject;
+    public IEnumerable<object> RootObjects => asset.RootObjects;
+    public IEnumerable<object> Objects => asset.Objects;
+    public EbxAsset Asset => asset;
+    
+    // The asset entry being edited
+    public AssetEntry AssetEntry { get; private set; }
+    
+    // Marks the asset as modified
+    public bool AssetModified { get; set; }
+    
+    // Logger for error messages
+    protected ILogger logger;
+    
+    // Loaded asset and dependencies
+    protected EbxAsset asset;
+    protected Dictionary<Guid, EbxAsset> dependentObjects;
+    
+    public FrostyAssetEditor(ILogger inLogger)
+    {
+        logger = inLogger;
+    }
+}
+```
+
+## Creating a Basic Editor
+
+<Steps>
+  <Step title="Create Editor Class">
+    Inherit from `FrostyAssetEditor` and pass the logger to the base constructor:
+    
+    ```csharp
+    using Frosty.Core.Controls;
+    using FrostySdk.Interfaces;
+    using System.Windows.Controls;
+    
+    namespace MyPlugin
+    {
+        public class MyAssetEditor : FrostyAssetEditor
+        {
+            public MyAssetEditor(ILogger inLogger) : base(inLogger)
+            {
+            }
+        }
+    }
+    ```
+  </Step>
+  
+  <Step title="Define the UI Template">
+    Create a WPF control template in your plugin's XAML resource dictionary:
+    
+    ```xml
+    <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                        xmlns:local="clr-namespace:MyPlugin"
+                        xmlns:frosty="clr-namespace:Frosty.Core.Controls;assembly=FrostyCore">
+        
+        <Style TargetType="{x:Type local:MyAssetEditor}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type local:MyAssetEditor}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="300"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- Main viewer area -->
+                            <Border Grid.Column="0" Background="#2D2D30">
+                                <!-- Your custom UI here -->
+                            </Border>
+                            
+                            <!-- Splitter -->
+                            <GridSplitter Grid.Column="1" Width="5" 
+                                          HorizontalAlignment="Stretch"/>
+                            
+                            <!-- Property grid -->
+                            <frosty:FrostyPropertyGrid Grid.Column="2" 
+                                                       x:Name="PART_AssetPropertyGrid"
+                                                       AssetModified="{Binding AssetModified, 
+                                                                       RelativeSource={RelativeSource 
+                                                                       TemplatedParent}, 
+                                                                       Mode=TwoWay}"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </ResourceDictionary>
+    ```
+  </Step>
+  
+  <Step title="Register the Template">
+    Override the static constructor to register your control template:
+    
+    ```csharp
+    static MyAssetEditor()
+    {
+        DefaultStyleKeyProperty.OverrideMetadata(
+            typeof(MyAssetEditor), 
+            new FrameworkPropertyMetadata(typeof(MyAssetEditor)));
+    }
+    ```
+  </Step>
+  
+  <Step title="Load Asset Data">
+    Override `LoadAsset` to perform custom loading:
+    
+    ```csharp
+    protected override EbxAsset LoadAsset(EbxAssetEntry entry)
+    {
+        EbxAsset asset = base.LoadAsset(entry);
+        
+        // Access the root object
+        dynamic rootObj = asset.RootObject;
+        
+        // Perform custom loading logic
+        // e.g., load associated resources
+        
+        return asset;
+    }
+    ```
+  </Step>
+</Steps>
+
+## Accessing Asset Data
+
+### Root Object Access
+
+The `RootObject` property provides access to the main asset object:
+
+```csharp
+public override void OnApplyTemplate()
+{
+    base.OnApplyTemplate();
+    
+    // Access asset data as dynamic
+    dynamic rootObj = RootObject;
+    
+    // Access typed properties
+    string assetName = rootObj.Name;
+    
+    // Load associated resources
+    if (rootObj.Resource != null)
+    {
+        ResAssetEntry resEntry = App.AssetManager.GetResEntry(rootObj.Resource);
+        // Load resource data
+    }
+}
+```
+
+### Loading Dependencies
+
+Dependencies are automatically loaded. Access them via the `dependentObjects` dictionary:
+
+```csharp
+public void LoadDependentAsset(Guid guid)
+{
+    EbxAsset dependentAsset = GetDependentObject(guid);
+    if (dependentAsset != null)
+    {
+        dynamic depObj = dependentAsset.RootObject;
+        // Use dependent asset
+    }
+}
+```
+
+### Adding New Dependencies
+
+From `~/workspace/source/FrostyPlugin/Controls/FrostyAssetEditor.cs:106`:
+
+```csharp
+public void AddDependentObject(Guid guid)
+{
+    if (asset.AddDependency(guid))
+    {
+        if (!dependentObjects.ContainsKey(guid))
+            dependentObjects.Add(guid, App.AssetManager.GetEbx(App.AssetManager.GetEbxEntry(guid)));
+    }
+}
+```
+
+## Modifying Assets
+
+To mark an asset as modified, set the `AssetModified` property to `true`. This automatically saves changes:
+
+From `~/workspace/source/FrostyPlugin/Controls/FrostyAssetEditor.cs:64`:
+
+```csharp
+private static void OnAssetModifiedChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
+{
+    bool isModified = (bool)e.NewValue;
+    if (isModified)
+    {
+        FrostyAssetEditor editor = o as FrostyAssetEditor;
+        
+        editor.asset.Update();
+        App.AssetManager.ModifyEbx(editor.AssetEntry.Name, editor.asset);
+        
+        editor.InvokeOnAssetModified();
+        editor.AssetModified = false;
+    }
+}
+```
+
+### Example: Modifying Properties
+
+```csharp
+private void OnPropertyChanged()
+{
+    dynamic rootObj = RootObject;
+    
+    // Modify a property
+    rootObj.SomeProperty = newValue;
+    
+    // Mark asset as modified
+    AssetModified = true;
+}
+```
+
+## Property Grid Integration
+
+The `FrostyPropertyGrid` control provides automatic property editing. Name it `PART_AssetPropertyGrid` in your template:
+
+```xml
+<frosty:FrostyPropertyGrid x:Name="PART_AssetPropertyGrid"
+                           AssetModified="{Binding AssetModified, 
+                                           RelativeSource={RelativeSource TemplatedParent}, 
+                                           Mode=TwoWay}"/>
+```
+
+The property grid automatically:
+- Displays all properties of the root object
+- Binds to `AssetModified` to save changes
+- Provides type-appropriate editors (text boxes, dropdowns, etc.)
+
+## Custom Toolbar Items
+
+Add custom toolbar buttons to your editor:
+
+```csharp
+public override List<ToolbarItem> RegisterToolbarItems()
+{
+    List<ToolbarItem> items = base.RegisterToolbarItems();
+    
+    items.Add(new ToolbarItem(
+        "Export",                                    // Text
+        "Export asset to file",                      // Tooltip
+        "Images/Export.png",                         // Icon path
+        new RelayCommand(Export_Click, CanExport)    // Command
+    ));
+    
+    return items;
+}
+
+private void Export_Click(object state)
+{
+    // Handle export
+}
+
+private bool CanExport(object state)
+{
+    return AssetEntry != null;
+}
+```
+
+## Handling Resources
+
+### Loading Texture Resources
+
+```csharp
+private void LoadTexture()
+{
+    dynamic textureAsset = RootObject;
+    
+    // Get the resource entry
+    ResAssetEntry resEntry = App.AssetManager.GetResEntry(textureAsset.Resource);
+    
+    // Load as Texture
+    Texture texture = App.AssetManager.GetResAs<Texture>(resEntry);
+    
+    // Access texture properties
+    int width = texture.Width;
+    int height = texture.Height;
+    
+    // Get chunk data if needed
+    if (texture.ChunkId != Guid.Empty)
+    {
+        ChunkAssetEntry chunkEntry = App.AssetManager.GetChunkEntry(texture.ChunkId);
+        byte[] chunkData = App.AssetManager.GetChunk(chunkEntry);
+    }
+}
+```
+
+### Loading MeshSet Resources
+
+```csharp
+private void LoadMesh()
+{
+    dynamic meshAsset = RootObject;
+    
+    // Get mesh resource
+    ResAssetEntry resEntry = App.AssetManager.GetResEntry(meshAsset.MeshSetResource);
+    MeshSet meshSet = App.AssetManager.GetResAs<MeshSet>(resEntry);
+    
+    // Iterate LODs
+    foreach (MeshSetLod lod in meshSet.Lods)
+    {
+        // Load chunk data for each LOD
+        if (lod.ChunkId != Guid.Empty)
+        {
+            ChunkAssetEntry chunk = App.AssetManager.GetChunkEntry(lod.ChunkId);
+            // Process chunk
+        }
+    }
+}
+```
+
+## Complete Example
+
+Here's a simplified texture editor:
+
+```csharp
+using Frosty.Core.Controls;
+using FrostySdk.Interfaces;
+using FrostySdk.IO;
+using FrostySdk.Managers;
+using FrostySdk.Resources;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+
+namespace TexturePlugin
+{
+    public class FrostyTextureEditor : FrostyAssetEditor
+    {
+        private Image imageControl;
+        
+        static FrostyTextureEditor()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(
+                typeof(FrostyTextureEditor),
+                new FrameworkPropertyMetadata(typeof(FrostyTextureEditor)));
+        }
+        
+        public FrostyTextureEditor(ILogger inLogger) : base(inLogger)
+        {
+        }
+        
+        public override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+            
+            // Get image control from template
+            imageControl = GetTemplateChild("PART_ImageViewer") as Image;
+            
+            // Load and display texture
+            LoadTexture();
+        }
+        
+        private void LoadTexture()
+        {
+            dynamic textureAsset = RootObject;
+            
+            // Load resource
+            ResAssetEntry resEntry = App.AssetManager.GetResEntry(textureAsset.Resource);
+            Texture texture = App.AssetManager.GetResAs<Texture>(resEntry);
+            
+            // Convert to WPF image source
+            BitmapSource bitmap = ConvertTextureToBitmap(texture);
+            
+            // Display in UI
+            if (imageControl != null)
+            {
+                imageControl.Source = bitmap;
+            }
+        }
+        
+        private BitmapSource ConvertTextureToBitmap(Texture texture)
+        {
+            // Implementation depends on texture format
+            // Return converted BitmapSource
+            return null;
+        }
+    }
+}
+```
+
+## Cleanup
+
+Override `Closed()` to release resources when the editor is closed:
+
+```csharp
+public override void Closed()
+{
+    base.Closed();
+    
+    // Release any resources
+    imageControl = null;
+    // Dispose any disposable objects
+}
+```
+
+<Warning>
+Always clean up unmanaged resources (textures, 3D meshes, etc.) to prevent memory leaks.
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Custom Actions" icon="bolt" href="/plugins/custom-actions">
+    Add context menu actions and commands
+  </Card>
+  
+  <Card title="Attributes Reference" icon="book" href="/plugins/plugin-attributes">
+    Complete attribute reference
+  </Card>
+</CardGroup>

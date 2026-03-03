@@ -1,0 +1,258 @@
+---
+title: Contributing to Frosty Toolsuite
+description: Guidelines for contributing to the Frosty Toolsuite project
+icon: code-pull-request
+---
+
+## Getting Started
+
+Frosty Toolsuite is the most advanced modding platform for games running on DICE's Frostbite engine. We welcome contributions from the community to help improve the toolsuite.
+
+### Prerequisites
+
+Before you begin contributing, ensure you have the following installed:
+
+- **Git** - [Download for Windows](https://git-scm.com/download/win)
+- **Visual Studio 2019** (or later)
+- **.NET Framework 4.8**
+
+## Development Setup
+
+<Steps>
+  <Step title="Clone the Repository">
+    Create an empty folder, right-click, and select "Git Bash Here":
+    ```bash
+    git clone -b 1.0.6 https://github.com/[repository-url]
+    ```
+  </Step>
+
+  <Step title="Open the Solution">
+    Navigate to the `FrostyEditor` directory and open `FrostyEditor.sln` with Visual Studio 2019.
+  </Step>
+
+  <Step title="Configure Build Settings">
+    Set the build configuration to `Developer - Debug` and platform to `x64`.
+    
+    <Note>
+      If prompted with a retarget window, close it without making changes.
+    </Note>
+  </Step>
+
+  <Step title="Build Individual Projects">
+    <Warning>
+      Only build individual projects, never build the entire solution.
+    </Warning>
+    
+    Build projects in this order:
+    1. FrostySdk
+    2. FrostyCore (FrostyPlugin)
+    3. FrostyControls
+    4. FrostyModSupport
+    5. FrostyEditor
+  </Step>
+</Steps>
+
+## Build Configurations
+
+Frosty Toolsuite supports multiple build configurations for different release stages:
+
+<AccordionGroup>
+  <Accordion title="Developer - Debug" icon="bug">
+    - **Platform**: x64
+    - **Output Path**: `bin/Developer/Debug/`
+    - **Defines**: `TRACE;DEBUG;FROSTY_DEVELOPER`
+    - **Debug Symbols**: Enabled
+    - **Use Case**: Active development and debugging
+  </Accordion>
+
+  <Accordion title="Release - Alpha" icon="flask">
+    - **Platform**: x64
+    - **Output Path**: `bin/Release/Alpha/`
+    - **Defines**: `TRACE;FROSTY_ALPHA`
+    - **Optimizations**: Enabled
+    - **Use Case**: Alpha testing releases
+  </Accordion>
+
+  <Accordion title="Release - Beta" icon="vial">
+    - **Platform**: x64
+    - **Output Path**: `bin/Release/Beta/`
+    - **Defines**: `TRACE;FROSTY_BETA`
+    - **Optimizations**: Enabled
+    - **Use Case**: Beta testing releases
+  </Accordion>
+
+  <Accordion title="Release - Final" icon="rocket">
+    - **Platform**: x64
+    - **Output Path**: `bin/Release/Final/`
+    - **Defines**: `TRACE`
+    - **Optimizations**: Enabled
+    - **Use Case**: Production releases
+  </Accordion>
+</AccordionGroup>
+
+## Project Structure
+
+The Frosty Toolsuite consists of several core projects:
+
+```
+FrostyToolsuite/
+├── FrostySdk/          # Core SDK for Frostbite file formats
+├── FrostyPlugin/       # Plugin system and core functionality
+├── FrostyControls/     # WPF UI controls
+├── FrostyModSupport/   # Mod loading and management
+├── FrostyEditor/       # Main editor application
+├── FrostyModManager/   # Standalone mod manager
+├── FrostyCmd/          # Command-line tools
+└── Plugins/            # Built-in plugins
+    ├── MeshSetPlugin/
+    ├── TexturePlugin/
+    ├── SoundEditorPlugin/
+    └── ...
+```
+
+## Contributing Guidelines
+
+### Code Style
+
+- Follow the existing code style in the project
+- Use meaningful variable and method names
+- Add comments for complex logic
+- Keep methods focused and concise
+
+### Making Changes
+
+<Steps>
+  <Step title="Create a Feature Branch">
+    ```bash
+    git checkout -b feature/your-feature-name
+    ```
+  </Step>
+
+  <Step title="Make Your Changes">
+    - Write clean, maintainable code
+    - Test your changes thoroughly
+    - Ensure builds succeed without warnings
+  </Step>
+
+  <Step title="Commit Your Changes">
+    ```bash
+    git add .
+    git commit -m "Add: Brief description of your changes"
+    ```
+  </Step>
+
+  <Step title="Push and Create Pull Request">
+    ```bash
+    git push origin feature/your-feature-name
+    ```
+    Then create a pull request on GitHub.
+  </Step>
+</Steps>
+
+### Commit Message Format
+
+Use clear, descriptive commit messages:
+
+- `Add:` for new features
+- `Fix:` for bug fixes
+- `Update:` for improvements to existing features
+- `Refactor:` for code refactoring
+- `Docs:` for documentation changes
+
+**Example**:
+```
+Fix: Memory leak in EbxWriter when processing large files
+```
+
+## Plugin Development
+
+Frosty supports an extensive plugin system. To create a new plugin:
+
+1. **Start with BlankPlugin**: Use `Plugins/BlankPlugin` as a template
+2. **Reference Required Projects**: Your plugin must reference `FrostySdk` and `FrostyCore`
+3. **Implement Plugin Extensions**: Use available extension points:
+   - `TypeEditor` - Custom property editors
+   - `MenuExtension` - Add menu items
+   - `TabExtension` - Add custom tabs
+   - `AssetDefinition` - Define custom asset types
+   - `CustomHandler` - Custom mod handlers
+
+### Plugin Extension Points
+
+<AccordionGroup>
+  <Accordion title="Editor Extensions">
+    - `TypeEditorPlugin` - Custom property type editors
+    - `AssetEditorPlugin` - Full asset editors
+    - `DataExplorerContextMenuItemPlugin` - Context menu items
+  </Accordion>
+
+  <Accordion title="UI Extensions">
+    - `MenuExtensionPlugin` - Custom menu items
+    - `TabExtensionPlugin` - Custom tab panels
+    - `OptionExtensionPlugin` - Settings pages
+  </Accordion>
+
+  <Accordion title="Data Extensions">
+    - `AssetDefinitionPlugin` - Custom asset types
+    - `LocalizedStringDatabasePlugin` - Localization support
+    - `CustomHandlerPlugin` - Mod handling logic
+  </Accordion>
+</AccordionGroup>
+
+## Testing
+
+<Warning>
+  Always test your changes with multiple Frostbite games to ensure compatibility.
+</Warning>
+
+Before submitting a pull request:
+
+1. Build all affected projects successfully
+2. Test with at least one Frostbite game
+3. Verify no regressions in existing functionality
+4. Test both Editor and Mod Manager if applicable
+
+## License
+
+By contributing to Frosty Toolsuite, you agree that your contributions will be licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.
+
+<Note>
+  All content, name, code, and assets are licensed under CC BY-NC-ND 4.0.
+</Note>
+
+## Community
+
+### Contributors
+
+Frosty Toolsuite is made possible by contributions from:
+
+- CadeEvs
+- wannkunstbeikor
+- Dyvinia
+- CosmicDreamsOfCode
+- Brawltendo
+- MrJTGaming
+- KrrKsThunder
+- AllyJaxx
+- Petrifyingz
+- Mophead01
+- zhpete
+- mlg556
+- NatalieWhatever
+- Clonedelta
+- And many more!
+
+### Acknowledgements
+
+Special thanks to **GalaxyMan2015** - without his years of work and dedication, Frosty would not exist and Frostbite modding would very well still be in the dark ages.
+
+Special thanks to **munchyfly** for providing endless support to our users.
+
+## Getting Help
+
+If you need help with contributing:
+
+- Check the [Troubleshooting](/resources/troubleshooting) guide
+- Review the [FAQ](/resources/faq)
+- Ask in the community Discord
+- Create a discussion on GitHub

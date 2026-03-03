@@ -1,0 +1,343 @@
+---
+title: "Mass Effect: Andromeda & Mirror's Edge Catalyst"
+description: "Frosty Toolsuite support for Mass Effect: Andromeda and Mirror's Edge Catalyst"
+---
+
+Frosty Toolsuite provides comprehensive modding support for two distinct BioWare and DICE titles: Mass Effect: Andromeda and Mirror's Edge Catalyst.
+
+## Supported Titles
+
+<CardGroup cols={2}>
+  <Card title="Mass Effect: Andromeda" icon="rocket">
+    Released: March 2017
+    
+    Profile: `MassEffectSDK.dll`
+    
+    Version: `20170321`
+  </Card>
+  
+  <Card title="Mirror's Edge Catalyst" icon="person-running">
+    Released: June 2016
+    
+    Profile: `MirrorsEdgeSDK.dll`
+    
+    Version: `20160607`
+  </Card>
+</CardGroup>
+
+<Note>
+  While these are separate games from different genres, they share similar Frostbite 3 technology from the 2016-2017 era and are grouped here for their common technical characteristics.
+</Note>
+
+---
+
+## Mass Effect: Andromeda
+
+### Game Information
+
+**Genre**: Action RPG / Space Exploration
+**Developer**: BioWare Montreal
+**Profile Size**: ~7.2 MB
+**Profile Version**: `20170321`
+
+Mass Effect: Andromeda is BioWare's science fiction RPG set in the Andromeda galaxy, built on an advanced version of the Frostbite engine with RPG-specific customizations.
+
+### Technical Characteristics
+
+**Engine Features:**
+- Advanced character customization system
+- Complex facial animation technology
+- Open-world planetary exploration
+- Modern mesh format with enhanced rigging
+- Extensive dialogue and cinematic systems
+
+**Mesh Format:**
+- Uses specialized mesh structure
+- Special handling for character creator morphs
+- Enhanced bone system for detailed animations
+- Facial blend shapes for expressions
+
+Code reference: `source/Plugins/MeshSetPlugin/Resources/MeshSet.cs:612`
+
+### Modding Capabilities
+
+<Accordion title="Character Customization">
+  Extensive character appearance modding:
+  
+  - **Face Presets**: Custom Ryder appearance options
+  - **Hair Styles**: Additional hairstyle models and textures
+  - **Skin Textures**: Enhanced or alternative skin tones
+  - **Eye Colors**: Expanded color options
+  - **Facial Features**: Custom morphs and blend shapes
+  - **Body Types**: Alternative character proportions
+  
+  MEA's character creator supports detailed modifications through Frosty.
+</Accordion>
+
+<Accordion title="Equipment & Gear">
+  Armor and weapon modifications:
+  
+  - **Armor Sets**: Retextured or recolored N7 and other armor
+  - **Weapon Models**: Enhanced weapon designs
+  - **Armor Tinting**: Custom color schemes
+  - **Material Shaders**: Improved surface properties
+  - **Equipment Stats**: Modified item attributes
+  
+  The Andromeda Initiative's equipment is highly customizable.
+</Accordion>
+
+<Accordion title="Squad & Companions">
+  Companion modifications:
+  
+  - **Companion Appearances**: Modified default looks for squadmates
+  - **Outfit Variants**: Alternative clothing for crew members
+  - **Armor Customization**: Custom armor tints and textures
+  - **Abilities**: Modified power visuals
+  - **Romance Content**: Enhanced or modified romance scenes
+</Accordion>
+
+<Accordion title="Environmental & Visual">
+  World and visual enhancements:
+  
+  - **Planet Textures**: Enhanced terrain for explorable worlds
+  - **Tempest Interior**: Ship interior improvements
+  - **Heleus Cluster**: Skybox and space visual enhancements
+  - **Lighting**: Modified scene lighting and atmosphere
+  - **UI Elements**: Custom interface graphics
+</Accordion>
+
+### Known Issues & Considerations
+
+<Accordion title="Facial Animation System">
+  MEA's facial animation system is complex:
+  
+  - Uses extensive blend shape technology
+  - Automated facial animation may conflict with mods
+  - Some animations are procedurally generated
+  - Custom face morphs require understanding of the blend shape system
+</Accordion>
+
+<Accordion title="Character Creator Compatibility">
+  When modding character creator assets:
+  
+  - Some options are gender-specific
+  - Face codes may not work with extensive mods
+  - Hair and makeup use layered systems
+  - Test in-game animations, not just character creator
+</Accordion>
+
+---
+
+## Mirror's Edge Catalyst
+
+### Game Information
+
+**Genre**: First-Person Action / Parkour
+**Developer**: DICE
+**Profile Size**: ~3.4 MB
+**Profile Version**: `20160607`
+
+Mirror's Edge Catalyst is DICE's parkour action game set in the futuristic city of Glass, featuring a distinctive visual style and fast-paced movement.
+
+### Technical Characteristics
+
+**Engine Features:**
+- First-person perspective optimization
+- Advanced movement and animation systems
+- Distinctive visual aesthetic (clean, minimalist)
+- Modern mesh format with ushort bone counts
+- Enhanced environmental rendering
+
+**Mesh Format:**
+- Modern Frostbite 3 mesh structure
+- Ushort bone count storage
+- Optimized for first-person character models
+- Special handling for parkour animations
+
+Code reference: `source/Plugins/MeshSetPlugin/Resources/MeshSet.cs:706`
+
+### Modding Capabilities
+
+<Accordion title="Character Appearance">
+  Faith and character customization:
+  
+  - **Faith's Outfit**: Modified colors and textures
+  - **Tattoos**: Custom runner tattoo designs
+  - **Gloves & Shoes**: Enhanced gear textures
+  - **Character Model**: Body mesh modifications
+  - **First-Person Arms**: Visible arm textures and models
+  
+  MEC's distinctive red and white aesthetic is fully moddable.
+</Accordion>
+
+<Accordion title="Visual Style">
+  The game's unique visual design:
+  
+  - **Runner Vision**: Modified highlighting colors
+  - **Environment Colors**: Adjusted city palette
+  - **UI Elements**: Custom interface colors and designs
+  - **Glass Materials**: Enhanced reflective surfaces
+  - **Lighting**: Modified time-of-day and ambient light
+  
+  MEC's clean aesthetic allows for dramatic visual overhauls.
+</Accordion>
+
+<Accordion title="Environmental Enhancements">
+  City of Glass modifications:
+  
+  - **Building Textures**: Enhanced urban architecture
+  - **Skybox**: Custom sky and atmospheric effects
+  - **Billboard Graphics**: Custom advertisement designs
+  - **Terrain**: Rooftop and ground surface improvements
+  - **Props**: Modified objects and details
+</Accordion>
+
+<Accordion title="Gameplay Elements">
+  Functional modifications:
+  
+  - **Collectibles**: Modified item appearances
+  - **Progression**: Visual indicators and UI
+  - **Abilities**: Modified visual effects
+  - **Equipment**: GridLink and gear appearances
+</Accordion>
+
+### Known Issues & Considerations
+
+<Accordion title="First-Person Perspective">
+  Modding considerations for FPS view:
+  
+  - Separate first-person and third-person models
+  - First-person arms are distinct assets
+  - Some modifications only visible in specific views
+  - Test in both gameplay and cutscenes
+</Accordion>
+
+<Accordion title="Visual Consistency">
+  Maintaining the game's aesthetic:
+  
+  - MEC has a specific art direction (clean, minimal, high contrast)
+  - Runner Vision depends on color coding
+  - Extreme texture changes may affect gameplay readability
+  - Consider artistic consistency when modding
+</Accordion>
+
+---
+
+## Shared Technical Details
+
+### Mesh Format Compatibility
+
+Both games use modern Frostbite 3 mesh formats from the 2016-2017 era:
+
+```
+Mirror's Edge Catalyst: Modern format, ushort bone counts
+Mass Effect Andromeda: Similar modern format with RPG-specific features
+```
+
+Both titles support:
+- Advanced vertex attributes
+- Enhanced bone systems
+- Modern texture compression
+- Improved LOD handling
+
+### Profile Loading
+
+Both games are detected and loaded through their respective SDK profiles:
+
+- **MirrorsEdgeSDK.dll**: 3.4 MB profile for MEC
+- **MassEffectSDK.dll**: 7.2 MB profile for MEA (larger due to RPG complexity)
+
+Profiles automatically configure:
+- Game-specific asset loaders
+- Deobfuscation settings
+- File system sources
+- Shared bundle definitions
+
+## DRM & Online Considerations
+
+<Warning>
+  Both titles include EA's DRM systems:
+  
+  **Mass Effect: Andromeda**
+  - Requires Origin client
+  - Some features require EA account
+  - DLC integration may affect modding
+  
+  **Mirror's Edge Catalyst**
+  - Requires Origin client
+  - Online leaderboards and social features
+  - May have mod detection in competitive modes
+  
+  Always backup original files and respect EA's Terms of Service.
+</Warning>
+
+## Getting Started
+
+### For Mass Effect: Andromeda
+
+1. **Setup**
+   - Install Frosty Editor and Mod Manager
+   - Ensure MEA is fully patched
+   - Install all DLC if available
+
+2. **Launch Frosty Editor**
+   - Select "Mass Effect: Andromeda" profile
+   - Wait for asset indexing (10-15 minutes)
+   - Large asset database due to RPG complexity
+
+3. **Browse and Modify**
+   - Find character assets in Data Explorer
+   - Locate armor and weapons
+   - Use Texture and Mesh editors
+
+4. **Test**
+   - Save as .fbmod
+   - Apply through Mod Manager
+   - Test with new game or existing save
+
+### For Mirror's Edge Catalyst
+
+1. **Setup**
+   - Install Frosty Editor and Mod Manager
+   - Ensure MEC is updated
+
+2. **Launch Frosty Editor**
+   - Select "Mirror's Edge Catalyst" profile
+   - Asset indexing (5-10 minutes)
+   - Smaller database than RPG titles
+
+3. **Browse and Modify**
+   - Find character and environment assets
+   - Focus on visual elements
+   - Use Texture Editor for appearance changes
+
+4. **Test**
+   - Save as .fbmod
+   - Apply through Mod Manager
+   - Test in gameplay for first-person visibility
+
+<Note>
+  Both games benefit from starting with simple texture mods before attempting complex mesh modifications or gameplay changes.
+</Note>
+
+## Community Resources
+
+### Mass Effect: Andromeda Community
+
+- Character preset collections
+- Armor retexture projects
+- Companion appearance enhancements
+- Visual upgrade mods
+- Gameplay balancing tweaks
+
+### Mirror's Edge Catalyst Community
+
+- Runner outfit variations
+- Visual overhaul mods
+- UI customization
+- Environment enhancements
+- Custom runner vision colors
+
+Both communities have active forums with tutorials, resources, and support.
+
+For detailed general tutorials, see the [Getting Started](/installation) guide.

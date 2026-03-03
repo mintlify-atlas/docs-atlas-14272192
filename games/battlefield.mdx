@@ -1,0 +1,123 @@
+---
+title: Battlefield Series
+description: Frosty Toolsuite support for Battlefield games
+---
+
+Frosty Toolsuite provides comprehensive modding support for multiple Battlefield titles running on the Frostbite engine.
+
+## Supported Titles
+
+The following Battlefield games are fully supported:
+
+<CardGroup cols={2}>
+  <Card title="Battlefield 4" icon="gamepad">
+    Released: 2013
+    
+    Profile: `BF4SDK.dll`
+  </Card>
+  
+  <Card title="Battlefield Hardline" icon="gamepad">
+    Released: 2015
+    
+    Profile: `BFHSDK.dll`
+  </Card>
+  
+  <Card title="Battlefield 1" icon="gamepad">
+    Released: 2016
+    
+    Profile: `BF1SDK.dll`
+  </Card>
+  
+  <Card title="Battlefield V" icon="gamepad">
+    Released: 2018
+    
+    Profile: `BFVSDK.dll`
+  </Card>
+</CardGroup>
+
+## Game-Specific Features
+
+### Battlefield 4 (2013)
+
+- Profile Version: `20141117`
+- One of the earliest Frostbite 3 titles supported
+- Legacy texture format support
+- Older mesh structure compared to later titles
+
+### Battlefield Hardline (2015)
+
+- Profile Version: Custom
+- Full name: "Battlefield™ Hardline"
+- Based on Frostbite 3 engine
+- Similar asset structure to Battlefield 4
+
+### Battlefield 1 (2016)
+
+- Profile Version: `20161021`
+- Updated mesh and texture formats
+- Enhanced asset loader capabilities
+- Supports newer Frostbite 3 features
+
+### Battlefield V (2018)
+
+- Profile Version: `20180628`
+- Most advanced Battlefield title supported
+- Modern mesh structure with enhanced bone system
+- Improved texture compression
+- May contain EAC (Easy Anti-Cheat) protection
+
+<Note>
+  Battlefield V uses one of the largest SDK profiles (9.9 MB), indicating extensive asset type support.
+</Note>
+
+## Modding Capabilities
+
+All Battlefield titles support:
+
+- **Asset Editing**: Modify game assets including meshes, textures, and bundles
+- **Texture Replacement**: Import custom textures with proper format conversion
+- **Mesh Modification**: Edit character models, vehicles, and environment meshes
+- **Bundle Management**: Manage and modify game bundles for asset organization
+
+## Technical Details
+
+<Accordion title="Mesh Format Differences">
+  Different Battlefield titles use varying mesh formats:
+  
+  - **BF4 & Hardline**: Legacy mesh structure with basic bone system
+  - **BF1**: Transition to modern mesh format with ushort bone counts
+  - **BFV**: Advanced mesh format with enhanced vertex attributes
+  
+  The MeshSet plugin automatically detects and handles these format differences.
+</Accordion>
+
+<Accordion title="Profile Loading">
+  Each Battlefield game has a dedicated SDK profile that defines:
+  
+  - Asset loader configuration
+  - Deobfuscation settings
+  - File system sources
+  - Shared bundles
+  - Resource type handlers
+  
+  Profiles are automatically loaded based on the detected game installation.
+</Accordion>
+
+## Anti-Cheat Considerations
+
+<Warning>
+  Battlefield V contains Easy Anti-Cheat (EAC) protection. Modding this title may be restricted in online modes. Always ensure you're complying with EA's Terms of Service when creating and using mods.
+</Warning>
+
+## Getting Started
+
+To start modding Battlefield games:
+
+1. Launch Frosty Editor
+2. Select your Battlefield game from the profile list
+3. Wait for the asset database to load
+4. Browse assets using the Data Explorer
+5. Make your modifications
+6. Export your mod using Frosty Mod Manager
+
+For detailed modding tutorials, see the [Getting Started](/installation) guide.

@@ -1,0 +1,357 @@
+---
+title: "Asset Modification"
+description: "Modify textures, meshes, and other asset types in Frosty Editor"
+---
+
+## Overview
+
+Frosty Editor provides specialized editors for different asset types. This guide covers the most common modification workflows.
+
+## Texture Assets
+
+Textures are stored as RES assets (type `0x6BDE20BA`) with linked chunk data for mipmap levels.
+
+### Opening the Texture Editor
+
+<Steps>
+  <Step title="Find Your Texture">
+    1. Use the Asset Browser search: enter texture name
+    2. Filter by type: **RES** > **Texture**
+    3. Double-click the texture asset to open it
+  </Step>
+  
+  <Step title="View Texture Properties">
+    The Texture Editor displays:
+    - **Format**: Pixel format (BC1, BC3, BC7, SRGB variants)
+    - **Dimensions**: Width x Height
+    - **Mip Levels**: Number of mipmap levels
+    - **Type**: 2D, Cube, 2DArray, 3D
+    - Real-time preview with mip/slice selection
+  </Step>
+</Steps>
+
+### Importing Textures
+
+<Tabs>
+  <Tab title="2D Textures">
+    1. Click the **Import** button in the toolbar
+    2. Select your image file:
+       - **PNG**: Best for lossless quality
+       - **TGA**: Supports alpha channels
+       - **DDS**: Direct import, no conversion
+       - **HDR**: For high dynamic range textures
+    3. Configure import options:
+       - **Format**: Match original or choose new format
+       - **Generate Mipmaps**: Auto-generate mip levels
+       - **Resize**: Adjust dimensions (must be power of 2)
+    4. Click **Import**
+  </Tab>
+  
+  <Tab title="Cube Maps">
+    Cube maps require 6 texture files (one per face):
+    
+    1. Click **Import** and select 6 images
+    2. Assign faces in the import dialog:
+       - **Face 0**: +X (Right)
+       - **Face 1**: -X (Left)
+       - **Face 2**: +Y (Top)
+       - **Face 3**: -Y (Bottom)
+       - **Face 4**: +Z (Front)
+       - **Face 5**: -Z (Back)
+    3. All faces must have identical dimensions
+  </Tab>
+  
+  <Tab title="Array Textures">
+    2D arrays and 3D textures require multiple slices:
+    
+    1. Select all slice images
+    2. Assign slice indices (0, 1, 2...)
+    3. All slices must match in dimensions and format
+  </Tab>
+</Tabs>
+
+<Warning>
+Textures using SRGB formats (`TextureFlags.SrgbGamma`) require gamma-correct source images. Non-SRGB textures should use linear color space.
+</Warning>
+
+### Exporting Textures
+
+1. Click the **Export** button
+2. Choose format:
+   - **PNG**: Best for sharing/viewing
+   - **TGA**: Preserves full quality with alpha
+   - **DDS**: Native format, includes mipmaps
+3. For cube maps and arrays, each face/slice exports separately
+
+## Mesh Assets
+
+Meshes are stored as MeshSet resources (type `0x49B156D4`) containing geometry, materials, and skeleton data.
+
+### Mesh Editor Features
+
+<AccordionGroup>
+  <Accordion title="3D Viewport">
+    Real-time mesh preview with:
+    - **Orbit Camera**: Click and drag to rotate
+    - **Pan**: Middle mouse drag
+    - **Zoom**: Mouse wheel
+    - **Material Preview**: Shows textures and shaders
+    - **Lighting**: Configurable sun and point lights
+  </Accordion>
+  
+  <Accordion title="LOD Selection">
+    View different Level of Detail versions:
+    - **LOD 0**: Highest quality
+    - **LOD 1-3**: Progressive simplification
+    - Toggle section visibility
+    - Highlight individual sections
+  </Accordion>
+  
+  <Accordion title="Material Variations">
+    Preview mesh with different material sets:
+    - View ObjectVariation assignments
+    - See material parameters
+    - Check texture references
+    - Validate MeshVariationDatabase entries
+  </Accordion>
+</AccordionGroup>
+
+### Importing Meshes
+
+<Steps>
+  <Step title="Prepare FBX File">
+    Export from your 3D software as FBX:
+    - **Format**: FBX 2014/2015 Binary
+    - **Up Axis**: Y-up (convert if needed)
+    - **Scale**: Centimeters
+    - **Triangulate**: On
+    - **Bake Animation**: If including skeleton
+  </Step>
+  
+  <Step title="Import in Frosty">
+    1. Open the mesh asset
+    2. Click **Import** in the toolbar
+    3. Select your FBX file
+    4. Configure import settings:
+       - **LOD Level**: Which LOD to replace
+       - **Skeleton**: Import or use existing
+       - **Materials**: Preserve or import
+  </Step>
+  
+  <Step title="Verify Import">
+    Check the imported mesh:
+    - UV channels preserved
+    - Vertex colors intact
+    - Skeleton bone count matches
+    - Material assignments correct
+  </Step>
+</Steps>
+
+<Tip>
+Meshes can have additional vertex data like `MaxBonesPerVertex`, multiple UV channels, and color channels. Verify these in the section properties.
+</Tip>
+
+### Exporting Meshes
+
+1. Click **Export** in the mesh editor
+2. Choose export options:
+   - **Format**: FBX or DAE
+   - **LOD**: Select which LOD levels
+   - **Skeleton**: Include bone hierarchy
+   - **Flatten Hierarchy**: Simplify bone structure
+3. Select export location
+
+## Sound Assets
+
+Sound data is stored as WAV resources with optional streaming.
+
+### Sound Editor
+
+<Steps>
+  <Step title="Open Sound Asset">
+    Find sound assets by searching for `SoundWaveAsset` or `NewWaveResource` types.
+  </Step>
+  
+  <Step title="Import Audio">
+    1. Click **Import**
+    2. Select WAV file (PCM format recommended)
+    3. Audio is automatically converted to game format
+  </Step>
+  
+  <Step title="Export Audio">
+    1. Click **Export**
+    2. Saves as standard WAV file
+    3. Can be edited in external audio software
+  </Step>
+</Steps>
+
+## Lua Scripts
+
+Compiled Lua scripts (type `0xAFECB022`) can be viewed and edited.
+
+### Lua Editor
+
+1. **View Decompiled Code**: See the Lua source
+2. **Syntax Highlighting**: Color-coded Lua syntax
+3. **Edit and Save**: Modify logic and recompile
+4. **Export Script**: Save as `.lua` file
+
+<Warning>
+Lua editing requires understanding of the game's Lua API. Incorrect scripts can cause crashes.
+</Warning>
+
+## Object Variations
+
+ObjectVariation assets define material and texture sets for meshes.
+
+### Variation Editor
+
+<AccordionGroup>
+  <Accordion title="Material Collections">
+    View and modify material assignments:
+    - Material shader references
+    - Texture parameters
+    - Scalar/vector parameters
+    - Material flags
+  </Accordion>
+  
+  <Accordion title="Mesh Variation Databases">
+    Link variations to MeshVariationDatabase entries:
+    - Database reference
+    - Variation index
+    - Multiple database support
+  </Accordion>
+  
+  <Accordion title="Preview Variations">
+    See how variations look on the mesh:
+    - Toggle between variations
+    - Compare material differences
+    - Validate texture assignments
+  </Accordion>
+</AccordionGroup>
+
+## EBX Entity Assets
+
+EBX assets contain game entities with properties and references.
+
+### Property Grid Editor
+
+<Steps>
+  <Step title="Navigate Properties">
+    - **Expandable Categories**: Organize properties
+    - **Type Information**: Shows data types
+    - **Reference Links**: Click to open referenced assets
+    - **Array/List Editing**: Add, remove, reorder items
+  </Step>
+  
+  <Step title="Edit Values">
+    Different editors for different types:
+    - **Numeric**: Sliders or direct input
+    - **Boolean**: Checkboxes
+    - **String**: Text fields
+    - **References**: Asset pickers
+    - **Structs**: Nested property groups
+  </Step>
+  
+  <Step title="Transient Properties">
+    Some properties are marked transient:
+    - Runtime-only data
+    - Not serialized normally
+    - Requires special handling (set `IsTransientModified`)
+  </Step>
+</Steps>
+
+<Note>
+Transient modifications are tracked separately in the project file to ensure proper serialization.
+</Note>
+
+## Asset Linking
+
+Many assets have linked dependencies that are tracked automatically:
+
+```
+EBX Asset
+  ├─ RES Texture Reference
+  │   └─ Chunk (mipmap data)
+  └─ RES Mesh Reference
+      └─ Chunk (geometry data)
+```
+
+**How Linking Works:**
+- Modifying a texture automatically links its chunk data
+- The chunk's H32 hash is updated to match the parent asset
+- All linked assets are saved together in the project
+- Bundle modifications propagate to linked assets
+
+## Custom Asset Handlers
+
+Some assets use custom handlers for specialized editing:
+
+### Handler Types
+
+<Tabs>
+  <Tab title="ShaderBlockDepot">
+    Merged resource handler:
+    - Combines multiple shader definitions
+    - Handles shader parameter merging
+    - Type: `0xD8F5DAAF`
+  </Tab>
+  
+  <Tab title="Legacy Custom Actions">
+    Backwards compatibility handler:
+    - Supports old mod formats
+    - Hash: `0xBD9BFB65`
+    - Transparent conversion to new format
+  </Tab>
+  
+  <Tab title="Modified Resources">
+    Generic handler for complex resources:
+    - Custom save/load logic
+    - Specialized merge operations
+    - Plugin-defined behavior
+  </Tab>
+</Tabs>
+
+<Tip>
+Custom handlers are registered by plugins. Check the **Plugins** directory in the source code to see available handlers.
+</Tip>
+
+## Common Workflows
+
+### Replacing a Character Texture
+
+1. Search for the character's texture asset
+2. Open in Texture Editor
+3. Export current texture as reference
+4. Edit in image editor (Photoshop, GIMP, etc.)
+5. Import modified texture
+6. Save project
+7. Test in game
+
+### Modifying Weapon Stats
+
+1. Find weapon's EBX blueprint
+2. Open in Property Grid
+3. Locate stat properties (damage, range, etc.)
+4. Modify values
+5. Check for transient properties that need special flags
+6. Save project
+
+### Creating a Custom Material Variation
+
+1. Duplicate existing ObjectVariation asset
+2. Modify material parameters
+3. Change texture references
+4. Link to MeshVariationDatabase
+5. Apply to mesh for testing
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Package Mods" icon="box-archive" href="/modding/mod-packaging">
+    Learn how to export your modifications as distributable mods
+  </Card>
+  <Card title="Best Practices" icon="star" href="/modding/best-practices">
+    Follow modding best practices for quality and compatibility
+  </Card>
+</CardGroup>

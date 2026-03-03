@@ -1,0 +1,157 @@
+---
+title: Plugin System Overview
+description: Understanding the Frosty Toolsuite plugin architecture
+---
+
+The Frosty Toolsuite plugin system allows you to extend the editor and mod manager with custom functionality. Plugins can add asset editors, context menu actions, custom handlers, and more.
+
+## What Can Plugins Do?
+
+Plugins extend Frosty's functionality by:
+
+- **Custom Asset Editors** - Create specialized editors for game asset types
+- **Asset Definitions** - Define how assets are displayed, imported, and exported
+- **Context Menu Actions** - Add right-click actions in the Data Explorer
+- **Menu Extensions** - Add custom menu items to the editor
+- **Custom Handlers** - Handle special processing for specific asset types
+- **Execution Actions** - Run code before/after mod execution
+- **Type Editors** - Provide custom UI for editing specific data types
+
+## Plugin Architecture
+
+Plugins are .NET assemblies (DLL files) placed in the `Plugins/` directory. The `PluginManager` discovers and loads plugins at startup.
+
+### Plugin Lifecycle
+
+<Steps>
+  <Step title="Discovery">
+    The PluginManager scans the `Plugins/` directory for DLL files at startup.
+  </Step>
+  
+  <Step title="Loading">
+    Assemblies are loaded and their attributes are read to determine what extensions they provide.
+  </Step>
+  
+  <Step title="Startup Phase">
+    Startup-level extensions are registered (profiles, type overrides, global type editors).
+  </Step>
+  
+  <Step title="Initialization Phase">
+    After a game profile is loaded, game-specific extensions are registered (asset definitions, editors, custom handlers).
+  </Step>
+</Steps>
+
+### Load Types
+
+Plugins have two load phases controlled by the `PluginLoadType` enum:
+
+**Startup** - Loaded before any game profile:
+- Profiles
+- Type overrides
+- Global type editors
+- Startup actions
+
+**Initialize** - Loaded after profile selection:
+- Asset definitions
+- Custom handlers
+- Menu extensions
+- Tab extensions
+- Context menu extensions
+- Execution actions
+
+## Plugin Manager Types
+
+Plugins can target different parts of Frosty:
+
+```csharp
+public enum PluginManagerType
+{
+    Editor,      // Frosty Editor
+    ModManager,  // Frosty Mod Manager
+    Both         // Both applications
+}
+```
+
+Most attributes accept a `PluginManagerType` parameter to control where the extension loads.
+
+## Core Classes
+
+From `~/workspace/source/FrostyPlugin/Plugin.cs:8`:
+
+```csharp
+public class Plugin
+{
+    public string Author { get; }         // From PluginAuthorAttribute
+    public Assembly Assembly { get; }     // The loaded plugin assembly
+    public string Name { get; }           // From PluginDisplayNameAttribute
+    public string Version { get; }        // From PluginVersionAttribute
+    public PluginLoadStatus Status { get; }  // Load success/failure status
+}
+```
+
+## Example Plugin Structure
+
+A typical plugin project structure:
+
+```
+MyPlugin/
+├── Properties/
+│   └── AssemblyInfo.cs          # Plugin metadata and registrations
+├── MyAssetDefinition.cs         # Asset definition class
+├── MyAssetEditor.cs             # Custom editor
+└── MyPlugin.csproj
+```
+
+## Getting Started
+
+<CardGroup cols={2}>
+  <Card title="Create a Plugin" icon="plus" href="/plugins/creating-plugins">
+    Step-by-step guide to building your first plugin
+  </Card>
+  
+  <Card title="Asset Editors" icon="pen-to-square" href="/plugins/asset-editors">
+    Learn to create custom asset editors
+  </Card>
+  
+  <Card title="Custom Actions" icon="bolt" href="/plugins/custom-actions">
+    Add context menu items and commands
+  </Card>
+  
+  <Card title="Attributes Reference" icon="book" href="/plugins/plugin-attributes">
+    Complete plugin attribute reference
+  </Card>
+</CardGroup>
+
+## Plugin Discovery
+
+From `~/workspace/source/FrostyPlugin/PluginManager.cs:139`:
+
+```csharp
+foreach (string item in Directory.EnumerateFiles("Plugins", "*.dll", SearchOption.AllDirectories))
+{
+    FileInfo fileInfo = new FileInfo(item);
+    m_plugins.Add(LoadPlugin(fileInfo.FullName, PluginLoadType.Startup));
+}
+```
+
+The PluginManager recursively searches for all `.dll` files in the `Plugins/` directory and its subdirectories.
+
+## Profile Validation
+
+Plugins can specify which game profiles they support using attributes:
+
+```csharp
+// Only load for Star Wars Battlefront II
+[assembly: PluginValidForProfile((int)ProfileVersion.StarWarsBattlefrontII)]
+
+// Don't load for Anthem
+[assembly: PluginNotValidForProfile((int)ProfileVersion.Anthem)]
+```
+
+Without these attributes, plugins load for all profiles by default.
+
+## Next Steps
+
+<Card title="Creating Your First Plugin" icon="rocket" href="/plugins/creating-plugins">
+  Follow the step-by-step guide to create a functional plugin with a custom asset editor
+</Card>

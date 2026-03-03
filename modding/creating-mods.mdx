@@ -1,0 +1,207 @@
+---
+title: "Creating Mods"
+description: "Learn how to create mods using Frosty Editor"
+---
+
+## Getting Started
+
+Frosty Editor allows you to create mods for Frostbite-powered games by modifying game assets. Every mod starts as a project file (.fbproject) that tracks your changes.
+
+<Note>
+Make sure you have launched Frosty Editor with your target game selected before creating a new project.
+</Note>
+
+## Creating a New Project
+
+<Steps>
+  <Step title="Start a New Project">
+    1. Launch Frosty Editor
+    2. Select **File** > **New Project**
+    3. Choose a location and name for your project
+    4. Click **Save**
+    
+    Your project file will be saved with a `.fbproject` extension.
+  </Step>
+  
+  <Step title="Configure Mod Settings">
+    Before making changes, configure your mod metadata:
+    
+    1. Go to **Tools** > **Mod Settings**
+    2. Fill in the required fields:
+       - **Title**: Your mod's display name
+       - **Author**: Your name or username
+       - **Version**: Mod version (e.g., "1.0.0")
+       - **Category**: Mod type (gameplay, cosmetics, etc.)
+       - **Description**: Brief description of what your mod does
+    3. Optionally add an icon and up to 4 screenshots
+  </Step>
+  
+  <Step title="Browse and Select Assets">
+    Use the Asset Browser to find assets to modify:
+    
+    1. Navigate the folder tree in the left panel
+    2. Use the search bar to find specific assets
+    3. Filter by asset type (EBX, RES, Chunk)
+    4. Double-click an asset to open it in an editor
+  </Step>
+</Steps>
+
+## Project Structure
+
+Frosty projects track three types of modifications:
+
+### Added Assets
+Assets you've created from scratch:
+- **Bundles**: Custom bundle containers
+- **EBX Assets**: Entity data (blueprints, logic)
+- **RES Assets**: Resource data (textures, meshes)
+- **Chunks**: Binary data chunks
+
+### Modified Assets
+Existing assets you've edited:
+- Original asset data is preserved
+- Only changes are stored in the project
+- Linked assets (e.g., texture chunks) are tracked automatically
+
+### Bundle Modifications
+Changes to where assets are loaded:
+- Assets added to new bundles
+- Assets removed from bundles
+- Custom bundle hierarchies
+
+<Tip>
+The project format (version 14) stores EBX as objects rather than compressed streams, making projects easier to merge and debug.
+</Tip>
+
+## Working with Assets
+
+### EBX Assets (Entity Data)
+
+EBX assets contain entity blueprints and game logic:
+
+```
+Format: .ebx files
+Editor: Property Grid Editor
+Examples: Characters, weapons, vehicles, UI elements
+```
+
+**Key Features:**
+- Visual property editing
+- Reference tracking (dependencies)
+- Transient property modification
+- Custom handlers for specialized assets
+
+### RES Assets (Resources)
+
+RES assets are binary resources like textures and meshes:
+
+```
+Format: .res files
+Editors: Texture Editor, Mesh Editor, etc.
+Common Types: 
+  - 0x6BDE20BA: Texture
+  - 0x49B156D4: MeshSet
+  - 0xAFECB022: CompiledLua
+```
+
+**Editing Workflow:**
+1. Open the RES asset in the appropriate editor
+2. Make your changes (import new texture, modify mesh, etc.)
+3. Changes are automatically saved to your project
+
+### Chunk Assets (Binary Data)
+
+Chunks contain raw binary data referenced by other assets:
+
+```
+Format: Binary chunks identified by GUID
+Use Cases: Texture mipmaps, mesh data, streaming data
+```
+
+<Warning>
+Chunks are typically managed automatically through their parent assets (textures, meshes). Direct chunk editing is rarely needed.
+</Warning>
+
+## Saving Your Project
+
+<Steps>
+  <Step title="Save Regularly">
+    Press **Ctrl+S** or select **File** > **Save Project**
+    
+    The project tracks:
+    - Creation and modification timestamps
+    - Game version (head revision)
+    - All asset modifications
+    - Mod metadata (title, author, etc.)
+  </Step>
+  
+  <Step title="Verify Changes">
+    Check the **Modified Assets** tab to review:
+    - Which assets have been changed
+    - Dirty state indicators (asterisk *)
+    - Linked asset modifications
+  </Step>
+</Steps>
+
+## Project File Format
+
+Frosty projects use a binary format with this structure:
+
+```
+Magic Number: 0x00005954534F5246 ("FROSTY")
+Format Version: 14
+Contents:
+  - Profile name (game identifier)
+  - Timestamps (creation, modification)
+  - Game version
+  - Mod settings (title, author, category, etc.)
+  - Added data (bundles, ebx, res, chunks)
+  - Modified data (asset changes)
+  - Custom action handlers
+```
+
+<Tip>
+Project files are saved to a temporary file first (.tmp extension) and verified before replacing the original. This prevents corruption from interrupted saves.
+</Tip>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use Descriptive Names">
+    Name your project clearly to identify its purpose:
+    - ✅ `enhanced-weapon-stats.fbproject`
+    - ❌ `project1.fbproject`
+  </Accordion>
+  
+  <Accordion title="Save Often">
+    Save your project frequently:
+    - After each major change
+    - Before testing
+    - Before exporting a mod
+  </Accordion>
+  
+  <Accordion title="Document Your Changes">
+    Use the mod description to document:
+    - What assets were modified
+    - What changes were made
+    - Any known issues or compatibility notes
+  </Accordion>
+  
+  <Accordion title="Version Control">
+    Consider using version control for your projects:
+    - Git can track `.fbproject` files
+    - Use meaningful commit messages
+    - Tag releases with version numbers
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Modify Assets" icon="pen" href="/modding/asset-modification">
+    Learn how to edit different asset types
+  </Card>
+  <Card title="Package Your Mod" icon="box" href="/modding/mod-packaging">
+    Export your project as a distributable mod
+  </Card>
+</CardGroup>

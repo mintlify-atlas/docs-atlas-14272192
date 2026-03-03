@@ -1,0 +1,315 @@
+---
+title: Creating Plugins
+description: Step-by-step guide to building a Frosty plugin
+---
+
+This guide walks through creating a complete Frosty plugin with a custom asset editor.
+
+## Prerequisites
+
+- Visual Studio 2019 or later
+- .NET Framework 4.7.2 SDK
+- Frosty Toolsuite source code or compiled assemblies
+
+## Project Setup
+
+<Steps>
+  <Step title="Create a Class Library Project">
+    Create a new .NET Framework Class Library project targeting .NET Framework 4.7.2:
+    
+    ```xml
+    <Project Sdk="Microsoft.NET.Sdk">
+      <PropertyGroup>
+        <TargetFramework>net472</TargetFramework>
+      </PropertyGroup>
+    </Project>
+    ```
+  </Step>
+  
+  <Step title="Add References">
+    Reference the required Frosty assemblies:
+    
+    - `FrostyPlugin.dll` - Core plugin functionality
+    - `FrostySdk.dll` - SDK types and managers
+    - `FrostyCore.dll` - Editor controls and base classes
+    
+    You'll also need WPF references:
+    - `PresentationCore`
+    - `PresentationFramework`
+    - `WindowsBase`
+    - `System.Xaml`
+  </Step>
+  
+  <Step title="Configure Build Output">
+    Set the output path to Frosty's Plugins directory:
+    
+    ```xml
+    <PropertyGroup>
+      <OutputPath>$(FrostyPath)\Plugins\MyPlugin\</OutputPath>
+    </PropertyGroup>
+    ```
+  </Step>
+</Steps>
+
+## Plugin Metadata
+
+Define your plugin's metadata in `Properties/AssemblyInfo.cs` using assembly-level attributes.
+
+### Basic Metadata
+
+```csharp
+using Frosty.Core.Attributes;
+using System.Reflection;
+using System.Runtime.InteropServices;
+
+[assembly: ComVisible(false)]
+[assembly: Guid("YOUR-GUID-HERE")]
+
+// Plugin identification
+[assembly: PluginDisplayName("Texture Editor")]
+[assembly: PluginAuthor("YourName")]
+[assembly: PluginVersion("1.0.0.0")]
+```
+
+These attributes are read by the PluginManager (from `~/workspace/source/FrostyPlugin/Plugin.cs:14-91`):
+
+```csharp
+public string Author
+{
+    get
+    {
+        string author = Assembly?.GetCustomAttribute<PluginAuthorAttribute>()?.Author;
+        return !string.IsNullOrEmpty(author) ? author : "Unknown";
+    }
+}
+```
+
+### Profile Targeting
+
+Optionally restrict your plugin to specific games:
+
+```csharp
+// Only load for Battlefield 1 and Battlefield V
+[assembly: PluginValidForProfile((int)ProfileVersion.Battlefield1)]
+[assembly: PluginValidForProfile((int)ProfileVersion.BattlefieldV)]
+
+// Or exclude specific profiles
+[assembly: PluginNotValidForProfile((int)ProfileVersion.Anthem)]
+```
+
+## Creating an Asset Definition
+
+Asset definitions control how assets are displayed and edited. Here's a real example from `~/workspace/source/Plugins/TexturePlugin/TextureAssetDefinition.cs`:
+
+```csharp
+using Frosty.Core;
+using Frosty.Core.Controls;
+using FrostySdk.Interfaces;
+using FrostySdk.Managers;
+using System.Collections.Generic;
+using System.Windows.Media;
+
+namespace TexturePlugin
+{
+    public class TextureAssetDefinition : AssetDefinition
+    {
+        private static ImageSource imageSource = new ImageSourceConverter()
+            .ConvertFromString("pack://application:,,,/FrostyCore;component/Images/Assets/ImageFileType.png") 
+            as ImageSource;
+
+        // Define supported export formats
+        public override void GetSupportedExportTypes(List<AssetExportType> exportTypes)
+        {
+            exportTypes.Add(new AssetExportType("png", "Portable Network Graphics"));
+            exportTypes.Add(new AssetExportType("tga", "Truevision TGA"));
+            exportTypes.Add(new AssetExportType("hdr", "High Dynamic Range"));
+            exportTypes.Add(new AssetExportType("dds", "Direct Draw Surface"));
+            base.GetSupportedExportTypes(exportTypes);
+        }
+
+        // Provide an icon for this asset type
+        public override ImageSource GetIcon()
+        {
+            return imageSource;
+        }
+
+        // Handle asset export
+        public override bool Export(EbxAssetEntry entry, string path, string filterType)
+        {
+            if (!base.Export(entry, path, filterType))
+            {
+                if (filterType == "png" || filterType == "tga" || 
+                    filterType == "hdr" || filterType == "dds")
+                {
+                    EbxAsset asset = App.AssetManager.GetEbx(entry);
+                    dynamic textureAsset = (dynamic)asset.RootObject;
+
+                    ResAssetEntry resEntry = App.AssetManager.GetResEntry(textureAsset.Resource);
+                    Texture texture = App.AssetManager.GetResAs<Texture>(resEntry);
+
+                    TextureExporter exporter = new TextureExporter();
+                    exporter.Export(texture, path, "*." + filterType);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Provide a custom editor
+        public override FrostyAssetEditor GetEditor(ILogger logger)
+        {
+            return new FrostyTextureEditor(logger);
+        }
+    }
+}
+```
+
+## Registering the Asset Definition
+
+Register your asset definition in `AssemblyInfo.cs`:
+
+```csharp
+using TexturePlugin;
+
+[assembly: RegisterAssetDefinition("TextureAsset", typeof(TextureAssetDefinition))]
+```
+
+The first parameter is the asset type name from the game's type library. The PluginManager handles registration (from `~/workspace/source/FrostyPlugin/PluginManager.cs:452-483`).
+
+## Creating a Custom Editor
+
+Custom editors inherit from `FrostyAssetEditor`. See the [Asset Editors guide](/plugins/asset-editors) for details.
+
+## Example: Complete Plugin
+
+Here's the complete MeshSetPlugin registration from `~/workspace/source/Plugins/MeshSetPlugin/Properties/AssemblyInfo.cs`:
+
+```csharp
+using MeshSetPlugin;
+using Frosty.Core.Attributes;
+using System.Runtime.InteropServices;
+using System.Windows;
+using MeshSetPlugin.Handlers;
+using FrostySdk.Managers;
+
+[assembly: ComVisible(false)]
+[assembly: Guid("4b612468-9b6a-4304-88a5-055c3575eb3d")]
+
+[assembly: PluginDisplayName("MeshSet Editor")]
+[assembly: PluginAuthor("GalaxyMan2015")]
+[assembly: PluginVersion("1.0.1.0")]
+
+// Register options page
+[assembly: RegisterOptionsExtension(typeof(MeshOptions))]
+
+// Register asset definitions for different mesh types
+[assembly: RegisterAssetDefinition("RigidMeshAsset", typeof(RigidMeshAssetDefinition))]
+[assembly: RegisterAssetDefinition("SkinnedMeshAsset", typeof(SkinnedMeshAssetDefinition))]
+[assembly: RegisterAssetDefinition("CompositeMeshAsset", typeof(CompositeMeshAssetDefinition))]
+
+// Register custom handler for shader block depot resources
+[assembly: RegisterCustomHandler(CustomHandlerType.Res, 
+    typeof(ShaderBlockDepotCustomActionHandler), 
+    resType: ResourceType.ShaderBlockDepot)]
+```
+
+## Building and Testing
+
+<Steps>
+  <Step title="Build the Project">
+    Build your plugin project. The DLL should output to `Plugins/YourPluginName/`.
+  </Step>
+  
+  <Step title="Verify Plugin Location">
+    Ensure your plugin DLL is in:
+    ```
+    FrostyEditor/
+    └── Plugins/
+        └── YourPluginName/
+            └── YourPluginName.dll
+    ```
+  </Step>
+  
+  <Step title="Launch Frosty Editor">
+    Start Frosty Editor. Check the log for plugin loading messages.
+  </Step>
+  
+  <Step title="Test Functionality">
+    Verify your plugin features work:
+    - Asset definitions appear for the correct asset types
+    - Custom editors open when double-clicking assets
+    - Export/import options are available
+  </Step>
+</Steps>
+
+## Debugging
+
+<AccordionGroup>
+  <Accordion title="Plugin Not Loading">
+    Check that:
+    - DLL is in the correct `Plugins/` subdirectory
+    - Target framework is .NET Framework 4.7.2
+    - All required assemblies are referenced
+    - Assembly attributes are correctly applied
+  </Accordion>
+  
+  <Accordion title="Asset Definition Not Appearing">
+    Verify:
+    - `RegisterAssetDefinition` attribute has correct asset type name
+    - Asset type exists in the game's type library
+    - Plugin is valid for the current game profile
+  </Accordion>
+  
+  <Accordion title="Attach Debugger">
+    For debugging:
+    1. Set plugin project as startup project
+    2. Set FrostyEditor.exe as the external program
+    3. Place breakpoints in your code
+    4. Press F5 to debug
+  </Accordion>
+</AccordionGroup>
+
+## Common Patterns
+
+### Multiple Asset Types
+
+Register multiple definitions for related asset types:
+
+```csharp
+[assembly: RegisterAssetDefinition("RigidMeshAsset", typeof(RigidMeshAssetDefinition))]
+[assembly: RegisterAssetDefinition("SkinnedMeshAsset", typeof(SkinnedMeshAssetDefinition))]
+[assembly: RegisterAssetDefinition("CompositeMeshAsset", typeof(CompositeMeshAssetDefinition))]
+```
+
+### Shared Base Class
+
+Create a base definition for common functionality:
+
+```csharp
+public class MeshAssetDefinition : AssetDefinition
+{
+    public override void GetSupportedExportTypes(List<AssetExportType> exportTypes)
+    {
+        exportTypes.Add(new AssetExportType("fbx", "Autodesk FBX"));
+        exportTypes.Add(new AssetExportType("obj", "Wavefront OBJ"));
+        base.GetSupportedExportTypes(exportTypes);
+    }
+}
+
+public class RigidMeshAssetDefinition : MeshAssetDefinition
+{
+    public override ImageSource GetIcon() => rigidMeshIcon;
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Asset Editors" icon="pen-to-square" href="/plugins/asset-editors">
+    Create custom asset editor UI
+  </Card>
+  
+  <Card title="Custom Actions" icon="bolt" href="/plugins/custom-actions">
+    Add context menu actions
+  </Card>
+</CardGroup>

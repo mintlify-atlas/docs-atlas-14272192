@@ -1,0 +1,162 @@
+---
+title: Introduction to Frosty Toolsuite
+description: The most advanced modding platform for games running on DICE's Frostbite game engine
+---
+
+<img
+  className="block dark:hidden"
+  src="/images/hero-light.svg"
+  alt="Frosty Toolsuite Hero Light"
+/>
+<img
+  className="hidden dark:block"
+  src="/images/hero-dark.svg"
+  alt="Frosty Toolsuite Hero Dark"
+/>
+
+## Welcome to Frosty Toolsuite
+
+Frosty Toolsuite is **the most advanced modding platform** for games running on DICE's Frostbite game engine. Whether you're looking to create custom content for Battlefield, FIFA, Need for Speed, Star Wars, Dragon Age, Mass Effect, or any other Frostbite-powered game, Frosty provides the tools you need to bring your creative vision to life.
+
+The suite consists of three powerful applications that work together to provide a complete modding workflow:
+
+- **FrostyEditor** - A comprehensive visual editor for creating and editing game assets
+- **FrostyModManager** - An intuitive mod installation and management tool
+- **FrostyCmd** - A command-line interface for advanced automation and batch operations
+
+## Supported Games
+
+Frosty Toolsuite supports a wide range of Frostbite engine games across multiple franchises:
+
+<CardGroup cols={3}>
+  <Card title="Battlefield" icon="shield">
+    - Battlefield 4
+    - Battlefield Hardline
+    - Battlefield 1
+    - Battlefield V
+  </Card>
+  <Card title="Sports Games" icon="futbol">
+    - FIFA 17, 18, 19, 20
+    - Madden NFL 19, 20
+  </Card>
+  <Card title="Need for Speed" icon="car">
+    - NFS Rivals
+    - NFS 2016
+    - NFS Payback
+    - NFS Heat
+    - NFS Unbound
+  </Card>
+  <Card title="Star Wars" icon="jedi">
+    - Star Wars Battlefront
+    - Star Wars Battlefront II
+    - Star Wars Squadrons
+  </Card>
+  <Card title="RPG Games" icon="dragon">
+    - Dragon Age: Inquisition
+    - Mass Effect: Andromeda
+    - Anthem
+  </Card>
+  <Card title="Plants vs Zombies" icon="seedling">
+    - Garden Warfare 1 & 2
+    - Battle for Neighborville
+  </Card>
+</CardGroup>
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="Visual Asset Editing" icon="palette" href="/features/asset-editing">
+    Edit game assets with an intuitive property grid interface. Modify meshes, textures, sounds, and more with real-time previews.
+  </Card>
+  <Card title="Plugin System" icon="puzzle-piece" href="/features/plugins">
+    Extend functionality with a powerful plugin architecture. Import/export meshes, edit textures, modify sounds, and add custom editors.
+  </Card>
+  <Card title="Mesh Import/Export" icon="cube" href="/features/mesh-editing">
+    Import and export 3D meshes in FBX, OBJ, and DAE formats. Full support for skinned meshes, composite meshes, and mesh variations.
+  </Card>
+  <Card title="Texture Tools" icon="image" href="/features/texture-editing">
+    Preview and edit textures with support for 2D, cube maps, texture arrays, and volume textures. Import/export in PNG, TGA, HDR, and DDS formats.
+  </Card>
+  <Card title="Sound Editing" icon="music" href="/features/sound-editing">
+    Import and export audio files with support for EA Layer 3 format. Preview sounds directly in the editor.
+  </Card>
+  <Card title="Bundle Editor" icon="box" href="/features/bundle-editor">
+    Advanced bundle management for organizing and optimizing game assets. Add or remove assets from bundles.
+  </Card>
+  <Card title="Localization Support" icon="language" href="/features/localization">
+    Edit localized strings for multiple languages. Export to CSV for easy translation workflows.
+  </Card>
+  <Card title="Mod Collections" icon="folder-tree" href="/features/collections">
+    Organize mods into collections for easy management. Create mod packs and share them with the community.
+  </Card>
+</CardGroup>
+
+## What Makes Frosty Special?
+
+<AccordionGroup>
+  <Accordion title="Game-Wide Asset Modification" icon="globe">
+    Unlike legacy modding tools, Frosty can modify any asset in the game, not just specific file types. Edit EBX files, chunks, resources, and bundles with full type information.
+  </Accordion>
+  
+  <Accordion title="Non-Destructive Workflow" icon="shield-check">
+    All modifications are applied at runtime without modifying original game files. Your game installation stays clean and updates won't break your mods.
+  </Accordion>
+  
+  <Accordion title="Advanced Type System" icon="code">
+    Full access to the Frostbite type system with property grids, reference tracking, and instance management. See exactly what each field does.
+  </Accordion>
+  
+  <Accordion title="Community-Driven Development" icon="users">
+    Built by modders, for modders. Active development with contributions from the community. Over 15 contributors and counting.
+  </Accordion>
+</AccordionGroup>
+
+## Latest Version: 1.0.6.3
+
+The current release includes:
+
+- Improved EBX writing performance
+- Enhanced collection import support
+- Full Battlefield V profile support
+- Star Wars Squadrons profile
+- ModData management from ModManager
+- Bundle whitelist options
+- Math expressions in number textboxes
+- Launch platform support (EA Desktop, Steam, Epic Games)
+- Comprehensive plugin extensions
+
+<Note>
+  Frosty Toolsuite is licensed under Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.
+</Note>
+
+## Ready to Get Started?
+
+<CardGroup cols={2}>
+  <Card title="Installation Guide" icon="download" href="/installation">
+    Download and set up Frosty Toolsuite on your system
+  </Card>
+  <Card title="Quick Start Tutorial" icon="rocket" href="/quickstart">
+    Create your first mod in under 10 minutes
+  </Card>
+  <Card title="Editor Overview" icon="pencil" href="/editor/overview">
+    Learn the FrostyEditor interface and workflow
+  </Card>
+  <Card title="Mod Manager Guide" icon="box-archive" href="/mod-manager/overview">
+    Install and manage mods with FrostyModManager
+  </Card>
+</CardGroup>
+
+## Community & Support
+
+<CardGroup cols={2}>
+  <Card title="GitHub Repository" icon="github" href="https://github.com/CadeEvs/FrostyToolsuite">
+    Access source code, report issues, and contribute
+  </Card>
+  <Card title="Join the Community" icon="discord" href="https://discord.gg/frosty">
+    Get help, share mods, and connect with other modders
+  </Card>
+</CardGroup>
+
+<Warning>
+  Some games contain Easy Anti-Cheat (EAC). Frosty will warn you when launching these games. Use at your own risk and only in offline/single-player modes.
+</Warning>

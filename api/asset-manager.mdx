@@ -1,0 +1,579 @@
+---
+title: 'AssetManager API'
+description: 'Comprehensive API for accessing, modifying, and managing game assets'
+---
+
+## Overview
+
+The `AssetManager` class provides comprehensive functionality for enumerating, loading, and modifying game assets including EBX, resources, and chunks.
+
+```csharp
+using FrostySdk.Managers;
+
+AssetManager am = new AssetManager(fileSystem, resourceManager);
+am.Initialize();
+```
+
+## Constructor
+
+<ParamField path="AssetManager" type="constructor">
+Creates a new AssetManager instance
+
+```csharp
+AssetManager am = new AssetManager(FileSystem fs, ResourceManager rm);
+```
+
+<ParamField path="fs" type="FileSystem" required>
+Initialized FileSystem instance
+</ParamField>
+
+<ParamField path="rm" type="ResourceManager" required>
+Initialized ResourceManager instance
+</ParamField>
+</ParamField>
+
+## Initialization
+
+<ParamField path="Initialize" type="void">
+Initializes the asset manager and loads all asset metadata
+
+```csharp
+am.Initialize(additionalStartup: true);
+```
+
+<ParamField path="additionalStartup" type="bool" default="true">
+Perform additional initialization like EBX indexing
+</ParamField>
+
+<ParamField path="result" type="AssetManagerImportResult" default="null">
+Optional result object for tracking patch changes
+</ParamField>
+</ParamField>
+
+## Asset Retrieval
+
+### EBX Assets
+
+<ParamField path="GetEbxEntry" type="EbxAssetEntry">
+Gets an EBX asset entry by name or GUID
+
+```csharp
+// By name
+EbxAssetEntry entry = am.GetEbxEntry("content/characters/player");
+
+// By GUID
+EbxAssetEntry entry = am.GetEbxEntry(guid);
+```
+
+<ParamField path="name" type="string">
+Asset path (case-insensitive)
+</ParamField>
+
+<ParamField path="ebxGuid" type="Guid">
+Asset GUID
+</ParamField>
+</ParamField>
+
+<ParamField path="GetEbx" type="EbxAsset">
+Loads and deserializes an EBX asset
+
+```csharp
+EbxAsset asset = am.GetEbx(entry);
+// Or
+EbxAsset asset = am.GetEbx("content/characters/player");
+```
+
+<ParamField path="entry" type="EbxAssetEntry">
+Asset entry to load
+</ParamField>
+
+<ParamField path="getUnmodifiedData" type="bool" default="false">
+If true, returns original data ignoring modifications
+</ParamField>
+</ParamField>
+
+<ParamField path="GetEbxAs<T>" type="T where T : EbxAsset">
+Loads an EBX asset as a specific type
+
+```csharp
+MeshAsset mesh = am.GetEbxAs<MeshAsset>(entry);
+```
+</ParamField>
+
+### Resource Assets
+
+<ParamField path="GetResEntry" type="ResAssetEntry">
+Gets a resource entry by name or resource ID
+
+```csharp
+// By name
+ResAssetEntry entry = am.GetResEntry("textures/character_diffuse");
+
+// By resource ID
+ResAssetEntry entry = am.GetResEntry(resRid);
+```
+
+<ParamField path="name" type="string">
+Resource name
+</ParamField>
+
+<ParamField path="resRid" type="ulong">
+Resource runtime ID
+</ParamField>
+</ParamField>
+
+<ParamField path="GetRes" type="Stream">
+Gets the raw resource data stream
+
+```csharp
+Stream resData = am.GetRes(resEntry);
+```
+</ParamField>
+
+<ParamField path="GetResAs<T>" type="T where T : Resource">
+Loads and deserializes a resource as a specific type
+
+```csharp
+Texture texture = am.GetResAs<Texture>(entry);
+```
+
+<ParamField path="entry" type="ResAssetEntry" required>
+Resource entry to load
+</ParamField>
+
+<ParamField path="modifiedData" type="ModifiedResource" default="null">
+Optional modified resource data
+</ParamField>
+</ParamField>
+
+### Chunk Assets
+
+<ParamField path="GetChunkEntry" type="ChunkAssetEntry">
+Gets a chunk entry by its GUID
+
+```csharp
+ChunkAssetEntry entry = am.GetChunkEntry(chunkId);
+```
+</ParamField>
+
+<ParamField path="GetChunk" type="Stream">
+Gets the raw chunk data stream
+
+```csharp
+Stream chunkData = am.GetChunk(chunkEntry);
+```
+</ParamField>
+
+## Asset Enumeration
+
+### Enumerate EBX
+
+<ParamField path="EnumerateEbx" type="IEnumerable<EbxAssetEntry>">
+Enumerates EBX assets with optional filtering
+
+```csharp
+// All EBX assets
+foreach (EbxAssetEntry entry in am.EnumerateEbx())
+{
+    Console.WriteLine(entry.Name);
+}
+
+// Filter by type
+foreach (EbxAssetEntry entry in am.EnumerateEbx("MeshAsset"))
+{
+    // Process mesh assets
+}
+
+// Modified assets only
+foreach (EbxAssetEntry entry in am.EnumerateEbx("", modifiedOnly: true))
+{
+    // Process modified assets
+}
+```
+
+<ParamField path="type" type="string" default="">
+Filter by asset type (supports inheritance)
+</ParamField>
+
+<ParamField path="modifiedOnly" type="bool" default="false">
+Only return modified assets
+</ParamField>
+
+<ParamField path="includeLinked" type="bool" default="false">
+Include indirectly modified linked assets
+</ParamField>
+
+<ParamField path="bundleSubPath" type="string" default="">
+Filter by bundle path
+</ParamField>
+</ParamField>
+
+### Enumerate Resources
+
+<ParamField path="EnumerateRes" type="IEnumerable<ResAssetEntry>">
+Enumerates resource assets
+
+```csharp
+// All resources
+foreach (ResAssetEntry entry in am.EnumerateRes())
+{
+    Console.WriteLine($"{entry.Name} - {entry.Type}");
+}
+
+// Filter by resource type
+foreach (ResAssetEntry entry in am.EnumerateRes((uint)ResourceType.Texture))
+{
+    // Process textures
+}
+```
+
+<ParamField path="resType" type="uint" default="0">
+Filter by ResourceType (0 = all types)
+</ParamField>
+
+<ParamField path="modifiedOnly" type="bool" default="false">
+Only return modified resources
+</ParamField>
+</ParamField>
+
+### Enumerate Chunks
+
+<ParamField path="EnumerateChunks" type="IEnumerable<ChunkAssetEntry>">
+Enumerates chunk assets
+
+```csharp
+foreach (ChunkAssetEntry entry in am.EnumerateChunks())
+{
+    Console.WriteLine($"Chunk: {entry.Id}");
+}
+```
+
+<ParamField path="modifiedOnly" type="bool" default="false">
+Only return modified chunks
+</ParamField>
+</ParamField>
+
+### Enumerate Bundles
+
+<ParamField path="EnumerateBundles" type="IEnumerable<BundleEntry>">
+Enumerates bundle entries
+
+```csharp
+foreach (BundleEntry bundle in am.EnumerateBundles())
+{
+    Console.WriteLine($"Bundle: {bundle.Name} ({bundle.Type})");
+}
+
+// Filter by type
+foreach (BundleEntry bundle in am.EnumerateBundles(BundleType.BlueprintBundle))
+{
+    // Process blueprint bundles
+}
+```
+
+<ParamField path="type" type="BundleType" default="BundleType.None">
+Filter by bundle type
+</ParamField>
+
+<ParamField path="modifiedOnly" type="bool" default="false">
+Only return modified bundles
+</ParamField>
+</ParamField>
+
+## Asset Modification
+
+### Modify EBX
+
+<ParamField path="ModifyEbx" type="void">
+Marks an EBX asset as modified with new data
+
+```csharp
+EbxAsset asset = am.GetEbx(entry);
+// Modify asset properties...
+asset.RootObject.SetValue("SomeProperty", newValue);
+
+// Save modification
+am.ModifyEbx(entry.Name, asset);
+```
+
+<ParamField path="name" type="string" required>
+Asset name
+</ParamField>
+
+<ParamField path="asset" type="EbxAsset" required>
+Modified asset object
+</ParamField>
+</ParamField>
+
+### Modify Resource
+
+<ParamField path="ModifyRes" type="void">
+Marks a resource as modified
+
+```csharp
+// Modify by resource ID
+am.ModifyRes(resRid, modifiedData, metaData);
+
+// Modify by name
+am.ModifyRes("textures/player_diffuse", modifiedData, metaData);
+
+// Modify with Resource object
+Texture texture = am.GetResAs<Texture>(entry);
+// Modify texture...
+am.ModifyRes(entry.ResRid, texture);
+```
+
+<ParamField path="resRid" type="ulong">
+Resource runtime ID
+</ParamField>
+
+<ParamField path="resName" type="string">
+Resource name
+</ParamField>
+
+<ParamField path="buffer" type="byte[]">
+Raw resource data
+</ParamField>
+
+<ParamField path="meta" type="byte[]" default="null">
+Resource metadata
+</ParamField>
+
+<ParamField path="resource" type="Resource">
+Resource object
+</ParamField>
+</ParamField>
+
+### Modify Chunk
+
+<ParamField path="ModifyChunk" type="bool">
+Modifies a chunk's data
+
+```csharp
+byte[] newChunkData = GetModifiedChunkData();
+bool success = am.ModifyChunk(chunkId, newChunkData);
+
+// For texture chunks
+Texture texture = GetTexture();
+am.ModifyChunk(chunkId, textureData, texture);
+```
+
+<ParamField path="chunkId" type="Guid" required>
+Chunk GUID
+</ParamField>
+
+<ParamField path="buffer" type="byte[]" required>
+New chunk data
+</ParamField>
+
+<ParamField path="texture" type="Texture" default="null">
+Texture metadata for texture chunks
+</ParamField>
+</ParamField>
+
+## Adding Assets
+
+### Add EBX
+
+<ParamField path="AddEbx" type="EbxAssetEntry">
+Adds a new EBX asset to the manager
+
+```csharp
+EbxAsset newAsset = CreateNewAsset();
+EbxAssetEntry entry = am.AddEbx(
+    "content/custom/myasset",
+    newAsset,
+    bundleId1, bundleId2
+);
+```
+
+<ParamField path="name" type="string" required>
+Asset name/path
+</ParamField>
+
+<ParamField path="asset" type="EbxAsset" required>
+Asset object
+</ParamField>
+
+<ParamField path="bundles" type="params int[]">
+Bundle IDs to add asset to
+</ParamField>
+</ParamField>
+
+### Add Resource
+
+<ParamField path="AddRes" type="ResAssetEntry">
+Adds a new resource to the manager
+
+```csharp
+byte[] textureData = LoadTextureData();
+byte[] metadata = CreateMetadata();
+
+ResAssetEntry entry = am.AddRes(
+    "textures/custom_texture",
+    ResourceType.Texture,
+    metadata,
+    textureData,
+    bundleId
+);
+```
+
+<ParamField path="name" type="string" required>
+Resource name
+</ParamField>
+
+<ParamField path="resType" type="ResourceType" required>
+Resource type
+</ParamField>
+
+<ParamField path="resMeta" type="byte[]" required>
+Resource metadata
+</ParamField>
+
+<ParamField path="buffer" type="byte[]" required>
+Resource data
+</ParamField>
+
+<ParamField path="bundles" type="params int[]">
+Bundle IDs
+</ParamField>
+</ParamField>
+
+### Add Chunk
+
+<ParamField path="AddChunk" type="Guid">
+Adds a new chunk and returns its GUID
+
+```csharp
+byte[] chunkData = GetChunkData();
+Guid chunkId = am.AddChunk(chunkData, bundles: bundleId);
+
+// For textures
+Texture texture = CreateTexture();
+Guid texChunkId = am.AddChunk(textureData, texture: texture, bundles: bundleId);
+```
+
+<ParamField path="buffer" type="byte[]" required>
+Chunk data
+</ParamField>
+
+<ParamField path="overrideGuid" type="Guid?" default="null">
+Optional specific GUID to use
+</ParamField>
+
+<ParamField path="texture" type="Texture" default="null">
+Texture metadata for texture chunks
+</ParamField>
+
+<ParamField path="bundles" type="params int[]">
+Bundle IDs
+</ParamField>
+</ParamField>
+
+## Asset Management
+
+### Revert Asset
+
+<ParamField path="RevertAsset" type="void">
+Reverts modifications to an asset
+
+```csharp
+am.RevertAsset(entry);
+
+// Revert data only (keep bundle assignments)
+am.RevertAsset(entry, dataOnly: true);
+```
+
+<ParamField path="entry" type="AssetEntry" required>
+Asset entry to revert
+</ParamField>
+
+<ParamField path="dataOnly" type="bool" default="false">
+Only revert data, not bundle assignments
+</ParamField>
+
+<ParamField path="suppressOnModify" type="bool" default="true">
+Suppress modification event
+</ParamField>
+</ParamField>
+
+### Reset All
+
+<ParamField path="Reset" type="void">
+Reverts all modifications across all assets
+
+```csharp
+am.Reset();
+```
+</ParamField>
+
+### Get Counts
+
+<ParamField path="GetModifiedCount" type="uint">
+Gets the total number of modified assets
+
+```csharp
+uint modCount = am.GetModifiedCount();
+Console.WriteLine($"{modCount} assets modified");
+```
+</ParamField>
+
+<ParamField path="GetEbxCount" type="uint">
+Gets count of EBX assets
+
+```csharp
+// All EBX
+uint total = am.GetEbxCount();
+
+// Specific type
+uint meshCount = am.GetEbxCount("MeshAsset");
+```
+</ParamField>
+
+## Usage Example
+
+```csharp
+using FrostySdk;
+using FrostySdk.Managers;
+using FrostySdk.IO;
+
+// Initialize
+FileSystem fs = new FileSystem(@"C:\Games\FIFA20");
+fs.Initialize();
+
+ResourceManager rm = new ResourceManager(fs);
+rm.Initialize();
+
+AssetManager am = new AssetManager(fs, rm);
+am.Initialize();
+
+// Find and modify an asset
+EbxAssetEntry entry = am.GetEbxEntry("content/characters/player");
+if (entry != null)
+{
+    EbxAsset asset = am.GetEbx(entry);
+    
+    // Modify asset
+    dynamic obj = asset.RootObject;
+    obj.Health = 100;
+    
+    // Save modification
+    am.ModifyEbx(entry.Name, asset);
+    
+    Console.WriteLine($"Modified: {entry.Name}");
+}
+
+// Enumerate all modified assets
+foreach (EbxAssetEntry modified in am.EnumerateEbx("", modifiedOnly: true))
+{
+    Console.WriteLine($"Modified: {modified.Name}");
+}
+
+Console.WriteLine($"Total modifications: {am.GetModifiedCount()}");
+```
+
+## See Also
+
+- [ResourceManager API](/api/resource-manager)
+- [FileSystem API](/api/file-system)
+- [FrostySdk Namespace](/api/frostysdk)

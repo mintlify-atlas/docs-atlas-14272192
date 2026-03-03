@@ -1,0 +1,506 @@
+---
+title: 'FileSystem API'
+description: 'File system abstraction for accessing game data, catalogs, and resolving paths'
+---
+
+## Overview
+
+The `FileSystem` class provides an abstraction layer for accessing Frostbite game file systems. It handles path resolution, catalog enumeration, superbundle management, and the InitFS memory file system.
+
+```csharp
+using FrostySdk;
+
+FileSystem fs = new FileSystem(@"C:\Program Files\FIFA 20");
+fs.Initialize();
+```
+
+## Constructor
+
+<ParamField path="FileSystem" type="constructor">
+Creates a new FileSystem instance for a game installation
+
+```csharp
+FileSystem fs = new FileSystem(string basePath);
+```
+
+<ParamField path="basePath" type="string" required>
+Path to the game installation directory
+
+Example: `@"C:\Program Files (x86)\Origin Games\Battlefield 5"`
+</ParamField>
+</ParamField>
+
+## Initialization
+
+<ParamField path="Initialize" type="void">
+Initializes the file system by loading layout.toc and initfs
+
+```csharp
+// Basic initialization
+fs.Initialize();
+
+// With encryption key (for games that require it)
+byte[] encryptionKey = GetGameKey();
+fs.Initialize(key: encryptionKey);
+```
+
+<ParamField path="key" type="byte[]" default="null">
+Encryption key for games that use encrypted InitFS
+</ParamField>
+
+This method:
+- Processes layout.toc (base and patch)
+- Loads catalogs from install manifest
+- Loads InitFS memory file system
+- Merges patch and base data
+</ParamField>
+
+## Properties
+
+<ResponseField name="BasePath" type="string">
+Game installation directory path
+
+```csharp
+Console.WriteLine($"Game path: {fs.BasePath}");
+```
+</ResponseField>
+
+<ResponseField name="CacheName" type="string">
+Path to the cache file for this profile
+
+```csharp
+string cachePath = fs.CacheName;
+// Example: "Caches/FIFA20_3932059483"
+```
+</ResponseField>
+
+<ResponseField name="Base" type="uint">
+Base version number from layout.toc
+</ResponseField>
+
+<ResponseField name="Head" type="uint">
+Head version number from layout.toc (current patch level)
+
+```csharp
+Console.WriteLine($"Game version: {fs.Base} -> {fs.Head}");
+```
+</ResponseField>
+
+<ResponseField name="SuperBundleCount" type="int">
+Total number of superbundles
+
+```csharp
+int count = fs.SuperBundleCount;
+```
+</ResponseField>
+
+<ResponseField name="SuperBundles" type="IEnumerable<string>">
+Enumerable collection of all superbundle names
+
+```csharp
+foreach (string sb in fs.SuperBundles)
+{
+    Console.WriteLine($"SuperBundle: {sb}");
+}
+```
+</ResponseField>
+
+<ResponseField name="CatalogCount" type="int">
+Total number of catalogs
+</ResponseField>
+
+<ResponseField name="Catalogs" type="IEnumerable<string>">
+Enumerable collection of all catalog names
+
+```csharp
+foreach (string catalog in fs.Catalogs)
+{
+    Console.WriteLine($"Catalog: {catalog}");
+}
+```
+</ResponseField>
+
+## Path Resolution
+
+<ParamField path="ResolvePath" type="string">
+Resolves a game-relative path to an absolute file system path
+
+```csharp
+// Resolve catalog
+string catPath = fs.ResolvePath("native_data/installpackage_00/cas.cat");
+// Returns: "C:\Games\FIFA20\Data\installpackage_00\cas.cat"
+
+// Resolve patch file
+string patchPath = fs.ResolvePath("native_patch/installpackage_00/cas_01.cas");
+
+// Returns empty string if not found
+string missing = fs.ResolvePath("nonexistent/file.dat");
+if (missing == "")
+{
+    Console.WriteLine("File not found");
+}
+```
+
+<ParamField path="filename" type="string" required>
+Game-relative path using forward slashes
+</ParamField>
+
+**Returns:** Absolute file system path, or empty string if not found
+
+**Supported prefixes:**
+- `native_data/` - Base game data
+- `native_patch/` - Patch data
+- No prefix - Searches both locations
+</ParamField>
+
+<ParamField path="ResolvePath" type="string">
+Resolves a ManifestFileRef to an absolute path
+
+```csharp
+ManifestFileRef fileRef = GetFileRef();
+string path = fs.ResolvePath(fileRef);
+```
+
+<ParamField path="fileRef" type="ManifestFileRef" required>
+Manifest file reference
+</ParamField>
+</ParamField>
+
+## Catalog Management
+
+<ParamField path="GetCatalogFromSuperBundle" type="string">
+Gets the catalog name that contains a specific superbundle
+
+```csharp
+string catalog = fs.GetCatalogFromSuperBundle("win32/levels/mp_001");
+// Returns: "win32/installpackage_00"
+```
+
+<ParamField path="sbName" type="string" required>
+Superbundle name
+</ParamField>
+</ParamField>
+
+<ParamField path="GetCatalog" type="string">
+Gets the catalog name from a ManifestFileRef
+
+```csharp
+string catalogName = fs.GetCatalog(fileRef);
+```
+</ParamField>
+
+<ParamField path="EnumerateCatalogInfos" type="IEnumerable<CatalogInfo>">
+Enumerates detailed catalog information
+
+```csharp
+foreach (CatalogInfo catalog in fs.EnumerateCatalogInfos())
+{
+    Console.WriteLine($"Catalog: {catalog.Name}");
+    Console.WriteLine($"  ID: {catalog.Id}");
+    Console.WriteLine($"  Always Installed: {catalog.AlwaysInstalled}");
+    Console.WriteLine($"  SuperBundles: {catalog.SuperBundles.Count}");
+    
+    foreach (var sb in catalog.SuperBundles)
+    {
+        Console.WriteLine($"    - {sb.Key} (Split: {sb.Value})");
+    }
+}
+```
+
+**CatalogInfo Properties:**
+- `Id` (Guid) - Unique catalog identifier
+- `Name` (string) - Catalog path name
+- `AlwaysInstalled` (bool) - Whether catalog is required
+- `SuperBundles` (Dictionary&lt;string, bool&gt;) - SuperBundles in this catalog
+</ParamField>
+
+## InitFS / Memory File System
+
+InitFS is a virtual file system stored in `initfs_win32` that contains configuration files, scripts, and other data.
+
+<ParamField path="HasFileInMemoryFs" type="bool">
+Checks if a file exists in the memory file system
+
+```csharp
+if (fs.HasFileInMemoryFs("Scripts/MyScript.lua"))
+{
+    byte[] script = fs.GetFileFromMemoryFs("Scripts/MyScript.lua");
+}
+```
+
+<ParamField path="name" type="string" required>
+File path in InitFS
+</ParamField>
+</ParamField>
+
+<ParamField path="GetFileFromMemoryFs" type="byte[]">
+Gets file data from the memory file system
+
+```csharp
+byte[] data = fs.GetFileFromMemoryFs("Dictionaries/ebx.dict");
+if (data != null)
+{
+    ProcessDictionary(data);
+}
+```
+
+<ParamField path="name" type="string" required>
+File path in InitFS
+</ParamField>
+
+**Returns:** File data, or `null` if not found
+</ParamField>
+
+<ParamField path="EnumerateFilesInMemoryFs" type="IEnumerable<string>">
+Enumerates all files in the memory file system
+
+```csharp
+foreach (string file in fs.EnumerateFilesInMemoryFs())
+{
+    Console.WriteLine($"InitFS file: {file}");
+}
+```
+
+Common InitFS files:
+- `Scripts/` - Configuration and script files
+- `Dictionaries/` - Decompression dictionaries
+- `Profiles/` - Profile definitions
+- Various configuration files
+</ParamField>
+
+## Source Management
+
+<ParamField path="AddSource" type="void">
+Adds a file system source path to search
+
+```csharp
+// Add single path
+fs.AddSource("Data");
+
+// Add path and iterate subdirectories
+fs.AddSource("SubDir", iterateSubPaths: true);
+```
+
+<ParamField path="path" type="string" required>
+Relative path from BasePath
+</ParamField>
+
+<ParamField path="iterateSubPaths" type="bool" default="false">
+Recursively add subdirectories containing package.mft
+</ParamField>
+</ParamField>
+
+## Manifest Operations
+
+<ParamField path="EnumerateBundles" type="IEnumerable<DbObject>">
+Enumerates bundle data from manifest
+
+```csharp
+foreach (DbObject bundle in fs.EnumerateBundles())
+{
+    string name = bundle.GetValue<string>("name");
+    string catalog = bundle.GetValue<string>("catalog");
+    Console.WriteLine($"Bundle: {name} in {catalog}");
+}
+```
+
+Only available for games using manifest-based loading (FIFA 19+, Anthem, etc.)
+</ParamField>
+
+<ParamField path="GetManifestBundle" type="ManifestBundleInfo">
+Gets manifest bundle information by name or hash
+
+```csharp
+// By name
+ManifestBundleInfo bundle = fs.GetManifestBundle("win32/levels/mp_001");
+
+// By hash
+ManifestBundleInfo bundle = fs.GetManifestBundle(nameHash);
+```
+
+<ParamField path="name" type="string">
+Bundle name
+</ParamField>
+
+<ParamField path="nameHash" type="int">
+Bundle name hash
+</ParamField>
+</ParamField>
+
+<ParamField path="GetManifestChunk" type="ManifestChunkInfo">
+Gets manifest chunk information by GUID
+
+```csharp
+ManifestChunkInfo chunk = fs.GetManifestChunk(chunkGuid);
+if (chunk != null)
+{
+    Console.WriteLine($"Chunk at offset: {chunk.file.offset}");
+}
+```
+</ParamField>
+
+## Utility Methods
+
+<ParamField path="GetFileRef" type="ManifestFileRef">
+Gets a ManifestFileRef from an absolute path
+
+```csharp
+ManifestFileRef fileRef = fs.GetFileRef(absolutePath);
+```
+</ParamField>
+
+<ParamField path="GetFilePath" type="string">
+Gets the file path for a CAS file
+
+```csharp
+// By index
+string path = fs.GetFilePath(fileIndex);
+
+// By catalog and CAS index
+string path = fs.GetFilePath(catalogIndex, casIndex, isPatch);
+```
+</ParamField>
+
+<ParamField path="CreateDeobfuscator" type="IDeobfuscator">
+Creates a deobfuscator instance for this game
+
+```csharp
+IDeobfuscator deobfuscator = fs.CreateDeobfuscator();
+```
+
+Used internally for reading obfuscated files like layout.toc
+</ParamField>
+
+## Usage Examples
+
+<CodeGroup>
+```csharp Basic Initialization
+using FrostySdk;
+using System;
+
+// Initialize file system
+FileSystem fs = new FileSystem(@"C:\Games\Battlefield V");
+fs.Initialize();
+
+Console.WriteLine($"Game: {ProfilesLibrary.DisplayName}");
+Console.WriteLine($"Version: {fs.Base} -> {fs.Head}");
+Console.WriteLine($"SuperBundles: {fs.SuperBundleCount}");
+Console.WriteLine($"Catalogs: {fs.CatalogCount}");
+```
+
+```csharp Path Resolution
+// Find catalog file
+string catPath = fs.ResolvePath("native_data/installpackage_00/cas.cat");
+if (catPath != "")
+{
+    Console.WriteLine($"Found catalog: {catPath}");
+    // Open and process catalog
+}
+
+// Find patch file
+string patchPath = fs.ResolvePath("native_patch/installpackage_00/cas_01.cas");
+if (patchPath != "")
+{
+    Console.WriteLine("Game has patches installed");
+}
+```
+
+```csharp Working with Catalogs
+// List all catalogs and their superbundles
+foreach (CatalogInfo catalog in fs.EnumerateCatalogInfos())
+{
+    Console.WriteLine($"\nCatalog: {catalog.Name}");
+    Console.WriteLine($"  Always Installed: {catalog.AlwaysInstalled}");
+    
+    foreach (var sb in catalog.SuperBundles)
+    {
+        Console.WriteLine($"  - {sb.Key}");
+    }
+}
+
+// Find which catalog contains a superbundle
+string sbName = "win32/levels/mp_metropolis";
+string catalog = fs.GetCatalogFromSuperBundle(sbName);
+Console.WriteLine($"{sbName} is in {catalog}");
+```
+
+```csharp InitFS Access
+// List all InitFS files
+Console.WriteLine("InitFS Contents:");
+foreach (string file in fs.EnumerateFilesInMemoryFs())
+{
+    Console.WriteLine($"  {file}");
+}
+
+// Load specific files
+if (fs.HasFileInMemoryFs("Scripts/CasEncrypt.yaml"))
+{
+    byte[] data = fs.GetFileFromMemoryFs("Scripts/CasEncrypt.yaml");
+    string content = Encoding.UTF8.GetString(data);
+    Console.WriteLine(content);
+}
+
+// Load decompression dictionary
+if (fs.HasFileInMemoryFs("Dictionaries/ebx.dict"))
+{
+    byte[] dict = fs.GetFileFromMemoryFs("Dictionaries/ebx.dict");
+    ZStd.SetDictionary(dict);
+}
+```
+
+```csharp SuperBundle Enumeration
+// List all superbundles
+Console.WriteLine("SuperBundles:");
+foreach (string sb in fs.SuperBundles)
+{
+    Console.WriteLine($"  {sb}");
+    
+    // Find its catalog
+    string catalog = fs.GetCatalogFromSuperBundle(sb);
+    Console.WriteLine($"    -> {catalog}");
+}
+```
+
+```csharp Manifest-based Games
+// For FIFA 19+, Anthem, etc.
+if (fs.GetManifestBundle("bundleName") != null)
+{
+    Console.WriteLine("Game uses manifest-based loading");
+    
+    // Enumerate bundles
+    foreach (DbObject bundle in fs.EnumerateBundles())
+    {
+        string name = bundle.GetValue<string>("name");
+        DbObject ebxList = bundle.GetValue<DbObject>("ebx");
+        Console.WriteLine($"Bundle {name} has {ebxList?.Count ?? 0} EBX assets");
+    }
+}
+```
+</CodeGroup>
+
+## Game-Specific Behavior
+
+Different Frostbite games use different file system layouts:
+
+**Legacy Games** (BF4, DAI, NFS, etc.)
+- Single `Data` directory
+- Simple catalog structure
+- No manifest system
+
+**Modern Games** (FIFA 19+, BFV, Anthem)
+- Install chunks/packages
+- Manifest-based loading
+- Split superbundles across catalogs
+- May use encryption
+
+**Edge Case: NFS Edge**
+- Uses `.das` files instead of CAS
+- Special DAS/DAL file format
+
+The FileSystem class handles these differences automatically based on the loaded profile.
+
+## See Also
+
+- [ResourceManager API](/api/resource-manager) - Resource data loading
+- [AssetManager API](/api/asset-manager) - Asset management
+- [FrostySdk Namespace](/api/frostysdk) - Core types and utilities

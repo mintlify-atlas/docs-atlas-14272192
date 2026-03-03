@@ -1,0 +1,440 @@
+---
+title: AssetDefinition API
+description: Define custom asset types with editors, icons, and import/export functionality
+---
+
+## Overview
+
+The `AssetDefinition` class describes editor-related functionality for a specific asset type. Plugins can derive from this class to customize asset icons, override editors, and define import/export methods.
+
+## Registration
+
+Register your asset definition using the `RegisterAssetDefinitionAttribute` in your plugin's AssemblyInfo.cs:
+
+<CodeGroup>
+```csharp AssemblyInfo.cs
+using Frosty.Core.Attributes;
+
+[assembly: RegisterAssetDefinition("MeshAsset", typeof(MeshAssetDefinition))]
+```
+</CodeGroup>
+
+The definition will be associated with the specified type and all derived types in the game's type system.
+
+## Constructor
+
+### AssetDefinition
+
+```csharp
+public AssetDefinition()
+```
+
+Initializes a new instance of the AssetDefinition class.
+
+## Virtual Methods
+
+### GetEditor
+
+```csharp
+public virtual FrostyAssetEditor GetEditor(ILogger logger)
+```
+
+Returns a custom editor used to edit the asset. Must inherit from `FrostyAssetEditor`.
+
+<ParamField path="logger" type="ILogger" required>
+  The logging interface to use in the editor
+</ParamField>
+
+<ResponseField name="return" type="FrostyAssetEditor">
+  A custom asset editor instance, or null to use the default editor
+</ResponseField>
+
+<CodeGroup>
+```csharp Example
+public override FrostyAssetEditor GetEditor(ILogger logger)
+{
+    return new MeshAssetEditor(logger);
+}
+```
+</CodeGroup>
+
+### GetIcon
+
+```csharp
+public virtual ImageSource GetIcon()
+public virtual ImageSource GetIcon(AssetEntry entry, double width = double.PositiveInfinity, double height = double.PositiveInfinity)
+```
+
+Returns an icon for the asset type or a specific asset entry.
+
+<ParamField path="entry" type="AssetEntry">
+  The asset entry to generate an icon for
+</ParamField>
+
+<ParamField path="width" type="double" default="PositiveInfinity">
+  Suggested width for the icon
+</ParamField>
+
+<ParamField path="height" type="double" default="PositiveInfinity">
+  Suggested height for the icon
+</ParamField>
+
+<ResponseField name="return" type="ImageSource">
+  An ImageSource representing the icon, or null for default
+</ResponseField>
+
+<CodeGroup>
+```csharp Generic Icon
+public override ImageSource GetIcon()
+{
+    return new BitmapImage(new Uri("pack://application:,,,/MeshPlugin;component/Images/MeshIcon.png"));
+}
+```
+
+```csharp Asset-Specific Icon
+public override ImageSource GetIcon(AssetEntry entry, double width, double height)
+{
+    // Generate a thumbnail preview of the mesh
+    EbxAsset asset = App.AssetManager.GetEbx(entry as EbxAssetEntry);
+    dynamic meshAsset = asset.RootObject;
+    
+    // Create preview image
+    return GenerateMeshThumbnail(meshAsset, (int)width, (int)height);
+}
+```
+</CodeGroup>
+
+### GetSupportedExportTypes
+
+```csharp
+public virtual void GetSupportedExportTypes(List<AssetExportType> exportTypes)
+```
+
+Provides a list of valid export file types for the asset.
+
+<ParamField path="exportTypes" type="List<AssetExportType>" required>
+  List to populate with supported export types
+</ParamField>
+
+<CodeGroup>
+```csharp Example
+public override void GetSupportedExportTypes(List<AssetExportType> exportTypes)
+{
+    exportTypes.Add(new AssetExportType("fbx", "Autodesk FBX"));
+    exportTypes.Add(new AssetExportType("obj", "Wavefront OBJ"));
+    exportTypes.Add(new AssetExportType("dae", "COLLADA DAE"));
+    
+    // Include default types
+    base.GetSupportedExportTypes(exportTypes);
+}
+```
+</CodeGroup>
+
+Default export types (if not overridden):
+- **bin**: Binary File
+- **xml**: XML File
+
+### GetSupportedImportTypes
+
+```csharp
+public virtual void GetSupportedImportTypes(List<AssetImportType> importTypes)
+```
+
+Provides a list of valid import file types for the asset.
+
+<ParamField path="importTypes" type="List<AssetImportType>" required>
+  List to populate with supported import types
+</ParamField>
+
+<CodeGroup>
+```csharp Example
+public override void GetSupportedImportTypes(List<AssetImportType> importTypes)
+{
+    importTypes.Add(new AssetImportType("fbx", "Autodesk FBX"));
+    importTypes.Add(new AssetImportType("obj", "Wavefront OBJ"));
+    importTypes.Add(new AssetImportType("dae", "COLLADA DAE"));
+    
+    // Include default types
+    base.GetSupportedImportTypes(importTypes);
+}
+```
+</CodeGroup>
+
+Default import types (if not overridden):
+- **bin**: Binary File (Data Only)
+- **bin**: Binary File
+
+### Export
+
+```csharp
+public virtual bool Export(EbxAssetEntry entry, string path, string filterType)
+```
+
+Performs the actual export of the asset.
+
+<ParamField path="entry" type="EbxAssetEntry" required>
+  The asset entry to export
+</ParamField>
+
+<ParamField path="path" type="string" required>
+  The full path and filename to export to
+</ParamField>
+
+<ParamField path="filterType" type="string" required>
+  The file extension of the chosen export type
+</ParamField>
+
+<ResponseField name="return" type="bool">
+  True if export was successful, false otherwise
+</ResponseField>
+
+<CodeGroup>
+```csharp Example
+public override bool Export(EbxAssetEntry entry, string path, string filterType)
+{
+    EbxAsset asset = App.AssetManager.GetEbx(entry);
+    dynamic meshAsset = asset.RootObject;
+    
+    if (filterType == "fbx")
+    {
+        return ExportToFbx(meshAsset, path);
+    }
+    else if (filterType == "obj")
+    {
+        return ExportToObj(meshAsset, path);
+    }
+    
+    // Fall back to default export
+    return base.Export(entry, path, filterType);
+}
+
+private bool ExportToFbx(dynamic meshAsset, string path)
+{
+    try
+    {
+        // Export logic here
+        using (var writer = new FbxWriter(path))
+        {
+            writer.WriteMesh(meshAsset);
+        }
+        return true;
+    }
+    catch (Exception ex)
+    {
+        App.Logger.LogError($"Failed to export FBX: {ex.Message}");
+        return false;
+    }
+}
+```
+</CodeGroup>
+
+### Import
+
+```csharp
+public virtual bool Import(EbxAssetEntry entry, string path, AssetImportType filterType)
+```
+
+Performs the actual import of data into the asset.
+
+<ParamField path="entry" type="EbxAssetEntry" required>
+  The asset entry to import data into
+</ParamField>
+
+<ParamField path="path" type="string" required>
+  The full path and filename to import from
+</ParamField>
+
+<ParamField path="filterType" type="AssetImportType" required>
+  The chosen import type containing extension and description
+</ParamField>
+
+<ResponseField name="return" type="bool">
+  True if import was successful, false otherwise
+</ResponseField>
+
+<CodeGroup>
+```csharp Example
+public override bool Import(EbxAssetEntry entry, string path, AssetImportType filterType)
+{
+    if (filterType.Extension == "fbx")
+    {
+        return ImportFromFbx(entry, path);
+    }
+    else if (filterType.Extension == "obj")
+    {
+        return ImportFromObj(entry, path);
+    }
+    
+    // Fall back to default import
+    return base.Import(entry, path, filterType);
+}
+
+private bool ImportFromFbx(EbxAssetEntry entry, string path)
+{
+    try
+    {
+        EbxAsset asset = App.AssetManager.GetEbx(entry);
+        dynamic meshAsset = asset.RootObject;
+        
+        using (var reader = new FbxReader(path))
+        {
+            // Read mesh data and update asset
+            reader.ReadMesh(meshAsset);
+        }
+        
+        // Mark asset as modified
+        App.AssetManager.ModifyEbx(entry.Name, asset);
+        return true;
+    }
+    catch (Exception ex)
+    {
+        App.Logger.LogError($"Failed to import FBX: {ex.Message}");
+        return false;
+    }
+}
+```
+</CodeGroup>
+
+## Helper Structures
+
+### AssetExportType
+
+```csharp
+public struct AssetExportType
+{
+    public string Extension { get; }
+    public string Description { get; }
+    public string FilterString { get; }
+    
+    public AssetExportType(string ext, string desc)
+}
+```
+
+Represents an export file type.
+
+<ParamField path="ext" type="string">
+  File extension without the dot (e.g., "fbx")
+</ParamField>
+
+<ParamField path="desc" type="string">
+  Human-readable description (e.g., "Autodesk FBX")
+</ParamField>
+
+### AssetImportType
+
+```csharp
+public struct AssetImportType
+{
+    public string Extension { get; }
+    public string Description { get; }
+    public string FilterString { get; }
+    
+    public AssetImportType(string ext, string desc)
+}
+```
+
+Represents an import file type.
+
+<ParamField path="ext" type="string">
+  File extension without the dot (e.g., "fbx")
+</ParamField>
+
+<ParamField path="desc" type="string">
+  Human-readable description (e.g., "Autodesk FBX")
+</ParamField>
+
+## Complete Example
+
+<CodeGroup>
+```csharp MeshAssetDefinition.cs
+using Frosty.Core;
+using Frosty.Core.Controls;
+using FrostySdk;
+using FrostySdk.Interfaces;
+using System.Collections.Generic;
+using System.Windows.Media;
+
+public class MeshAssetDefinition : AssetDefinition
+{
+    public override FrostyAssetEditor GetEditor(ILogger logger)
+    {
+        return new MeshAssetEditor(logger);
+    }
+    
+    public override ImageSource GetIcon()
+    {
+        return new BitmapImage(new Uri("pack://application:,,,/MeshPlugin;component/Images/MeshIcon.png"));
+    }
+    
+    public override void GetSupportedExportTypes(List<AssetExportType> exportTypes)
+    {
+        exportTypes.Add(new AssetExportType("fbx", "Autodesk FBX"));
+        exportTypes.Add(new AssetExportType("obj", "Wavefront OBJ"));
+        base.GetSupportedExportTypes(exportTypes);
+    }
+    
+    public override void GetSupportedImportTypes(List<AssetImportType> importTypes)
+    {
+        importTypes.Add(new AssetImportType("fbx", "Autodesk FBX"));
+        importTypes.Add(new AssetImportType("obj", "Wavefront OBJ"));
+        base.GetSupportedImportTypes(importTypes);
+    }
+    
+    public override bool Export(EbxAssetEntry entry, string path, string filterType)
+    {
+        if (filterType == "fbx")
+            return ExportToFbx(entry, path);
+        if (filterType == "obj")
+            return ExportToObj(entry, path);
+            
+        return base.Export(entry, path, filterType);
+    }
+    
+    public override bool Import(EbxAssetEntry entry, string path, AssetImportType filterType)
+    {
+        if (filterType.Extension == "fbx")
+            return ImportFromFbx(entry, path);
+        if (filterType.Extension == "obj")
+            return ImportFromObj(entry, path);
+            
+        return base.Import(entry, path, filterType);
+    }
+    
+    private bool ExportToFbx(EbxAssetEntry entry, string path)
+    {
+        // Implementation
+        return true;
+    }
+    
+    private bool ExportToObj(EbxAssetEntry entry, string path)
+    {
+        // Implementation
+        return true;
+    }
+    
+    private bool ImportFromFbx(EbxAssetEntry entry, string path)
+    {
+        // Implementation
+        return true;
+    }
+    
+    private bool ImportFromObj(EbxAssetEntry entry, string path)
+    {
+        // Implementation
+        return true;
+    }
+}
+```
+
+```csharp AssemblyInfo.cs
+using Frosty.Core.Attributes;
+
+[assembly: RegisterAssetDefinition("MeshAsset", typeof(MeshAssetDefinition))]
+```
+</CodeGroup>
+
+## See Also
+
+- [PluginManager API](/api/plugin-manager)
+- [Custom Asset Editors](/api/custom-asset-editors)
+- [FrostyAssetEditor Documentation](/api/custom-asset-editors#frostyasseteditor)

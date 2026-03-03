@@ -1,0 +1,275 @@
+---
+title: Frosty Editor
+description: Visual asset editor for modding Frostbite games
+---
+
+Frosty Editor is the main application for creating and editing mods for Frostbite engine games. It provides a comprehensive visual interface for browsing, modifying, and creating game assets.
+
+## Getting Started
+
+### Launching the Editor
+
+<Steps>
+  <Step title="Select Game Profile">
+    Choose your game from the profile selector on launch. The editor supports multiple Frostbite titles including Battlefield, FIFA, Dragon Age, Mass Effect, and more.
+  </Step>
+  
+  <Step title="Create or Open Project">
+    Create a new project (`Ctrl+N`) or open an existing `.fbproject` file (`Ctrl+O`). Projects store all your modifications and settings.
+  </Step>
+  
+  <Step title="Wait for Initialization">
+    The editor will load the game's asset database. This may take a few minutes on first launch.
+  </Step>
+</Steps>
+
+<Note>
+Some game profiles require encryption keys. If prompted, provide the game's encryption key file during initialization.
+</Note>
+
+## Core Features
+
+### Asset Explorer
+
+The Data Explorer is the main interface for browsing game assets:
+
+- **Tree View**: Navigate assets organized by directory structure
+- **List View**: View assets in the selected folder with detailed information
+- **Filter**: Use `Ctrl+F` to quickly find assets by name
+- **Asset Types**:
+  - **EBX**: Entity Blueprint XML files (game objects and configurations)
+  - **RES**: Resource files (textures, meshes, audio)
+  - **CHUNK**: Chunk resource files (streamed data)
+
+#### Advanced Filtering
+
+The filter supports multiple search modes:
+
+```
+filename          # Contains search (default)
+^filename         # Starts with search
+type:MeshAsset    # Filter by asset type
+modified:true     # Show only modified assets
+```
+
+### Asset Editing
+
+Double-click any asset to open it in the appropriate editor:
+
+<Tabs>
+  <Tab title="EBX Assets">
+    Edit game objects and configurations using the property grid editor:
+    - Modify object properties
+    - Add/remove array elements
+    - Create references to other assets
+    - View inheritance hierarchy
+  </Tab>
+  
+  <Tab title="Textures">
+    Visual texture editor with:
+    - Texture preview and mipmap viewing
+    - Import/export to DDS, PNG, TGA formats
+    - Texture property modification
+    - Atlas texture support
+  </Tab>
+  
+  <Tab title="Meshes">
+    3D mesh viewer and editor:
+    - 3D viewport with camera controls
+    - Material and shader viewing
+    - Mesh import/export (FBX format)
+    - Skeleton and animation support
+  </Tab>
+  
+  <Tab title="Audio">
+    Audio playback and editing:
+    - Waveform visualization
+    - Import/export audio files
+    - Audio property editing
+  </Tab>
+</Tabs>
+
+### Plugin System
+
+Frosty Editor supports plugins that extend functionality:
+
+- **Data Editors**: Custom editors for specific asset types
+- **Menu Extensions**: Additional tools in the Tools menu
+- **Tab Extensions**: Custom tabs for specialized workflows
+- **Export Actions**: Custom mod export handlers
+
+View loaded plugins in `Tools > Options > Plugins`.
+
+### Project Management
+
+#### Saving Projects
+
+- **Quick Save**: `Ctrl+S` saves to current project file
+- **Save As**: `Ctrl+Shift+S` saves to a new location
+- **Auto-save**: Configurable automatic project backup
+
+<Warning>
+Projects are game-specific and cannot be transferred between different Frostbite games.
+</Warning>
+
+#### Project Structure
+
+Frosty projects (`.fbproject`) store:
+
+- Modified asset data in binary format
+- Mod metadata (title, author, version, description)
+- Custom action handlers
+- Legacy file modifications
+- Asset bundle assignments
+
+### Bookmarks
+
+Organize frequently accessed assets with bookmarks:
+
+- **Add Bookmark**: Select asset and press `Ctrl+B`
+- **Remove Bookmark**: Press `Ctrl+Shift+B`
+- **Contexts**: Create multiple bookmark contexts for different workflows
+- **Persistence**: Bookmarks are saved per-game profile
+
+### Legacy File Support
+
+For older Frostbite games, the Legacy Explorer provides access to:
+
+- Big file archives
+- Database files (FIFA Career Mode tables)
+- Localized string databases
+- Game-specific legacy formats
+
+## Mod Export
+
+### Creating Mods
+
+<Steps>
+  <Step title="Configure Mod Settings">
+    Go to `Project > Mod Settings` and fill in:
+    - Mod title and version
+    - Author name and contact
+    - Description and category
+    - Optional screenshot/icon
+  </Step>
+  
+  <Step title="Export Mod">
+    Click `File > Export Mod` or use the export button in the toolbar.
+  </Step>
+  
+  <Step title="Choose Export Location">
+    Select where to save the `.fbmod` file. This file can be shared with others.
+  </Step>
+</Steps>
+
+### Mod Settings
+
+Configure mod metadata before export:
+
+```yaml
+Title: My Awesome Mod
+Author: YourName
+Version: 1.0.0
+Category: Gameplay / Visual / Audio / Misc
+Description: Detailed description of what your mod does
+```
+
+<Note>
+The mod title, author, and version are displayed in Frosty Mod Manager.
+</Note>
+
+## Advanced Features
+
+### Bundle Management
+
+Control which game bundles contain your modified assets:
+
+- View asset bundle assignments
+- Add assets to additional bundles
+- Remove assets from bundles
+- Optimize bundle loading
+
+### Launch Game
+
+Test your modifications directly from the editor:
+
+- Press `F5` to launch the game with current project
+- Temporary mod applied without permanent file modification
+- Game closes when testing is complete
+
+<Warning>
+Launch functionality requires execution-enabled profiles and may not work with anti-cheat protected games.
+</Warning>
+
+### Discord Rich Presence
+
+Enable Discord integration in `Tools > Options > General` to show:
+
+- Current game being modded
+- Active project name
+- Time spent in editor
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+N` | New Project |
+| `Ctrl+O` | Open Project |
+| `Ctrl+S` | Save Project |
+| `Ctrl+Shift+S` | Save Project As |
+| `Ctrl+F` | Focus Asset Filter |
+| `Ctrl+B` | Add Bookmark |
+| `Ctrl+Shift+B` | Remove Bookmark |
+| `F5` | Launch Game (if enabled) |
+
+## Troubleshooting
+
+### Editor Won't Launch
+
+- Verify .NET Framework 4.8 is installed
+- Check that all files are unblocked (Right-click > Properties > Unblock)
+- Ensure game path is correctly configured in profile
+
+### Missing Encryption Key
+
+Some games require encryption keys:
+
+1. Obtain the appropriate `.key` file for your game
+2. Place it in the game's data directory
+3. The editor will prompt for it on launch
+
+### Project Won't Load
+
+- Ensure project matches the selected game profile
+- Check project version compatibility
+- Try loading an autosave from the `Autosave/` folder
+
+### Performance Issues
+
+- Close unused asset editor tabs
+- Disable Discord Rich Presence
+- Reduce viewport quality in 3D editors
+- Use filter to limit displayed assets
+
+## Configuration Files
+
+Editor settings are stored in:
+
+```
+%USERPROFILE%/Documents/Frosty/
+├── editor_config.json       # Editor preferences
+├── profiles/                # Game profiles
+├── bookmarks.db             # Saved bookmarks
+└── cache/                   # Asset database cache
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Mod Manager" icon="box" href="/applications/mod-manager">
+    Install and manage mods created in the editor
+  </Card>
+  <Card title="Command Line Tool" icon="terminal" href="/applications/command-line">
+    Automate tasks with FrostyCmd
+  </Card>
+</CardGroup>

@@ -1,0 +1,384 @@
+---
+title: 'ChunkAssetEntry'
+description: 'Chunk asset entry API for binary data chunks'
+---
+
+## Overview
+
+The `ChunkAssetEntry` class represents chunk assets in the Frostbite engine. Chunks are binary data blocks used for large resources like texture mipmaps, mesh LODs, and streaming data.
+
+## Class Definition
+
+```csharp
+public class ChunkAssetEntry : AssetEntry
+{
+    public override string Name => Id.ToString();
+    public override string Type => "Chunk";
+    public override string AssetType => "chunk";
+    
+    public Guid Id;
+    public uint BundledSize;
+    public uint LogicalOffset;
+    public uint LogicalSize;
+    public uint RangeStart;
+    public uint RangeEnd;
+    public int H32;
+    public int FirstMip;
+    public bool IsTocChunk;
+    public bool TocChunkSpecialHack;
+}
+```
+
+Location: `FrostySdk/Managers/AssetManager.cs:394`
+
+## Properties
+
+<ParamField path="Id" type="Guid">
+  Unique identifier for the chunk. Used as the chunk's name.
+</ParamField>
+
+<ParamField path="BundledSize" type="uint">
+  Size of the chunk data when stored in a bundle (may differ from actual size).
+</ParamField>
+
+<ParamField path="LogicalOffset" type="uint">
+  Logical offset within the parent resource (for texture mips or mesh sections).
+</ParamField>
+
+<ParamField path="LogicalSize" type="uint">
+  Logical size of the chunk data after decompression.
+</ParamField>
+
+<ParamField path="RangeStart" type="uint">
+  Start offset in the range of data covered by this chunk.
+</ParamField>
+
+<ParamField path="RangeEnd" type="uint">
+  End offset in the range of data covered by this chunk.
+</ParamField>
+
+<ParamField path="H32" type="int">
+  32-bit hash of the parent resource name (FNV-1 hash). Links chunk to its owner.
+</ParamField>
+
+<ParamField path="FirstMip" type="int">
+  For texture chunks, indicates the first mipmap level. -1 if not applicable.
+</ParamField>
+
+<ParamField path="IsTocChunk" type="bool">
+  True if this chunk is stored in a Table of Contents chunk bundle.
+</ParamField>
+
+<ParamField path="TocChunkSpecialHack" type="bool">
+  Internal flag for special TOC chunk handling.
+</ParamField>
+
+<ParamField path="Name" type="string" override>
+  Returns the chunk GUID as a string (since chunks are identified by GUID).
+</ParamField>
+
+<ParamField path="Type" type="string" override>
+  Always returns `"Chunk"`.
+</ParamField>
+
+<ParamField path="AssetType" type="string" override>
+  Returns `"chunk"` to identify this as a chunk asset entry.
+</ParamField>
+
+### Inherited Properties
+
+See [EbxAssetEntry](/api/assets/ebx#inherited-properties) for complete list of base properties including:
+- Sha1, Size, OriginalSize
+- IsModified, IsDirty, IsAdded
+- Bundles, LinkedAssets
+- Location, IsInline
+
+## Methods
+
+### AddToBundle (Override)
+
+```csharp
+public override bool AddToBundle(int bid)
+```
+
+Adds the chunk to a bundle. Overridden to prevent adding orphaned chunks.
+
+<ParamField path="bid" type="int" required>
+  Bundle index to add the chunk to
+</ParamField>
+
+<ResponseField name="return" type="bool">
+  True if successfully added. Returns false if chunk has no bundles and is not a new chunk.
+</ResponseField>
+
+<Note>
+Chunks cannot be added to bundles unless they already belong to at least one bundle or were explicitly created via `AddChunk()`.
+</Note>
+
+### Inherited Methods
+
+Chunk entries inherit methods from `AssetEntry`:
+- `AddToBundles(IEnumerable<int>)` - Add to multiple bundles
+- `IsInBundle(int bid)` - Check bundle membership  
+- `EnumerateBundles(bool addedOnly)` - Iterate bundles
+- `LinkAsset(AssetEntry)` - Link to parent assets
+
+See [EbxAssetEntry](/api/assets/ebx#inherited-methods) for detailed method documentation.
+
+## Usage Examples
+
+### Reading a Chunk
+
+```csharp
+Guid chunkId = /* ... chunk GUID ... */;
+ChunkAssetEntry entry = assetManager.GetChunkEntry(chunkId);
+
+if (entry != null)
+{
+    Console.WriteLine($"Chunk ID: {entry.Id}");
+    Console.WriteLine($"Logical Size: {entry.LogicalSize} bytes");
+    Console.WriteLine($"First Mip: {entry.FirstMip}");
+    Console.WriteLine($"Is TOC Chunk: {entry.IsTocChunk}");
+}
+```
+
+### Loading Chunk Data
+
+```csharp
+ChunkAssetEntry chunk = assetManager.GetChunkEntry(chunkId);
+using (Stream stream = assetManager.GetChunk(chunk))
+{
+    byte[] chunkData = new byte[chunk.LogicalSize];
+    stream.Read(chunkData, 0, (int)chunk.LogicalSize);
+    
+    // Process chunk data
+}
+```
+
+### Modifying a Chunk
+
+```csharp
+Guid chunkId = /* ... */;
+byte[] newData = /* ... modified chunk data ... */;
+
+// For regular chunks
+assetManager.ModifyChunk(chunkId, newData);
+
+// For texture chunks (preserves mip information)
+Texture texture = /* ... */;
+assetManager.ModifyChunk(chunkId, newData, texture);
+```
+
+### Creating a New Chunk
+
+```csharp
+byte[] chunkData = /* ... your chunk data ... */;
+int[] bundles = { bundleId };
+
+// Create with auto-generated GUID
+Guid newChunkId = assetManager.AddChunk(chunkData, bundles: bundles);
+
+// Create with specific GUID
+Guid customGuid = Guid.NewGuid();
+Guid chunkId = assetManager.AddChunk(
+    chunkData, 
+    overrideGuid: customGuid,
+    bundles: bundles
+);
+
+Console.WriteLine($"Created chunk: {chunkId}");
+```
+
+### Creating a Texture Chunk
+
+```csharp
+Texture texture = /* ... texture resource ... */;
+byte[] mipData = /* ... mipmap level data ... */;
+int[] bundles = { bundleId };
+
+// Create chunk with texture information
+Guid chunkId = assetManager.AddChunk(
+    mipData,
+    texture: texture,
+    bundles: bundles
+);
+
+ChunkAssetEntry chunk = assetManager.GetChunkEntry(chunkId);
+Console.WriteLine($"Mip level: {chunk.FirstMip}");
+Console.WriteLine($"Range: {chunk.RangeStart} - {chunk.RangeEnd}");
+```
+
+### Linking Chunks to Resources
+
+```csharp
+ResAssetEntry res = assetManager.GetResEntry("textures/character/diffuse");
+ChunkAssetEntry chunk = assetManager.GetChunkEntry(chunkId);
+
+// Link chunk to resource
+res.LinkAsset(chunk);
+
+// The chunk now has H32 set to the resource's name hash
+Console.WriteLine($"Parent hash: 0x{chunk.H32:X8}");
+```
+
+### Finding Parent Resource
+
+```csharp
+ChunkAssetEntry chunk = assetManager.GetChunkEntry(chunkId);
+
+// H32 contains FNV-1 hash of parent resource name
+int parentHash = chunk.H32;
+
+// Search for parent resource by hash
+foreach (ResAssetEntry res in assetManager.EnumerateRes())
+{
+    int resHash = Fnv1.HashString(res.Name.ToLower());
+    if (resHash == parentHash)
+    {
+        Console.WriteLine($"Parent resource: {res.Name}");
+        break;
+    }
+}
+```
+
+### Enumerating Texture Mipmaps
+
+```csharp
+ResAssetEntry texRes = assetManager.GetResEntry("textures/ui/icon");
+
+// Enumerate linked chunks (mipmaps)
+foreach (AssetEntry linked in texRes.LinkedAssets)
+{
+    if (linked is ChunkAssetEntry chunk)
+    {
+        Console.WriteLine($"Mip {chunk.FirstMip}: " +
+            $"{chunk.LogicalSize} bytes, " +
+            $"range {chunk.RangeStart}-{chunk.RangeEnd}");
+    }
+}
+```
+
+### Working with Modified Chunks
+
+```csharp
+ChunkAssetEntry chunk = assetManager.GetChunkEntry(chunkId);
+
+if (chunk.HasModifiedData)
+{
+    ModifiedAssetEntry mod = chunk.ModifiedEntry;
+    
+    Console.WriteLine($"Modified Size: {mod.Data.Length}");
+    Console.WriteLine($"Logical Size: {mod.LogicalSize}");
+    Console.WriteLine($"First Mip: {mod.FirstMip}");
+    Console.WriteLine($"Range: {mod.RangeStart} - {mod.RangeEnd}");
+    
+    // Modified chunks may have H32 set
+    if (mod.H32 != 0)
+    {
+        Console.WriteLine($"Parent: 0x{mod.H32:X8}");
+    }
+}
+```
+
+### Checking Chunk Bundle Membership
+
+```csharp
+ChunkAssetEntry chunk = assetManager.GetChunkEntry(chunkId);
+
+Console.WriteLine($"In {chunk.Bundles.Count} bundles:");
+foreach (int bundleId in chunk.EnumerateBundles())
+{
+    BundleEntry bundle = assetManager.GetBundleEntry(bundleId);
+    Console.WriteLine($"  - {bundle.Name}");
+}
+
+// Check if chunk is in specific bundle
+if (chunk.IsInBundle(targetBundleId))
+{
+    Console.WriteLine("Chunk is in target bundle");
+}
+```
+
+## Chunk Compression
+
+Chunks are compressed based on the game profile:
+
+```csharp
+// Compression is handled automatically by AssetManager
+// FIFA 18/20 use Oodle compression
+if (ProfilesLibrary.DataVersion == (int)ProfileVersion.Fifa18 ||
+    ProfilesLibrary.DataVersion == (int)ProfileVersion.Fifa20)
+{
+    // Uses Oodle compression
+}
+else
+{
+    // Uses default compression (ZLib or ZStd)
+}
+```
+
+## Modified Chunk Entry
+
+When a chunk is modified, additional data is stored:
+
+```csharp
+public class ModifiedAssetEntry
+{
+    public byte[] Data;              // Compressed chunk data
+    public Sha1 Sha1;               // SHA-1 hash
+    public long OriginalSize;        // Original size
+    
+    // Chunk-specific fields
+    public uint LogicalOffset;
+    public uint LogicalSize;
+    public uint RangeStart;
+    public uint RangeEnd;
+    public int FirstMip;
+    public int H32;                  // Parent resource hash
+    
+    public bool AddToChunkBundle;    // Add to chunk bundle?
+    public bool IsInline;            // Inline in bundle?
+}
+```
+
+## Special Chunk Types
+
+### TOC Chunks
+
+Table of Contents chunks store chunk bundles:
+
+```csharp
+if (chunk.IsTocChunk)
+{
+    Console.WriteLine("This is a TOC chunk");
+    // TOC chunks have special handling for bundle storage
+}
+```
+
+### Texture Chunks
+
+Texture mipmaps are stored as chunks:
+
+```csharp
+if (chunk.FirstMip >= 0)
+{
+    Console.WriteLine($"Texture mip level {chunk.FirstMip}");
+    Console.WriteLine($"Mip range: {chunk.RangeStart} to {chunk.RangeEnd}");
+}
+```
+
+### Mesh Chunks
+
+Mesh sections may be stored as chunks for streaming:
+
+```csharp
+ChunkAssetEntry meshChunk = /* ... */;
+Console.WriteLine($"Mesh section size: {meshChunk.LogicalSize}");
+```
+
+## Related Types
+
+- [EbxAssetEntry](/api/assets/ebx) - Entity assets that may reference chunks
+- [ResAssetEntry](/api/assets/res) - Resource assets that link to chunks
+- [AssetManager](/api/managers/asset-manager) - Chunk management operations
+- [Texture](/api/resources/texture) - Texture resources using chunk mipmaps

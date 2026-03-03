@@ -1,0 +1,205 @@
+---
+title: 'Frosty.Core Namespace'
+description: 'High-level application framework for Frosty Editor integration'
+---
+
+## Overview
+
+The `Frosty.Core` namespace provides the application-level framework for Frosty Editor. It exposes global instances of core managers and provides convenient access to editor state.
+
+## App Class
+
+Central static class providing access to all core managers and editor state.
+
+```csharp
+using Frosty.Core;
+
+// Access managers
+AssetManager am = App.AssetManager;
+ResourceManager rm = App.ResourceManager;
+FileSystem fs = App.FileSystem;
+
+// Get current selection
+EbxAssetEntry selectedAsset = App.SelectedAsset;
+string selectedProfile = App.SelectedProfile;
+```
+
+## Static Properties
+
+<ResponseField name="AssetManager" type="AssetManager">
+Global AssetManager instance for accessing and modifying game assets
+
+```csharp
+EbxAssetEntry entry = App.AssetManager.GetEbxEntry("path/to/asset");
+```
+</ResponseField>
+
+<ResponseField name="ResourceManager" type="ResourceManager">
+Global ResourceManager instance for loading resource data
+
+```csharp
+Stream data = App.ResourceManager.GetResourceData(sha1);
+```
+</ResponseField>
+
+<ResponseField name="FileSystem" type="FileSystem">
+Global FileSystem instance for path resolution and catalog access
+
+```csharp
+string path = App.FileSystem.ResolvePath("native_data/catalog/cas.cat");
+```
+</ResponseField>
+
+<ResponseField name="PluginManager" type="PluginManager">
+Manages loaded plugins and extensions
+</ResponseField>
+
+<ResponseField name="SelectedAsset" type="EbxAssetEntry">
+Currently selected asset in the editor
+
+```csharp
+if (App.SelectedAsset != null)
+{
+    Console.WriteLine($"Selected: {App.SelectedAsset.Name}");
+}
+```
+</ResponseField>
+
+<ResponseField name="SelectedProfile" type="string">
+Name of the currently loaded game profile
+</ResponseField>
+
+<ResponseField name="SelectedPack" type="string">
+Name of the currently selected pack
+</ResponseField>
+
+<ResponseField name="Logger" type="ILogger">
+Global logger instance for diagnostic output
+
+```csharp
+App.Logger.Log("Processing asset: {0}", assetName);
+```
+</ResponseField>
+
+<ResponseField name="WhitelistedBundles" type="HashSet<int>">
+Set of bundle IDs that are whitelisted for processing
+</ResponseField>
+
+<ResponseField name="ProfileSettingsPath" type="string">
+Path to profile-specific settings directory
+
+```csharp
+string settingsPath = App.ProfileSettingsPath;
+// Returns: C:\Users\Username\AppData\Local\Frosty\FIFA20
+```
+</ResponseField>
+
+<ResponseField name="GlobalSettingsPath" type="string">
+Path to global Frosty settings directory
+
+```csharp
+string globalPath = App.GlobalSettingsPath;
+// Returns: C:\Users\Username\AppData\Local\Frosty
+```
+</ResponseField>
+
+<ResponseField name="EditorWindow" type="IEditorWindow">
+Reference to the main editor window
+</ResponseField>
+
+<ResponseField name="Version" type="int">
+Frosty application version number
+</ResponseField>
+
+## Usage Examples
+
+<CodeGroup>
+```csharp Access Managers
+using Frosty.Core;
+
+// Get an EBX asset
+EbxAssetEntry entry = App.AssetManager.GetEbxEntry("content/characters/player");
+if (entry != null)
+{
+    EbxAsset asset = App.AssetManager.GetEbx(entry);
+    
+    // Modify asset
+    // ...
+    
+    // Save modification
+    App.AssetManager.ModifyEbx(entry.Name, asset);
+}
+```
+
+```csharp Load Resources
+using Frosty.Core;
+using FrostySdk.Managers;
+
+// Get a resource entry
+ResAssetEntry resEntry = App.AssetManager.GetResEntry("textures/character_diffuse");
+if (resEntry != null)
+{
+    // Get resource data
+    Stream dataStream = App.AssetManager.GetRes(resEntry);
+    
+    // Process resource
+    // ...
+}
+```
+
+```csharp Settings Paths
+using Frosty.Core;
+using System.IO;
+
+// Save plugin settings
+string settingsFile = Path.Combine(App.ProfileSettingsPath, "MyPlugin.json");
+File.WriteAllText(settingsFile, jsonSettings);
+
+// Load global configuration
+string configFile = Path.Combine(App.GlobalSettingsPath, "config.xml");
+if (File.Exists(configFile))
+{
+    var config = LoadConfiguration(configFile);
+}
+```
+
+```csharp Bundle Whitelisting
+using Frosty.Core;
+
+// Whitelist specific bundles
+App.WhitelistedBundles.Add(bundleId);
+
+// Check if bundle is whitelisted
+if (App.WhitelistedBundles.Contains(bundleId))
+{
+    // Process whitelisted bundle
+}
+```
+</CodeGroup>
+
+## Plugin Integration
+
+Plugins typically access managers through the `App` class:
+
+```csharp
+public class MyEditorPlugin : IAssetDefinition
+{
+    public void OnAssetOpened()
+    {
+        // Access current asset
+        var asset = App.SelectedAsset;
+        
+        // Load asset data
+        var ebx = App.AssetManager.GetEbx(asset);
+        
+        // Log information
+        App.Logger.Log("Opened asset: {0}", asset.Name);
+    }
+}
+```
+
+## See Also
+
+- [AssetManager API](/api/asset-manager) - Asset management operations
+- [ResourceManager API](/api/resource-manager) - Resource loading
+- [FileSystem API](/api/file-system) - File system operations

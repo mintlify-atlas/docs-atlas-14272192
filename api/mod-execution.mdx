@@ -1,0 +1,397 @@
+---
+title: FrostyModExecutor API
+description: Execute and apply mods to game data at runtime
+---
+
+## Overview
+
+The `FrostyModExecutor` class is responsible for applying Frosty mods to game data and launching the game with modifications. It processes mod resources, applies handlers, generates modified game files, and manages the game launch process.
+
+This API is primarily used by the Frosty Mod Manager, but plugins can extend execution functionality through `ExecutionAction` classes.
+
+## ExecutionAction
+
+Plugins can register execution actions to perform custom operations before or after game launch.
+
+### Base Class
+
+```csharp
+public abstract class ExecutionAction
+{
+    public virtual Action<ILogger, PluginManagerType, CancellationToken> PreLaunchAction { get; }
+    public virtual Action<ILogger, PluginManagerType, CancellationToken> PostLaunchAction { get; }
+}
+```
+
+### Properties
+
+#### PreLaunchAction
+
+```csharp
+public virtual Action<ILogger, PluginManagerType, CancellationToken> PreLaunchAction { get; }
+```
+
+Action to execute before launching the game. Useful for preparing files, checking prerequisites, or validating mod configurations.
+
+<ResponseField name="parameters">
+  - **ILogger**: Logger instance for output
+  - **PluginManagerType**: The manager type (ModManager)
+  - **CancellationToken**: Token to check for cancellation
+</ResponseField>
+
+#### PostLaunchAction
+
+```csharp
+public virtual Action<ILogger, PluginManagerType, CancellationToken> PostLaunchAction { get; }
+```
+
+Action to execute after the game has been launched. Useful for cleanup, monitoring, or post-launch configuration.
+
+<ResponseField name="parameters">
+  - **ILogger**: Logger instance for output
+  - **PluginManagerType**: The manager type (ModManager)
+  - **CancellationToken**: Token to check for cancellation
+</ResponseField>
+
+### Registration
+
+Register execution actions using the `RegisterExecutionAction` attribute:
+
+<CodeGroup>
+```csharp AssemblyInfo.cs
+using Frosty.Core.Attributes;
+
+[assembly: RegisterExecutionAction(typeof(MyExecutionAction))]
+```
+</CodeGroup>
+
+### Example: Anti-Cheat Workaround
+
+<CodeGroup>
+```csharp AntiCheatExecutionAction.cs
+using Frosty.Core;
+using FrostySdk.Interfaces;
+using System;
+using System.Threading;
+
+public class AntiCheatExecutionAction : ExecutionAction
+{
+    public override Action<ILogger, PluginManagerType, CancellationToken> PreLaunchAction =>
+        (logger, managerType, cancelToken) =>
+        {
+            if (managerType != PluginManagerType.ModManager)
+                return;
+                
+            logger.Log("Applying anti-cheat workarounds...");
+            
+            try
+            {
+                // Disable anti-cheat or apply bypass
+                DisableAntiCheat();
+                logger.Log("Anti-cheat workarounds applied successfully");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"Failed to apply anti-cheat workarounds: {ex.Message}");
+            }
+        };
+    
+    public override Action<ILogger, PluginManagerType, CancellationToken> PostLaunchAction =>
+        (logger, managerType, cancelToken) =>
+        {
+            if (managerType != PluginManagerType.ModManager)
+                return;
+                
+            logger.Log("Re-enabling anti-cheat...");
+            
+            try
+            {
+                // Re-enable anti-cheat after game launch
+                EnableAntiCheat();
+                logger.Log("Anti-cheat re-enabled");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"Failed to re-enable anti-cheat: {ex.Message}");
+            }
+        };
+    
+    private void DisableAntiCheat()
+    {
+        // Implementation specific to the game
+    }
+    
+    private void EnableAntiCheat()
+    {
+        // Implementation specific to the game
+    }
+}
+```
+</CodeGroup>
+
+### Example: Custom Launcher Arguments
+
+<CodeGroup>
+```csharp LaunchArgsExecutionAction.cs
+using Frosty.Core;
+using FrostySdk.Interfaces;
+using System;
+using System.Threading;
+
+public class LaunchArgsExecutionAction : ExecutionAction
+{
+    public override Action<ILogger, PluginManagerType, CancellationToken> PreLaunchAction =>
+        (logger, managerType, cancelToken) =>
+        {
+            if (managerType != PluginManagerType.ModManager)
+                return;
+                
+            logger.Log("Configuring launch arguments...");
+            
+            // Add custom launch arguments
+            string configFile = "launch_config.txt";
+            
+            var args = new string[]
+            {
+                "-windowed",
+                "-dx11",
+                "-high",
+                "-nosound" // Disable sound for faster loading during testing
+            };
+            
+            System.IO.File.WriteAllLines(configFile, args);
+            logger.Log($"Launch configuration written to {configFile}");
+        };
+}
+```
+</CodeGroup>
+
+### Example: File Backup
+
+<CodeGroup>
+```csharp BackupExecutionAction.cs
+using Frosty.Core;
+using FrostySdk.Interfaces;
+using System;
+using System.IO;
+using System.Threading;
+
+public class BackupExecutionAction : ExecutionAction
+{
+    private string backupPath;
+    
+    public override Action<ILogger, PluginManagerType, CancellationToken> PreLaunchAction =>
+        (logger, managerType, cancelToken) =>
+        {
+            if (managerType != PluginManagerType.ModManager)
+                return;
+                
+            logger.Log("Creating backup of save files...");
+            
+            try
+            {
+                string savePath = GetSaveFilePath();
+                backupPath = Path.Combine(Path.GetTempPath(), $"SaveBackup_{DateTime.Now:yyyyMMdd_HHmmss}");
+                
+                if (Directory.Exists(savePath))
+                {
+                    CopyDirectory(savePath, backupPath);
+                    logger.Log($"Backup created at: {backupPath}");
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"Failed to create backup: {ex.Message}");
+            }
+        };
+    
+    public override Action<ILogger, PluginManagerType, CancellationToken> PostLaunchAction =>
+        (logger, managerType, cancelToken) =>
+        {
+            if (managerType != PluginManagerType.ModManager)
+                return;
+                
+            logger.Log("Game session ended. Backup remains at: " + backupPath);
+        };
+    
+    private string GetSaveFilePath()
+    {
+        // Get the save file directory for the current game
+        return Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+            "GameName",
+            "Saves");
+    }
+    
+    private void CopyDirectory(string source, string destination)
+    {
+        Directory.CreateDirectory(destination);
+        
+        foreach (string file in Directory.GetFiles(source))
+        {
+            string fileName = Path.GetFileName(file);
+            File.Copy(file, Path.Combine(destination, fileName), true);
+        }
+        
+        foreach (string dir in Directory.GetDirectories(source))
+        {
+            string dirName = Path.GetFileName(dir);
+            CopyDirectory(dir, Path.Combine(destination, dirName));
+        }
+    }
+}
+```
+</CodeGroup>
+
+### Example: Discord Rich Presence
+
+<CodeGroup>
+```csharp DiscordExecutionAction.cs
+using Frosty.Core;
+using FrostySdk.Interfaces;
+using System;
+using System.Threading;
+
+public class DiscordExecutionAction : ExecutionAction
+{
+    private DiscordRpcClient discord;
+    
+    public override Action<ILogger, PluginManagerType, CancellationToken> PreLaunchAction =>
+        (logger, managerType, cancelToken) =>
+        {
+            if (managerType != PluginManagerType.ModManager)
+                return;
+                
+            logger.Log("Initializing Discord Rich Presence...");
+            
+            try
+            {
+                discord = new DiscordRpcClient("your_client_id");
+                discord.Initialize();
+                
+                discord.SetPresence(new RichPresence()
+                {
+                    Details = "Playing with Frosty mods",
+                    State = "In game",
+                    Assets = new Assets()
+                    {
+                        LargeImageKey = "game_icon",
+                        LargeImageText = "Game Name"
+                    },
+                    Timestamps = new Timestamps()
+                    {
+                        Start = DateTime.UtcNow
+                    }
+                });
+                
+                logger.Log("Discord Rich Presence initialized");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"Failed to initialize Discord: {ex.Message}");
+            }
+        };
+    
+    public override Action<ILogger, PluginManagerType, CancellationToken> PostLaunchAction =>
+        (logger, managerType, cancelToken) =>
+        {
+            if (managerType != PluginManagerType.ModManager)
+                return;
+                
+            logger.Log("Disposing Discord Rich Presence...");
+            
+            try
+            {
+                discord?.Dispose();
+                logger.Log("Discord Rich Presence disposed");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"Error disposing Discord: {ex.Message}");
+            }
+        };
+}
+```
+</CodeGroup>
+
+## FrostyModExecutor Properties
+
+### Logger
+
+```csharp
+public ILogger Logger { get; set; }
+```
+
+The logger instance used by the executor.
+
+## Important Notes
+
+<Warning>
+  ExecutionActions run in the context of the Mod Manager and have access to the file system. Be careful with file operations and always handle exceptions properly.
+</Warning>
+
+<Note>
+  The PreLaunchAction executes after mods are applied but before the game is launched. The PostLaunchAction executes after the game launch command is issued (not after the game closes).
+</Note>
+
+## Common Use Cases
+
+### Pre-Launch Actions
+
+- Disable anti-cheat systems
+- Create file backups
+- Validate mod compatibility
+- Configure launch arguments
+- Initialize external tools
+- Check for updates
+
+### Post-Launch Actions
+
+- Re-enable anti-cheat
+- Clean up temporary files
+- Update Discord presence
+- Start monitoring tools
+- Initialize overlay applications
+
+## Error Handling
+
+<CodeGroup>
+```csharp Best Practices
+public override Action<ILogger, PluginManagerType, CancellationToken> PreLaunchAction =>
+    (logger, managerType, cancelToken) =>
+    {
+        // Always check manager type
+        if (managerType != PluginManagerType.ModManager)
+            return;
+            
+        try
+        {
+            // Check for cancellation
+            cancelToken.ThrowIfCancellationRequested();
+            
+            // Perform action
+            DoSomething();
+            
+            // Check again after long operations
+            cancelToken.ThrowIfCancellationRequested();
+            
+            logger.Log("Action completed successfully");
+        }
+        catch (OperationCanceledException)
+        {
+            logger.Log("Action cancelled");
+        }
+        catch (Exception ex)
+        {
+            // Log error but don't crash the mod manager
+            logger.LogError($"Action failed: {ex.Message}");
+        }
+    };
+```
+</CodeGroup>
+
+## See Also
+
+- [PluginManager API](/api/plugin-manager)
+- [AssetDefinition API](/api/asset-definition)
+- [Creating Plugins Guide](/plugins/creating-plugins)

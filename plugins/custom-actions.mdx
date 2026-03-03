@@ -1,0 +1,521 @@
+---
+title: Custom Actions and Commands
+description: Add context menus, menu items, and custom execution actions
+---
+
+Plugins can extend the Frosty Editor UI with custom menu items, context menu actions, and execution hooks.
+
+## Context Menu Extensions
+
+Context menu extensions add right-click actions to the Data Explorer. They inherit from `DataExplorerContextMenuExtension`.
+
+### Creating a Context Menu Item
+
+Here's a real example from `~/workspace/source/Plugins/DuplicationPlugin/DuplicateContextMenuItem.cs:613`:
+
+```csharp
+using Frosty.Core;
+using FrostySdk;
+using System.Windows.Media;
+
+namespace DuplicationPlugin
+{
+    public class DuplicateContextMenuItem : DataExplorerContextMenuExtension
+    {
+        // The text displayed in the context menu
+        public override string ContextItemName => "Duplicate";
+        
+        // Optional icon for the menu item
+        public override ImageSource Icon => 
+            new ImageSourceConverter().ConvertFromString(
+                "pack://application:,,,/FrostyEditor;component/Images/Add.png") as ImageSource;
+        
+        // The action to perform when clicked
+        public override RelayCommand ContextItemClicked => new RelayCommand((o) =>
+        {
+            // Get the selected asset
+            EbxAssetEntry entry = App.SelectedAsset as EbxAssetEntry;
+            
+            // Show a dialog to configure duplication
+            DuplicateAssetWindow win = new DuplicateAssetWindow(entry);
+            if (win.ShowDialog() == false)
+                return;
+            
+            string newName = win.SelectedPath + "/" + win.SelectedName;
+            newName = newName.Trim('/');
+            
+            // Perform the duplication
+            FrostyTaskWindow.Show("Duplicating asset", "", (task) =>
+            {
+                DuplicateAsset(entry, newName);
+            });
+            
+            // Refresh the Data Explorer
+            App.EditorWindow.DataExplorer.RefreshAll();
+        });
+        
+        private void DuplicateAsset(EbxAssetEntry entry, string newName)
+        {
+            // Implementation
+        }
+    }
+}
+```
+
+### Registering Context Menu Items
+
+Register in `AssemblyInfo.cs`:
+
+```csharp
+using DuplicationPlugin;
+using Frosty.Core.Attributes;
+
+[assembly: PluginDisplayName("Asset Duplication")]
+[assembly: PluginAuthor("Cade")]
+[assembly: PluginVersion("1.0.0.0")]
+
+[assembly: RegisterDataExplorerContextMenu(typeof(DuplicateContextMenuItem))]
+```
+
+From `~/workspace/source/FrostyPlugin/Attributes/RegisterDataExplorerContextMenuAttribute.cs:11`:
+
+```csharp
+[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true, Inherited = true)]
+public class RegisterDataExplorerContextMenuAttribute : Attribute
+{
+    public Type ContextMenuItemExtensionType { get; private set; }
+    
+    public RegisterDataExplorerContextMenuAttribute(Type type)
+    {
+        ContextMenuItemExtensionType = type;
+    }
+}
+```
+
+### Context Menu Properties
+
+<ParamField path="ContextItemName" type="string" required>
+  The display text for the menu item
+</ParamField>
+
+<ParamField path="Icon" type="ImageSource">
+  Optional icon displayed next to the menu item
+</ParamField>
+
+<ParamField path="ContextItemClicked" type="RelayCommand" required>
+  The command executed when the menu item is clicked
+</ParamField>
+
+### Accessing Selected Assets
+
+Use `App.SelectedAsset` to get the currently selected asset:
+
+```csharp
+EbxAssetEntry entry = App.SelectedAsset as EbxAssetEntry;
+if (entry != null)
+{
+    // Work with the asset
+    EbxAsset asset = App.AssetManager.GetEbx(entry);
+}
+```
+
+For multiple selection:
+
+```csharp
+var selectedAssets = App.EditorWindow.DataExplorer.SelectedAssets;
+foreach (var entry in selectedAssets)
+{
+    // Process each asset
+}
+```
+
+## Menu Extensions
+
+Menu extensions add items to the top menu bar. They inherit from `MenuExtension`.
+
+### Creating a Menu Extension
+
+From `~/workspace/source/Plugins/BiowareLocalizationPlugin/BioWareLocalizedStringEditorMenuExtension.cs`:
+
+```csharp
+using Frosty.Core;
+using FrostySdk;
+
+namespace BiowareLocalizationPlugin
+{
+    public class BioWareLocalizedStringEditorMenuExtension : MenuExtension
+    {
+        // Top-level menu to add to
+        public override string TopLevelMenuName => "View";
+        
+        // Submenu (null for top-level)
+        public override string SubLevelMenuName => null;
+        
+        // Menu item text
+        public override string MenuItemName => "Bioware Localized String Editor";
+        
+        // Action when clicked
+        public override RelayCommand MenuItemClicked => new RelayCommand((o) =>
+        {
+            // Open a custom editor window
+            var textDb = (BiowareLocalizedStringDatabase)LocalizedStringDatabase.Current;
+            App.EditorWindow.OpenEditor(
+                "Bioware Localized String Editor", 
+                new BiowareLocalizedStringEditor(textDb));
+        });
+    }
+}
+```
+
+### MenuExtension Base Class
+
+From `~/workspace/source/FrostyPlugin/Extensions/MenuExtension.cs:10`:
+
+```csharp
+public abstract class MenuExtension
+{
+    // Top-level menu name (e.g., "File", "Edit", "View")
+    public virtual string TopLevelMenuName { get; }
+    
+    // Submenu name (null for top-level)
+    public virtual string SubLevelMenuName { get; }
+    
+    // Menu item display name
+    public virtual string MenuItemName { get; }
+    
+    // Optional icon
+    public virtual ImageSource Icon { get; }
+    
+    // Click handler
+    public virtual RelayCommand MenuItemClicked { get; }
+}
+```
+
+### Registering Menu Extensions
+
+```csharp
+using Frosty.Core.Attributes;
+
+// Register for Editor only
+[assembly: RegisterMenuExtension(typeof(MyMenuExtension))]
+
+// Register for both Editor and Mod Manager
+[assembly: RegisterMenuExtension(typeof(MyMenuExtension), PluginManagerType.Both)]
+```
+
+From `~/workspace/source/FrostyPlugin/Attributes/RegisterMenuExtensionAttribute.cs:25`:
+
+```csharp
+public RegisterMenuExtensionAttribute(Type type, PluginManagerType managerType)
+{
+    MenuExtensionType = type;
+    ManagerType = managerType;
+}
+```
+
+### Menu Locations
+
+Common top-level menus:
+- `File` - File operations
+- `Edit` - Editing commands
+- `View` - UI toggles and windows
+- `Tools` - Utility functions
+- `Help` - Documentation and about
+
+## Execution Actions
+
+Execution actions run code before or after mod execution in the Mod Manager. They inherit from `ExecutionAction`.
+
+### Creating an Execution Action
+
+From `~/workspace/source/FrostyPlugin/Extensions/ExecutionAction.cs:11`:
+
+```csharp
+using Frosty.Core;
+using FrostySdk.Interfaces;
+using System;
+using System.Threading;
+
+namespace MyPlugin
+{
+    public class MyExecutionAction : ExecutionAction
+    {
+        // Runs before game launch
+        public override Action<ILogger, PluginManagerType, CancellationToken> PreLaunchAction => 
+            (logger, managerType, token) =>
+            {
+                logger.Log("Running pre-launch action...");
+                
+                // Perform pre-launch tasks
+                // Check token.IsCancellationRequested periodically
+                
+                if (token.IsCancellationRequested)
+                    return;
+                
+                // Do work
+                logger.Log("Pre-launch complete");
+            };
+        
+        // Runs after game exit
+        public override Action<ILogger, PluginManagerType, CancellationToken> PostLaunchAction => 
+            (logger, managerType, token) =>
+            {
+                logger.Log("Running post-launch action...");
+                
+                // Cleanup or post-game tasks
+                
+                logger.Log("Post-launch complete");
+            };
+    }
+}
+```
+
+### Registering Execution Actions
+
+```csharp
+using Frosty.Core.Attributes;
+
+[assembly: RegisterExecutionAction(typeof(MyExecutionAction))]
+```
+
+### Use Cases
+
+Execution actions are useful for:
+- Generating runtime files before game launch
+- Cleaning up temporary files after game exit
+- Validating mod configurations
+- Injecting DLLs or patches
+- Logging game session data
+
+## Tab Extensions
+
+Tab extensions add custom tabs to the editor. They inherit from `TabExtension`.
+
+### Creating a Tab Extension
+
+```csharp
+using Frosty.Core;
+using System.Windows.Controls;
+
+namespace MyPlugin
+{
+    public class MyTabExtension : TabExtension
+    {
+        public override string TabItemName => "My Custom Tab";
+        
+        public override FrostyBaseEditor CreateEditor()
+        {
+            return new MyCustomTabEditor();
+        }
+    }
+    
+    public class MyCustomTabEditor : FrostyBaseEditor
+    {
+        public MyCustomTabEditor()
+        {
+            // Create your custom UI
+        }
+    }
+}
+```
+
+### Registering Tab Extensions
+
+```csharp
+[assembly: RegisterTabExtension(typeof(MyTabExtension))]
+```
+
+## Custom Handlers
+
+Custom handlers intercept asset operations for special processing.
+
+### EBX Handlers
+
+Handle specific EBX asset types:
+
+```csharp
+using FrostySdk.Interfaces;
+
+namespace MyPlugin
+{
+    public class MyCustomHandler : ICustomActionHandler
+    {
+        public void ExecuteAction(string actionName, params object[] parameters)
+        {
+            // Handle custom action
+        }
+    }
+}
+```
+
+Register for an EBX type:
+
+```csharp
+[assembly: RegisterCustomHandler(
+    CustomHandlerType.Ebx, 
+    typeof(MyCustomHandler), 
+    ebxType: "MyAssetType")]
+```
+
+### Resource Handlers
+
+Handle specific resource types:
+
+```csharp
+[assembly: RegisterCustomHandler(
+    CustomHandlerType.Res,
+    typeof(ShaderBlockDepotCustomActionHandler),
+    resType: ResourceType.ShaderBlockDepot)]
+```
+
+From the MeshSetPlugin example (`~/workspace/source/Plugins/MeshSetPlugin/Properties/AssemblyInfo.cs:40`).
+
+## Startup Actions
+
+Startup actions run when Frosty first launches, before any profile is loaded:
+
+```csharp
+using Frosty.Core;
+
+namespace MyPlugin
+{
+    public class MyStartupAction : StartupAction
+    {
+        public override void Execute()
+        {
+            // Runs at application startup
+            // Initialize global resources, register services, etc.
+        }
+    }
+}
+```
+
+Register:
+
+```csharp
+[assembly: RegisterStartupAction(typeof(MyStartupAction))]
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="User Feedback">
+    Always provide feedback for long-running operations:
+    
+    ```csharp
+    FrostyTaskWindow.Show("Processing", "", (task) =>
+    {
+        task.Update("Step 1...");
+        // Do work
+        
+        task.Update("Step 2...", 50); // 50% progress
+        // Do more work
+    });
+    ```
+  </Accordion>
+  
+  <Accordion title="Error Handling">
+    Catch and log errors appropriately:
+    
+    ```csharp
+    try
+    {
+        // Risky operation
+    }
+    catch (Exception ex)
+    {
+        App.Logger.LogError($"Failed to process: {ex.Message}");
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Asset Validation">
+    Validate assets before operations:
+    
+    ```csharp
+    EbxAssetEntry entry = App.SelectedAsset as EbxAssetEntry;
+    if (entry == null || entry.Type != "ExpectedType")
+    {
+        App.Logger.LogError("Invalid asset selected");
+        return;
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Complete Example: Export Context Menu
+
+```csharp
+using Frosty.Core;
+using FrostySdk;
+using FrostySdk.IO;
+using System.IO;
+using System.Windows.Media;
+
+namespace ExportPlugin
+{
+    public class ExportToJsonContextMenu : DataExplorerContextMenuExtension
+    {
+        public override string ContextItemName => "Export to JSON";
+        
+        public override ImageSource Icon =>
+            new ImageSourceConverter().ConvertFromString(
+                "pack://application:,,,/FrostyEditor;component/Images/Export.png") as ImageSource;
+        
+        public override RelayCommand ContextItemClicked => new RelayCommand((o) =>
+        {
+            EbxAssetEntry entry = App.SelectedAsset as EbxAssetEntry;
+            if (entry == null)
+                return;
+            
+            // Show save dialog
+            var dialog = new SaveFileDialog
+            {
+                Filter = "JSON Files (*.json)|*.json",
+                FileName = entry.Filename + ".json"
+            };
+            
+            if (dialog.ShowDialog() != true)
+                return;
+            
+            // Export with progress
+            FrostyTaskWindow.Show("Exporting", "", (task) =>
+            {
+                EbxAsset asset = App.AssetManager.GetEbx(entry);
+                
+                task.Update("Converting to JSON...");
+                string json = ConvertToJson(asset);
+                
+                task.Update("Writing file...", 50);
+                File.WriteAllText(dialog.FileName, json);
+                
+                task.Update("Complete!", 100);
+            });
+            
+            App.Logger.Log($"Exported {entry.Name} to {dialog.FileName}");
+        });
+        
+        private string ConvertToJson(EbxAsset asset)
+        {
+            // Implement JSON conversion
+            return "{}";
+        }
+    }
+}
+```
+
+Register:
+
+```csharp
+[assembly: PluginDisplayName("JSON Export")]
+[assembly: PluginAuthor("YourName")]
+[assembly: PluginVersion("1.0.0.0")]
+
+[assembly: RegisterDataExplorerContextMenu(typeof(ExportToJsonContextMenu))]
+```
+
+## Next Steps
+
+<Card title="Plugin Attributes Reference" icon="book" href="/plugins/plugin-attributes">
+  Complete reference for all plugin attributes and their parameters
+</Card>

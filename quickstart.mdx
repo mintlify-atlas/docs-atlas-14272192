@@ -1,80 +1,417 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quick Start Guide
+description: Create your first Frostbite mod in 10 minutes with Frosty Toolsuite
 ---
 
-## Get started in three steps
+Get started with Frosty Toolsuite and create your first mod for any Frostbite engine game. This guide walks you through a simple text modification that demonstrates the core modding workflow.
 
-Get your documentation site running locally and make your first customization.
+## Prerequisites
 
-### Step 1: Set up your local environment
+Before starting, ensure you have:
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+<Steps>
+  <Step title="Install Frosty Toolsuite">
+    Download and install Frosty Toolsuite from the [installation guide](/installation). You'll need both FrostyEditor and FrostyModManager.
+  </Step>
+  
+  <Step title="Select Your Game">
+    Have a supported Frostbite game installed. This tutorial works with any game, but examples use Battlefield 1.
+  </Step>
+  
+  <Step title="Complete First Launch Setup">
+    Launch FrostyEditor once and let it scan for games and generate cache files. This process takes 5-10 minutes depending on the game.
+  </Step>
+</Steps>
 
-### Step 2: Deploy your changes
+<Note>
+  If you haven't installed Frosty yet, visit the [Installation Guide](/installation) first.
+</Note>
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+## What Can You Mod?
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
-
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 3: Go live
-
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
-
-## Next steps
-
-Now that you have your docs running, explore these key features:
+Frosty Toolsuite gives you access to virtually every asset in Frostbite games:
 
 <CardGroup cols={2}>
+  <Card title="Visual Assets" icon="palette">
+    Textures, meshes, materials, shaders, UI elements, and visual effects
+  </Card>
+  <Card title="Audio" icon="music">
+    Sound effects, music tracks, voiceovers, and audio parameters
+  </Card>
+  <Card title="Game Data" icon="database">
+    Entity properties, gameplay values, weapon stats, character attributes
+  </Card>
+  <Card title="Text & Localization" icon="language">
+    In-game text, dialogue, UI labels, and localized strings
+  </Card>
+</CardGroup>
 
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
+<Accordion title="What makes Frosty different from other modding tools?">
+  Unlike legacy modding tools that only work with specific file types, Frosty provides complete access to the Frostbite type system. You can modify:
+  
+  - **EBX Assets**: Entity blueprints containing game logic and configurations
+  - **RES Assets**: Resources like textures, meshes, and audio
+  - **Chunks**: Binary data referenced by other assets
+  - **Bundles**: Asset organization and loading behavior
+  
+  All modifications are applied at runtime without touching original game files, making your installation safe and update-proof.
+</Accordion>
 
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
+## Your First Mod: Changing Localized Text
 
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
+Let's create a simple mod that changes in-game text. This demonstrates the complete workflow from asset discovery to testing.
 
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
+### Step 1: Create a New Project
 
+<Steps>
+  <Step title="Launch FrostyEditor">
+    Open FrostyEditor and select your game profile from the launcher. Wait for the editor to load the asset database.
+  </Step>
+  
+  <Step title="Create New Project">
+    Click **File** > **New Project** (or press `Ctrl+N`)
+    
+    Choose a location and name your project file:
+    ```
+    my-first-mod.fbproject
+    ```
+    
+    <Warning>
+      Save your project to a permanent location, not your Downloads or Temp folder. Frosty references this file throughout development.
+    </Warning>
+  </Step>
+  
+  <Step title="Configure Mod Settings">
+    Go to **Tools** > **Mod Settings** and fill in the metadata:
+    
+    - **Title**: My First Mod
+    - **Author**: Your Name
+    - **Version**: 1.0.0
+    - **Category**: Misc
+    - **Description**: A simple text modification to learn Frosty modding
+    
+    This information appears in FrostyModManager when users view your mod.
+  </Step>
+</Steps>
+
+### Step 2: Find a Text Asset to Modify
+
+<Steps>
+  <Step title="Open the Data Explorer">
+    The Data Explorer (left panel) shows all game assets organized in a tree structure. We need to find localized text assets.
+  </Step>
+  
+  <Step title="Search for Localization Assets">
+    Click the search box at the top (or press `Ctrl+F`) and search for:
+    ```
+    localization
+    ```
+    
+    Filter results by type to find text-related assets. Look for assets with names containing "string" or "text".
+    
+    <Tip>
+      Different games organize localization differently. Common paths include:
+      - `UI/Localization/`
+      - `Text/`
+      - `Strings/`
+      
+      Try searching for common UI text like "menu" or "settings" to find editable strings.
+    </Tip>
+  </Step>
+  
+  <Step title="Select a Text Entry">
+    Double-click a localization asset to open it. You'll see the Property Grid Editor with expandable text entries.
+    
+    Find a string you recognize from the game (like a menu item or button label).
+  </Step>
+</Steps>
+
+### Step 3: Modify the Text
+
+<Steps>
+  <Step title="Edit the String Value">
+    In the Property Grid:
+    
+    1. Expand the text entry you want to modify
+    2. Find the language field (usually "en" for English)
+    3. Click the value field to edit
+    4. Change the text to something new
+    
+    For example, change:
+    ```
+    Original: "Continue"
+    Modified: "Continue Your Adventure"
+    ```
+  </Step>
+  
+  <Step title="Save Your Changes">
+    Press `Ctrl+S` or click **File** > **Save Project**
+    
+    The asset will show a dirty indicator (asterisk) until saved. Once saved, it appears in the **Modified Assets** list.
+  </Step>
+</Steps>
+
+<Note>
+  The Property Grid Editor shows the complete type information for each field. Green fields are required, white fields are optional, and grayed-out fields are read-only or transient.
+</Note>
+
+### Step 4: Export Your Mod
+
+<Steps>
+  <Step title="Verify Your Changes">
+    Check the **Modified Assets** tab to confirm your text asset is listed. This shows everything included in your mod.
+  </Step>
+  
+  <Step title="Export as .fbmod File">
+    Click **File** > **Export Mod** (or click the export button in the toolbar)
+    
+    Choose where to save your mod:
+    ```
+    my-first-mod.fbmod
+    ```
+    
+    The export process bundles all your changes into a single distributable file.
+  </Step>
+  
+  <Step title="Verify Export Success">
+    You should see a success message. The `.fbmod` file is now ready to use in FrostyModManager.
+  </Step>
+</Steps>
+
+### Step 5: Test Your Mod
+
+<Steps>
+  <Step title="Launch FrostyModManager">
+    Close FrostyEditor and open FrostyModManager. Select the same game profile.
+  </Step>
+  
+  <Step title="Import Your Mod">
+    Click **Import Mod** and select your `my-first-mod.fbmod` file.
+    
+    The mod appears in the Available Mods list with your title, author, and description.
+  </Step>
+  
+  <Step title="Enable and Apply">
+    1. Check the box next to your mod to enable it
+    2. Click **Apply Mods** (or **Launch Game** to test immediately)
+    3. FrostyModManager will apply your changes and launch the game
+    
+    <Warning>
+      Some games use anti-cheat systems that may detect mods. Always use mods in single-player or offline mode only.
+    </Warning>
+  </Step>
+  
+  <Step title="Verify In-Game">
+    Navigate to where your modified text appears. You should see your changes reflected in the game!
+  </Step>
+</Steps>
+
+## Understanding the Modding Workflow
+
+The workflow you just completed is the foundation of all Frosty modding:
+
+```
+1. Create Project → 2. Find Assets → 3. Modify → 4. Save → 5. Export → 6. Test
+```
+
+<AccordionGroup>
+  <Accordion title="Why use project files?" icon="file">
+    `.fbproject` files store all your modifications in a reusable format. You can:
+    
+    - Continue working on your mod across multiple sessions
+    - Make incremental changes without starting over
+    - Share project files with other modders for collaboration
+    - Export multiple versions of the same mod
+    
+    Projects track creation/modification dates, game version, and maintain references to all modified assets.
+  </Accordion>
+  
+  <Accordion title="What happens when I save?" icon="floppy-disk">
+    When you save a project, Frosty stores:
+    
+    - Only the changes you made (delta format)
+    - Asset references and dependencies
+    - Linked assets (like texture chunks)
+    - Mod metadata
+    - Custom action handlers
+    
+    Original game assets remain untouched. Your modifications exist only in the project file until export.
+  </Accordion>
+  
+  <Accordion title="How do mods get applied?" icon="wand-magic-sparkles">
+    FrostyModManager applies mods at runtime by:
+    
+    1. Reading the `.fbmod` file
+    2. Injecting modified data into the game's memory
+    3. Redirecting asset references to modded versions
+    4. Managing load order for multiple mods
+    
+    No game files are permanently modified. Remove the mod in ModManager and launch the game normally to play unmodded.
+  </Accordion>
+</AccordionGroup>
+
+## What to Try Next
+
+Now that you understand the basics, explore more advanced modding techniques:
+
+<CardGroup cols={2}>
+  <Card title="Modify Textures" icon="image" href="/modding/asset-modification#texture-assets">
+    Replace character skins, environment textures, or UI graphics
+  </Card>
+  <Card title="Edit Meshes" icon="cube" href="/modding/asset-modification#mesh-assets">
+    Import custom 3D models for weapons, vehicles, or characters
+  </Card>
+  <Card title="Change Audio" icon="volume-high" href="/modding/asset-modification#sound-assets">
+    Replace sound effects or music tracks
+  </Card>
+  <Card title="Modify Gameplay" icon="gamepad" href="/modding/asset-modification#ebx-entity-assets">
+    Edit weapon stats, character abilities, or game logic
+  </Card>
+</CardGroup>
+
+## Tips for Successful Modding
+
+<AccordionGroup>
+  <Accordion title="Start Simple" icon="seedling">
+    Begin with small, single-asset mods like this tutorial. Once comfortable with the workflow, gradually tackle more complex modifications.
+    
+    Simple progression:
+    1. Text modifications (this tutorial)
+    2. Single texture replacements
+    3. Multiple textures or meshes
+    4. Complex entity property changes
+    5. Multi-asset gameplay mods
+  </Accordion>
+  
+  <Accordion title="Save Often" icon="floppy-disk">
+    Get in the habit of saving frequently:
+    
+    - After each major change
+    - Before testing or exporting
+    - Before modifying complex assets
+    
+    Enable auto-save in **Tools** > **Options** > **General** for automatic backups.
+  </Accordion>
+  
+  <Accordion title="Use Bookmarks" icon="bookmark">
+    Add frequently accessed assets to bookmarks (`Ctrl+B`) to avoid repeated searching. Create multiple bookmark contexts for different aspects of your mod.
+  </Accordion>
+  
+  <Accordion title="Test Incrementally" icon="vial">
+    Export and test your mod frequently during development:
+    
+    - Verify changes appear as expected
+    - Catch errors early before they compound
+    - Ensure mod doesn't conflict with game updates
+    - Check performance impact
+  </Accordion>
+  
+  <Accordion title="Document Your Work" icon="book">
+    Use the mod description field to document:
+    
+    - What assets were changed
+    - What the changes do
+    - Known compatibility issues
+    - Installation requirements
+    
+    Future you (and your users) will appreciate the documentation.
+  </Accordion>
+  
+  <Accordion title="Understand Asset Dependencies" icon="link">
+    Many assets reference other assets:
+    
+    - Textures link to chunk data for mipmaps
+    - Meshes reference materials and textures
+    - Entity blueprints reference multiple resource types
+    
+    Frosty tracks these dependencies automatically, but understanding them helps you plan complex mods.
+  </Accordion>
+</AccordionGroup>
+
+## Common Beginner Issues
+
+<Accordion title="Can't find the asset I want to modify" icon="magnifying-glass">
+  **Solutions:**
+  
+  - Use advanced filter syntax: `type:MeshAsset` to filter by type
+  - Search for partial names: `^weapon` finds assets starting with "weapon"
+  - Check both base game and DLC superbundles
+  - Use the Legacy Explorer for older Frostbite games
+  - Look at similar existing mods to see what assets they modify
+</Accordion>
+
+<Accordion title="Changes don't appear in game" icon="eye-slash">
+  **Common causes:**
+  
+  1. **Mod not enabled**: Check FrostyModManager's Applied Mods list
+  2. **Wrong game profile**: Ensure mod was created for the correct game
+  3. **Cache issues**: Clear game cache and regenerate in FrostyEditor
+  4. **Load order**: Some mods conflict; adjust load order in ModManager
+  5. **Anti-cheat blocking**: Some games prevent modding; check game compatibility
+</Accordion>
+
+<Accordion title="Editor crashes or won't load assets" icon="triangle-exclamation">
+  **Troubleshooting steps:**
+  
+  1. Verify .NET Framework 4.7.2+ is installed
+  2. Unblock DLL files (Frosty does this automatically on first launch)
+  3. Regenerate cache files (delete cache folder and restart)
+  4. Ensure game is not running while using the editor
+  5. Check game version matches Frosty's supported versions
+  6. Review FrostyEditor.log for specific error messages
+</Accordion>
+
+<Accordion title="Exported mod file seems too large" icon="file">
+  **Understanding mod file sizes:**
+  
+  - Text-only mods: Very small (few KB)
+  - Texture mods: Medium to large (MB range depending on resolution)
+  - Mesh mods: Medium (hundreds of KB to few MB)
+  - Complex mods with many assets: Large (tens of MB)
+  
+  If your simple mod is unexpectedly large, you may have accidentally modified linked assets. Check the Modified Assets list for unexpected entries.
+</Accordion>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Asset Modification Guide" icon="pen" href="/modding/asset-modification">
+    Deep dive into modifying textures, meshes, audio, and entities
+  </Card>
+  <Card title="Creating Mods" icon="plus" href="/modding/creating-mods">
+    Learn advanced project management and mod development techniques
+  </Card>
+  <Card title="Mod Packaging" icon="box" href="/modding/mod-packaging">
+    Best practices for exporting and distributing your mods
+  </Card>
+  <Card title="FrostyEditor Guide" icon="window" href="/applications/editor">
+    Master the editor interface and advanced features
+  </Card>
+  <Card title="Best Practices" icon="star" href="/modding/best-practices">
+    Follow community standards for quality and compatibility
+  </Card>
+  <Card title="Game-Specific Guides" icon="gamepad" href="/games/battlefield">
+    Find tips and tutorials for your specific game
+  </Card>
+</CardGroup>
+
+## Get Help and Share Your Work
+
+<CardGroup cols={2}>
+  <Card title="Join the Community" icon="discord">
+    Connect with other modders on Discord for help, feedback, and collaboration
+  </Card>
+  <Card title="FAQ & Troubleshooting" icon="circle-question" href="/resources/faq">
+    Find answers to common questions and technical issues
+  </Card>
+  <Card title="GitHub Repository" icon="github" href="https://github.com/CadeEvs/FrostyToolsuite">
+    Report bugs, request features, or contribute to Frosty development
+  </Card>
+  <Card title="Contributing Guide" icon="code-pull-request" href="/resources/contributing">
+    Learn how to contribute to Frosty Toolsuite
+  </Card>
 </CardGroup>
 
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+  Congratulations on creating your first mod! You now understand the core workflow used by thousands of Frosty modders. The same process scales from simple text changes to complex total conversion mods.
 </Note>

@@ -1,0 +1,435 @@
+---
+title: PluginManager API
+description: Core plugin management system for loading and managing plugin extensions
+---
+
+## Overview
+
+The `PluginManager` class is the core plugin manager responsible for loading and managing plugin extensions in Frosty Toolsuite. It discovers plugins from the `Plugins/` directory, validates them, and provides access to various extension types.
+
+## Constructor
+
+### PluginManager
+
+```csharp
+public PluginManager(ILogger logger, PluginManagerType context)
+```
+
+Initializes a new instance of the PluginManager with the specified logger and context.
+
+<ParamField path="logger" type="ILogger" required>
+  The logging interface the plugin manager should use
+</ParamField>
+
+<ParamField path="context" type="PluginManagerType" required>
+  The context which this plugin should load for (Editor, ModManager, or Both)
+</ParamField>
+
+<CodeGroup>
+```csharp Example
+var logger = new MyLogger();
+var pluginManager = new PluginManager(logger, PluginManagerType.Editor);
+```
+</CodeGroup>
+
+## Properties
+
+### ManagerType
+
+```csharp
+public PluginManagerType ManagerType { get; }
+```
+
+Retrieves the enum defining which manager is being loaded (Editor, ModManager, or Both).
+
+### Plugins
+
+```csharp
+public IEnumerable<Plugin> Plugins { get; }
+```
+
+An enumerable collection of all plugins that have been found in the Plugins directory.
+
+### LoadedPlugins
+
+```csharp
+public IEnumerable<Plugin> LoadedPlugins { get; }
+```
+
+A collection of plugins that have been successfully loaded and validated for the current profile.
+
+### MenuExtensions
+
+```csharp
+public IEnumerable<MenuExtension> MenuExtensions { get; }
+```
+
+Retrieves menu extensions that have been loaded from plugins.
+
+### TabExtensions
+
+```csharp
+public IEnumerable<TabExtension> TabExtensions { get; }
+```
+
+Retrieves tab extensions that have been loaded from plugins.
+
+### DataExplorerContextMenuExtensions
+
+```csharp
+public IEnumerable<DataExplorerContextMenuExtension> DataExplorerContextMenuExtensions { get; }
+```
+
+Retrieves data explorer context menu item extensions loaded from plugins.
+
+### ExecutionActions
+
+```csharp
+public IEnumerable<ExecutionAction> ExecutionActions { get; }
+```
+
+Retrieves execution actions that have been loaded from plugins for mod launching.
+
+### OptionsExtensions
+
+```csharp
+public IEnumerable<Type> OptionsExtensions { get; }
+```
+
+Retrieves options extensions that have been loaded from plugins.
+
+### Profiles
+
+```csharp
+public IEnumerable<Profile> Profiles { get; }
+```
+
+Retrieves game profiles that have been loaded from plugins.
+
+### StartupActions
+
+```csharp
+public IEnumerable<StartupAction> StartupActions { get; }
+```
+
+Retrieves startup actions that have been loaded from plugins.
+
+## Methods
+
+### Initialize
+
+```csharp
+public void Initialize()
+```
+
+Initializes all post-profile assembly plugins. This method must be called after the game profile is loaded to initialize profile-specific plugins.
+
+<CodeGroup>
+```csharp Example
+pluginManager.Initialize();
+```
+</CodeGroup>
+
+### GetAssetDefinition
+
+```csharp
+public AssetDefinition GetAssetDefinition(string type)
+```
+
+Returns the `AssetDefinition` for the specified asset type.
+
+<ParamField path="type" type="string" required>
+  The type of the asset definition to obtain (case-insensitive)
+</ParamField>
+
+<ResponseField name="return" type="AssetDefinition">
+  The AssetDefinition for the specified type, or null if not found
+</ResponseField>
+
+<CodeGroup>
+```csharp Example
+AssetDefinition meshDef = pluginManager.GetAssetDefinition("MeshAsset");
+if (meshDef != null)
+{
+    var editor = meshDef.GetEditor(logger);
+}
+```
+</CodeGroup>
+
+### GetTypeEditor
+
+```csharp
+public Type GetTypeEditor(string lookupName)
+```
+
+Returns the Type to use to construct the property grid type editor with the specified lookup name.
+
+<ParamField path="lookupName" type="string" required>
+  The lookup name of the type editor to obtain (case-insensitive)
+</ParamField>
+
+<ResponseField name="return" type="Type">
+  The Type of the type editor, or null if not found
+</ResponseField>
+
+<CodeGroup>
+```csharp Example
+Type editorType = pluginManager.GetTypeEditor("Vec3");
+if (editorType != null)
+{
+    var editor = Activator.CreateInstance(editorType);
+}
+```
+</CodeGroup>
+
+### GetTypeOverride
+
+```csharp
+public Type GetTypeOverride(string lookupName)
+```
+
+Returns the Type of the type override class with the specified lookup name.
+
+<ParamField path="lookupName" type="string" required>
+  The lookup name of the type override to obtain (case-insensitive)
+</ParamField>
+
+<ResponseField name="return" type="Type">
+  The Type of the type override, or null if not found
+</ResponseField>
+
+### GetCustomHandler
+
+```csharp
+public ICustomActionHandler GetCustomHandler(string ebxType)
+public ICustomActionHandler GetCustomHandler(uint handlerHash)
+public ICustomActionHandler GetCustomHandler(ResourceType resType)
+```
+
+Returns a custom action handler for the specified EBX type, handler hash, or resource type.
+
+<ParamField path="ebxType" type="string">
+  The EBX type name to get a handler for
+</ParamField>
+
+<ParamField path="handlerHash" type="uint">
+  The FNV1 hash of the EBX type
+</ParamField>
+
+<ParamField path="resType" type="ResourceType">
+  The resource type to get a handler for
+</ParamField>
+
+<ResponseField name="return" type="ICustomActionHandler">
+  A new instance of the custom handler, or null if not found
+</ResponseField>
+
+<CodeGroup>
+```csharp Example
+// Get handler by EBX type name
+var handler = pluginManager.GetCustomHandler("MeshAsset");
+
+// Get handler by resource type
+var resHandler = pluginManager.GetCustomHandler(ResourceType.MeshSet);
+```
+</CodeGroup>
+
+### GetPluginAssembly
+
+```csharp
+public Assembly GetPluginAssembly(string name)
+```
+
+Returns the Assembly of the specified plugin if it is loaded.
+
+<ParamField path="name" type="string" required>
+  The name of the plugin to obtain
+</ParamField>
+
+<ResponseField name="return" type="Assembly">
+  The Assembly of the plugin, or null if not found
+</ResponseField>
+
+<CodeGroup>
+```csharp Example
+Assembly meshPlugin = pluginManager.GetPluginAssembly("MeshSetPlugin");
+if (meshPlugin != null)
+{
+    // Use plugin assembly
+}
+```
+</CodeGroup>
+
+### GetLocalizedStringDatabase
+
+```csharp
+public ILocalizedStringDatabase GetLocalizedStringDatabase()
+```
+
+Creates and returns the localized string database, or a default one if none was specified by any loaded plugin.
+
+<ResponseField name="return" type="ILocalizedStringDatabase">
+  The constructed localized string database instance
+</ResponseField>
+
+### GetShader
+
+```csharp
+public byte[] GetShader(ShaderType type, string name)
+```
+
+Returns the shader bytecode of the shader specified by the name and shader type.
+
+<ParamField path="type" type="ShaderType" required>
+  The type of shader (VertexShader, PixelShader, or ComputeShader)
+</ParamField>
+
+<ParamField path="name" type="string" required>
+  The resource name of the shader
+</ParamField>
+
+<ResponseField name="return" type="byte[]">
+  The bytecode of the shader, or null if not found
+</ResponseField>
+
+<CodeGroup>
+```csharp Example
+byte[] vertexShader = pluginManager.GetShader(ShaderType.VertexShader, "MeshShader");
+byte[] pixelShader = pluginManager.GetShader(ShaderType.PixelShader, "MeshShader");
+```
+</CodeGroup>
+
+### GetUserShaders
+
+```csharp
+public IEnumerable<string> GetUserShaders()
+```
+
+Returns an enumerable collection of user-defined shader names.
+
+<ResponseField name="return" type="IEnumerable<string>">
+  Collection of user shader descriptors
+</ResponseField>
+
+### IsThirdPartyDll
+
+```csharp
+public bool IsThirdPartyDll(string name)
+```
+
+Returns true if a plugin has registered the specified name as a third-party DLL.
+
+<ParamField path="name" type="string" required>
+  The name of the DLL to check (case-insensitive)
+</ParamField>
+
+<ResponseField name="return" type="bool">
+  True if the DLL is registered as third-party
+</ResponseField>
+
+### IsManagerType
+
+```csharp
+public bool IsManagerType(PluginManagerType type)
+```
+
+Returns true if the loaded manager matches the specified manager type.
+
+<ParamField path="type" type="PluginManagerType" required>
+  The manager type to check (Editor, ModManager, or Both)
+</ParamField>
+
+<ResponseField name="return" type="bool">
+  True if the manager type matches
+</ResponseField>
+
+<CodeGroup>
+```csharp Example
+if (pluginManager.IsManagerType(PluginManagerType.Editor))
+{
+    // Editor-specific code
+}
+```
+</CodeGroup>
+
+### LoadPlugin
+
+```csharp
+public Plugin LoadPlugin(string pluginPath, PluginLoadType? loadType = null)
+```
+
+Attempts to load a plugin located at the specified path.
+
+<ParamField path="pluginPath" type="string" required>
+  The path to the target plugin DLL
+</ParamField>
+
+<ParamField path="loadType" type="PluginLoadType?">
+  Optional. Determines what should be loaded from the plugin (Startup or Initialize)
+</ParamField>
+
+<ResponseField name="return" type="Plugin">
+  A Plugin instance. Check the Status property for load success/failure
+</ResponseField>
+
+<CodeGroup>
+```csharp Example
+Plugin plugin = pluginManager.LoadPlugin("Plugins/MyPlugin.dll", PluginLoadType.Startup);
+if (plugin.Status == PluginLoadStatus.Loaded)
+{
+    logger.Log($"Plugin {plugin.Assembly.GetName().Name} loaded successfully");
+}
+else if (plugin.LoadException != null)
+{
+    logger.LogError($"Failed to load plugin: {plugin.LoadException.Message}");
+}
+```
+</CodeGroup>
+
+## Enumerations
+
+### PluginManagerType
+
+```csharp
+public enum PluginManagerType
+{
+    Editor,
+    ModManager,
+    Both
+}
+```
+
+Defines the context in which the plugin manager operates.
+
+### PluginLoadType
+
+```csharp
+public enum PluginLoadType
+{
+    Startup,
+    Initialize
+}
+```
+
+Defines when a plugin should be loaded:
+- **Startup**: Loaded before profile initialization (profiles, type overrides, global editors)
+- **Initialize**: Loaded after profile initialization (asset definitions, menu extensions, handlers)
+
+### PluginLoadStatus
+
+```csharp
+public enum PluginLoadStatus
+{
+    Loaded,
+    LoadedInvalid,
+    FailedToLoad
+}
+```
+
+Indicates the load status of a plugin.
+
+## See Also
+
+- [AssetDefinition API](/api/asset-definition)
+- [Custom Asset Editors](/api/custom-asset-editors)
+- [FrostyModExecutor API](/api/mod-execution)

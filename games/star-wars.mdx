@@ -1,0 +1,178 @@
+---
+title: Star Wars Games
+description: Frosty Toolsuite support for Star Wars titles on Frostbite
+---
+
+Frosty Toolsuite provides full modding support for EA's Star Wars games built on the Frostbite engine.
+
+## Supported Titles
+
+<CardGroup cols={2}>
+  <Card title="Star Wars Battlefront" icon="jedi">
+    Released: 2015
+    
+    Profile: `StarWarsSDK.dll`
+  </Card>
+  
+  <Card title="Star Wars Battlefront II" icon="jedi">
+    Released: 2017
+    
+    Profile: `StarWarsIISDK.dll`
+  </Card>
+  
+  <Card title="Star Wars: Squadrons" icon="jedi">
+    Released: 2020
+    
+    Profile: `SWSSDK.dll`
+  </Card>
+</CardGroup>
+
+## Game-Specific Features
+
+### Star Wars Battlefront (2015)
+
+- Profile Version: `20151117`
+- First Star Wars title on Frostbite engine
+- Unique mesh format for character models
+- Extensive texture assets for iconic Star Wars locations
+- Profile size: ~4 MB
+
+<Note>
+  Battlefront uses a specialized mesh structure that requires special handling in the MeshSet plugin.
+</Note>
+
+### Star Wars Battlefront II (2017)
+
+- Profile Version: `20171117`
+- Enhanced asset system compared to the first game
+- Modern mesh format with improved bone system
+- Larger asset library with more content
+- Profile size: ~9.4 MB
+- Updated texture compression formats
+
+**Technical Details:**
+- Uses ushort bone count storage in mesh format
+- Compatible with modern Frostbite 3 asset pipeline
+- Special handling for character customization assets
+
+### Star Wars: Squadrons (2020)
+
+- Profile Version: `20201001`
+- Latest Star Wars title supported
+- Most modern Frostbite implementation
+- Profile size: ~9.9 MB
+- Optimized for VR and cockpit-focused gameplay
+
+**Unique Features:**
+- Advanced mesh LOD system for VR performance
+- Specialized shader support for cockpit displays
+- Enhanced texture streaming for space environments
+
+## Modding Capabilities
+
+### Asset Types
+
+All Star Wars titles support modding:
+
+- **Character Models**: Modify heroes, troopers, and alien species
+- **Vehicles & Starfighters**: Edit iconic ships and ground vehicles
+- **Weapons**: Customize blasters, lightsabers, and equipment
+- **Environments**: Modify maps and locations from the Star Wars universe
+- **Textures**: Replace and enhance visual assets
+- **Audio**: Modify sound effects and music (with appropriate plugins)
+
+### Common Use Cases
+
+<Accordion title="Character Customization">
+  Popular mods include:
+  
+  - Custom trooper appearances
+  - Hero skin variations
+  - Canon-accurate armor designs
+  - Character ports from other Star Wars media
+  
+  The mesh format in SWBFII and Squadrons supports advanced rigging for detailed character animations.
+</Accordion>
+
+<Accordion title="Visual Enhancements">
+  Texture modding capabilities:
+  
+  - 4K texture upgrades
+  - Improved shader materials
+  - Custom lighting adjustments
+  - Environment retextures
+  
+  All games support modern texture compression with proper mipmapping.
+</Accordion>
+
+<Accordion title="Vehicle Modifications">
+  Modders can customize:
+  
+  - Starfighter models and textures
+  - Ground vehicle appearances
+  - Cockpit details (especially in Squadrons)
+  - Special effects for engines and weapons
+</Accordion>
+
+## Technical Considerations
+
+### Mesh Format Compatibility
+
+The Star Wars games use different mesh formats:
+
+```
+Battlefront (2015): Legacy format
+Battlefront II (2017): Modern format with ushort bone counts
+Squadrons (2020): Advanced format with VR optimizations
+```
+
+Frosty automatically handles format conversion based on the detected profile.
+
+### Profile Detection
+
+Profiles are identified by game installation. The SDK profiles contain:
+
+- Game-specific asset loaders
+- Deobfuscation settings (if required)
+- File system source paths
+- Shared bundle definitions
+- Texture format specifications
+
+<Note>
+  Star Wars Battlefront II has one of the largest SDK profiles, indicating extensive asset type support for the game's diverse content.
+</Note>
+
+## Online Play & Anti-Cheat
+
+<Warning>
+  Some Star Wars titles may have anti-cheat protection for online multiplayer modes. Always use mods responsibly:
+  
+  - Only use cosmetic mods in online play
+  - Respect EA's Terms of Service
+  - Be aware that some mods may not work in multiplayer
+  - Consider using mods in single-player or co-op modes only
+</Warning>
+
+## Getting Started
+
+To begin modding Star Wars games:
+
+1. Install Frosty Editor and Mod Manager
+2. Launch Frosty Editor and select your Star Wars game
+3. Wait for asset indexing to complete (may take several minutes)
+4. Browse the asset explorer to find game files
+5. Use appropriate plugins (Mesh, Texture, etc.) to edit assets
+6. Apply mods through Frosty Mod Manager
+
+For detailed tutorials, see the [Getting Started](/installation) guide.
+
+## Community Resources
+
+The Star Wars modding community is one of the most active in the Frosty ecosystem:
+
+- Extensive mod libraries for character customization
+- Map enhancement projects
+- Canon accuracy improvements
+- Crossover content from other Star Wars games
+
+Check community forums and mod repositories for inspiration and support.
